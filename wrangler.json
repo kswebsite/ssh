@@ -13,7 +13,8 @@
   "observability": {
     "enabled": true
   },
-  "site": {
-    "bucket": "./public"
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
   }
 }
