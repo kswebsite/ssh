@@ -1,16 +1,15 @@
 {
-	"compatibility_date": "2025-10-08",
-	"main": "src/index.ts",
-	"name": "ssh",
-	"upload_source_maps": true,
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_id": "85ed8694-89ea-4013-9df0-ca7004282f2b",
-			"database_name": "ssh_db"
-		}
-	],
-	"observability": {
-		"enabled": true
-	}
+  "compatibility_date": "2025-10-08",
+  "main": "src/index.ts",
+  "name": "ssh",
+  "upload_source_maps": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_id": "85ed8694-89ea-4013-9df0-ca7004282f2b",
+      "database_name": "ssh_db"
+    }
+  ],
+  "observability": { "enabled": true },
+  "site": { "bucket": "./public" }
 }
