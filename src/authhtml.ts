@@ -1,4 +1,4 @@
-export function renderHtml(content: string) {
+export function authhtml(content: string) {
 	return `
     <!DOCTYPE html>
     <html lang="en">
