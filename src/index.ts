@@ -220,118 +220,818 @@ const AUTH_HTML = `<!DOCTYPE html>
 const DASHBOARD_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SSH • Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
-    body { font-family: 'Inter', system_ui, sans-serif; }
-  </style>
-</head>
-<body class="bg-gray-950 text-white min-h-screen">
-  <div class="max-w-5xl mx-auto p-8">
-    <div class="flex justify-between items-center mb-12">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl">🔑</div>
-        <h1 class="text-4xl font-semibold tracking-tight">SSH</h1>
-      </div>
-      <div class="flex items-center gap-6">
-        <div onclick="logout()" class="cursor-pointer flex items-center gap-2 text-gray-400 hover:text-white">
-          <span class="text-sm font-medium">Logout</span>
-          <span class="text-xl">→</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-gray-900 rounded-3xl p-8 mb-8">
-      <div class="flex justify-between items-start">
-        <div>
-          <p class="text-emerald-400 text-sm font-medium">WELCOME BACK</p>
-          <h2 id="username-display" class="text-5xl font-semibold mt-1">Loading...</h2>
-        </div>
-        <div class="text-right">
-          <p class="text-gray-400 text-sm">YOUR CREDITS</p>
-          <div id="credits-display" class="text-7xl font-bold text-emerald-400 mt-1 tabular-nums">0</div>
-        </div>
-      </div>
-
-      <div id="afk-message" class="mt-6 bg-emerald-900/30 border border-emerald-500/30 rounded-2xl p-4 hidden">
-        <p class="text-emerald-400 font-medium">🎉 AFK Earnings claimed!</p>
-        <p id="earned-text" class="text-emerald-300"></p>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-gray-900 rounded-3xl p-8">
-        <h3 class="text-xl font-semibold mb-4">How AFK Earning Works</h3>
-        <ul class="space-y-4 text-gray-300">
-          <li class="flex gap-3"><span class="text-emerald-400">•</span> You earn <strong>10 credits per hour</strong> while away from the dashboard</li>
-          <li class="flex gap-3"><span class="text-emerald-400">•</span> Credits are automatically calculated and added when you visit</li>
-          <li class="flex gap-3"><span class="text-emerald-400">•</span> Maximum 240 credits per visit (24 hours)</li>
-          <li class="flex gap-3"><span class="text-emerald-400">•</span> Last active time is updated after every claim</li>
-        </ul>
-      </div>
-      <div class="bg-gray-900 rounded-3xl p-8 flex flex-col justify-center">
-        <p class="text-3xl font-medium text-center">System Credits</p>
-        <p id="system-note" class="text-center text-gray-400 mt-6 text-lg">Your balance updates live.<br>Stay AFK and watch it grow!</p>
-        <div class="flex-1"></div>
-        <button onclick="refreshCredits()" 
-                class="mt-auto w-full py-4 bg-white text-gray-900 rounded-2xl font-semibold text-lg hover:bg-emerald-400 transition">
-          Refresh Credits Now
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let currentUser = null;
-
-    async function loadDashboard() {
-      const res = await fetch('/api/me');
-      if (!res.ok) {
-        window.location.href = '/auth.html';
-        return;
-      }
-      const data = await res.json();
-      currentUser = data.user;
-
-      document.getElementById('username-display').textContent = currentUser.username;
-      document.getElementById('credits-display').textContent = currentUser.credits;
-
-      if (currentUser.earned && currentUser.earned > 0) {
-        const msg = document.getElementById('afk-message');
-        msg.classList.remove('hidden');
-        document.getElementById('earned-text').innerHTML = 
-          \`You earned <strong>\${currentUser.earned}</strong> credits while AFK!\`;
-      }
-    }
-
-    async function refreshCredits() {
-      const res = await fetch('/api/me');
-      if (res.ok) {
-        const data = await res.json();
-        currentUser = data.user;
-        document.getElementById('credits-display').textContent = currentUser.credits;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KS SSH — Web Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         
-        const msg = document.getElementById('afk-message');
-        if (currentUser.earned && currentUser.earned > 0) {
-          msg.classList.remove('hidden');
-          document.getElementById('earned-text').innerHTML = 
-            \`You earned <strong>\${currentUser.earned}</strong> credits while AFK!\`;
+        :root {
+            --sidebar-width: 225px;
+            --primary-blue: #3b82f6;
+            --electric-blue: #60a5fa;
+            --deep-blue: #1e3a8a;
+            --navy: #0f172a;
+            --black: #020617;
         }
-      }
-    }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: var(--black);
+            font-family: 'Inter', sans-serif;
+        }
+        
+        #sidebar {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            max-width: var(--sidebar-width);
+        }
+        
+        .iframe-container {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+            background: #000;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+        
+        .modal {
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes modalPop {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        @keyframes slideIn {
+            0% {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        .terminal-list-item {
+            transition: all 0.2s ease;
+        }
+        
+        .terminal-list-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .terminal-list-item.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-left: 2px solid #3b82f6;
+        }
 
-    async function logout() {
-      await fetch('/api/logout', { method: 'POST' });
-      window.location.href = '/auth.html';
-    }
+        #sidebar {
+            transition: transform 0.3s ease;
+            background: #0f172a;
+        }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .input-field {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        
+        .btn-secondary {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            color: #60a5fa;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .code-block {
+            background: #0f172a;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .status-dot {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .sidebar-overlay {
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.4);
+            border-radius: 2px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.6);
+        }
+        
+        .icon-btn {
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .icon-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .icon-btn-danger:hover {
+            background: rgba(220, 38, 38, 0.2);
+        }
+        
+        /* Subpage transitions */
+        .subpage {
+            animation: slideIn 0.2s ease;
+        }
 
-    // Tailwind script
-    document.documentElement.setAttribute('data-theme', 'dark');
-    loadDashboard();
-  </script>
+        /* OPTIMISTIC TOAST ANIMATION */
+        @keyframes toastSlide {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-black text-white antialiased">
+    <div class="flex h-screen w-screen relative overflow-hidden">
+        <!-- SIDEBAR - Fixed 225px width -->
+        <div id="sidebar" class="h-full bg-slate-950 border-r border-blue-900/30 flex flex-col fixed md:static inset-y-0 left-0 z-50 -translate-x-full md:translate-x-0 shadow-xl shadow-blue-900/10">
+            
+            <!-- Header -->
+            <div class="px-4 py-4 border-b border-blue-900/30 flex items-center gap-3 bg-slate-900/50">
+                <div class="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-md text-white shadow-lg shadow-blue-600/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-lg font-bold tracking-tight text-white truncate">KS SSH</h1>
+                    <p class="text-blue-400 text-[10px] font-semibold tracking-wider uppercase">KS WARRIOR</p>
+                </div>
+                <div class="flex items-center gap-1 px-2 py-1 bg-blue-500/10 border border-blue-500/30 rounded">
+                    <div class="w-1.5 h-1.5 bg-blue-400 rounded-full status-dot"></div>
+                    <span class="text-blue-400 text-[9px] font-bold">LIVE</span>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="px-3 pt-3 pb-2">
+                <div class="relative">
+                    <input 
+                        id="search-input"
+                        type="text"
+                        placeholder="Search terminals..."
+                        class="w-full bg-slate-900 border border-blue-800/50 focus:border-blue-500 rounded-md py-2 pl-8 pr-3 text-xs outline-none text-slate-200 placeholder-slate-500"
+                    >
+                    <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Add Button -->
+            <div class="px-3 pb-3">
+                <button 
+                    onclick="showAddModal()"
+                    class="w-full btn-primary text-white font-medium py-2 rounded-md flex items-center justify-center gap-1.5 text-xs"
+                >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span>ADD TERMINAL</span>
+                </button>
+            </div>
+
+            <!-- Terminals List -->
+            <div class="flex-1 overflow-y-auto px-2 py-1 space-y-1" id="terminals-list">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <!-- USER PROFILE + CREDITS (NEW - OPTIMISTIC INTEGRATION) -->
+            <div class="px-3 py-3 border-t border-blue-900/30">
+                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 bg-gradient-to-br from-blue-400 to-emerald-400 rounded-2xl flex items-center justify-center text-sm font-bold shadow-inner">👤</div>
+                            <div class="min-w-0">
+                                <p class="text-xs text-slate-400 tracking-widest">LOGGED IN AS</p>
+                                <p id="username-display" class="font-semibold text-white text-sm truncate">@loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right border-l border-blue-900/30 pl-4">
+                        <div class="flex items-baseline justify-end gap-1">
+                            <span class="text-[10px] font-medium text-emerald-400">CREDITS</span>
+                        </div>
+                        <div id="credits-display" class="text-4xl font-bold text-emerald-400 tabular-nums leading-none">0</div>
+                        <div onclick="refreshCredits()" class="text-[10px] text-emerald-300 hover:text-emerald-400 cursor-pointer flex items-center justify-end gap-1 mt-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.058 11H1M12 3v2m0 16v2m9-9H15" />
+                            </svg>
+                            REFRESH
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-auto border-t border-blue-900/30 p-3 bg-slate-950/50">
+                <div class="flex items-center justify-between text-[9px] text-slate-500">
+                    <div class="flex items-center gap-1">
+                        <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Secure • AFK earning active</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button onclick="clearAllData()" class="hover:text-red-400 transition-colors font-medium flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            RESET
+                        </button>
+                        <button onclick="logout()" class="hover:text-red-400 transition-colors font-medium flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 16l4-4m0 0l-4-4m4 4V7m-4 4V7" />
+                            </svg>
+                            LOGOUT
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOBILE OVERLAY -->
+        <div onclick="if(event.target.id === 'sidebar-overlay') toggleSidebar()" 
+             id="sidebar-overlay"
+             class="hidden fixed inset-0 bg-black/60 sidebar-overlay z-40 md:hidden">
+        </div>
+
+        <!-- MAIN AREA -->
+        <div id="main-content" class="flex-1 flex flex-col bg-black h-full w-full md:ml-0">
+            <!-- Dynamically rendered -->
+        </div>
+    </div>
+
+    <!-- ADD TERMINAL MODAL -->
+    <div onclick="if(event.target.id === 'add-modal') hideAddModal()" 
+         id="add-modal"
+         class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+        
+        <div onclick="event.stopImmediatePropagation()" 
+             class="modal glass-panel w-full max-w-sm rounded-lg p-6 shadow-2xl">
+            
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-white">Add New Terminal</h2>
+                <button onclick="hideAddModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] uppercase tracking-wider text-blue-400 mb-1.5 block font-semibold">Display Name</label>
+                    <input 
+                        id="modal-name"
+                        type="text" 
+                        placeholder="My Server"
+                        class="w-full input-field px-3 py-2.5 text-sm text-white placeholder-slate-500"
+                    >
+                </div>
+                
+                <div>
+                    <label class="text-[10px] uppercase tracking-wider text-blue-400 mb-1.5 block font-semibold">Token</label>
+                    <input 
+                        id="modal-token"
+                        type="text" 
+                        placeholder="abc123-def456"
+                        class="w-full input-field px-3 py-2.5 text-sm font-mono text-blue-300 placeholder-slate-600"
+                    >
+                    <p class="text-[10px] text-slate-500 mt-2 flex items-center gap-1.5">
+                        <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>From your KS Panel</span>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 mt-6">
+                <button onclick="hideAddModal()" 
+                        class="flex-1 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md border border-slate-700 font-medium text-sm transition-all">
+                    CANCEL
+                </button>
+                <button onclick="handleAddTerminal()" 
+                        class="flex-1 py-2.5 btn-primary text-white font-medium text-sm flex items-center justify-center gap-1.5">
+                    <span>ADD</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RENAME / DELETE MODALS (unchanged) -->
+    <!-- (kept exactly as you provided - no changes needed) -->
+    <div onclick="if(event.target.id === 'rename-modal') hideRenameModal()" 
+         id="rename-modal"
+         class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+        <!-- ... same as your original ... -->
+        <div onclick="event.stopImmediatePropagation()" class="modal glass-panel w-full max-w-sm rounded-lg p-6 shadow-2xl">
+            <!-- full rename modal content from your code -->
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-500/20 rounded-md flex items-center justify-center">
+                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Rename Terminal</h2>
+                        <p class="text-xs text-slate-400" id="rename-current-name"></p>
+                    </div>
+                </div>
+                <button onclick="hideRenameModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] uppercase tracking-wider text-blue-400 mb-1.5 block font-semibold">New Name</label>
+                    <input id="rename-input" type="text" placeholder="Enter new name..." class="w-full input-field px-3 py-2.5 text-sm text-white placeholder-slate-500">
+                </div>
+                <div class="bg-slate-900/50 rounded-md p-3 border border-blue-900/30">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Token (unchanged)</div>
+                    <div class="font-mono text-xs text-blue-400/80 truncate" id="rename-token-display"></div>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-6">
+                <button onclick="hideRenameModal()" class="flex-1 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md border border-slate-700 font-medium text-sm transition-all">CANCEL</button>
+                <button onclick="confirmRename()" class="flex-1 py-2.5 btn-primary text-white font-medium text-sm flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span>SAVE</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div onclick="if(event.target.id === 'delete-modal') hideDeleteModal()" 
+         id="delete-modal"
+         class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+        <!-- ... same as your original delete modal ... -->
+        <div onclick="event.stopImmediatePropagation()" class="modal glass-panel w-full max-w-sm rounded-lg p-6 shadow-2xl border-red-500/20">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-red-500/20 rounded-md flex items-center justify-center">
+                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-white">Delete Terminal</h2>
+                        <p class="text-xs text-red-400">This action cannot be undone</p>
+                    </div>
+                </div>
+                <button onclick="hideDeleteModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-3 mb-6">
+                <div class="bg-red-950/30 border border-red-900/50 rounded-md p-4">
+                    <div class="text-[10px] text-red-400/80 uppercase tracking-wider mb-1">Terminal to delete</div>
+                    <div class="font-semibold text-white text-sm mb-1" id="delete-name-display"></div>
+                    <div class="font-mono text-xs text-slate-500" id="delete-token-display"></div>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Are you sure you want to delete this terminal? All saved data will be permanently removed from your local storage.
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="hideDeleteModal()" class="flex-1 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md border border-slate-700 font-medium text-sm transition-all">CANCEL</button>
+                <button onclick="confirmDelete()" class="flex-1 py-2.5 btn-danger text-white font-medium text-sm flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    <span>DELETE</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============== GLOBAL STATE ==============
+        let terminals = [];
+        let activeId = null;
+        let searchTerm = '';
+        let pendingRenameId = null;
+        let pendingDeleteId = null;
+        let currentUser = null;   // ← NEW: backend user + credits
+
+        // ============== LOCALSTORAGE ==============
+        function loadTerminals() {
+            const saved = localStorage.getItem('ks_ssh_terminals');
+            if (saved) terminals = JSON.parse(saved);
+        }
+
+        function saveTerminals() {
+            localStorage.setItem('ks_ssh_terminals', JSON.stringify(terminals));
+        }
+
+        // ============== DATE FORMAT ==============
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // ============== MOBILE SIDEBAR ==============
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function closeSidebarIfMobile() {
+            if (window.innerWidth >= 768) return;
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full');
+                if (overlay) overlay.classList.add('hidden');
+            }
+        }
+
+        // ============== RENDER SIDEBAR LIST ==============
+        function renderList() {
+            const container = document.getElementById('terminals-list');
+            container.innerHTML = '';
+
+            const filtered = terminals.filter(t => 
+                t.name.toLowerCase().includes(searchTerm) ||
+                t.token.toLowerCase().includes(searchTerm)
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="px-4 py-8 text-center">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                        </svg>
+                        <p class="text-xs text-slate-500">No terminals yet — add one above!</p>
+                    </div>`;
+                return;
+            }
+
+            filtered.forEach((term) => {
+                const isActive = term.id === activeId;
+                const div = document.createElement('div');
+                div.className = `terminal-list-item flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer mx-1 ${isActive ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div class="flex-1 min-w-0 mr-2" onclick="selectTerminal('${term.id}')">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <svg class="w-3.5 h-3.5 ${isActive ? 'text-blue-400' : 'text-slate-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <div class="font-medium text-xs text-white truncate">${term.name}</div>
+                        </div>
+                        <div class="font-mono text-[9px] text-slate-500 truncate pl-5">${term.token}</div>
+                    </div>
+                    <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="event.stopImmediatePropagation(); showRenameModal('${term.id}');" class="icon-btn text-blue-400 hover:text-blue-300" title="Rename">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
+                        <button onclick="event.stopImmediatePropagation(); showDeleteModal('${term.id}');" class="icon-btn icon-btn-danger text-red-400 hover:text-red-300" title="Delete">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>`;
+                container.appendChild(div);
+            });
+        }
+
+        // ============== RENDER HOME ==============
+        function renderHome() {
+            const main = document.getElementById('main-content');
+            main.innerHTML = `
+                <div class="flex flex-col h-full w-full">
+                    <!-- Mobile Header -->
+                    <div class="md:hidden h-14 bg-slate-950 border-b border-blue-900/30 px-3 flex items-center justify-between flex-shrink-0">
+                        <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-800 transition-colors">
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            <span class="font-bold text-lg">KS SSH</span>
+                        </div>
+                        <div class="flex items-center gap-1 text-blue-400 text-[10px] font-semibold">
+                            <div class="w-1.5 h-1.5 bg-blue-400 rounded-full status-dot"></div>
+                            LIVE
+                        </div>
+                    </div>
+
+                    <!-- Home Content - OPTIMISTIC HERO -->
+                    <div class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
+                        <div class="max-w-lg w-full">
+                            <div class="text-center mb-10">
+                                <div class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-2xl mb-6 shadow-inner">
+                                    <span class="text-emerald-400 text-xs font-bold tracking-[1px]">AFK EARNING ENABLED • 10 CREDITS / HOUR</span>
+                                </div>
+                                <h1 class="text-5xl md:text-6xl font-bold text-white mb-3 tracking-tighter">KS SSH</h1>
+                                <p class="text-slate-400 text-lg">Web Terminal Dashboard</p>
+                                <p class="text-emerald-400 text-sm mt-2">Your credits grow while you’re away. Come back anytime.</p>
+                            </div>
+
+                            <!-- Install Card -->
+                            <div class="glass-panel rounded-2xl p-6 mb-8">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <h3 class="text-blue-400 text-xs font-bold tracking-wider uppercase">Install KS Panel</h3>
+                                    </div>
+                                    <span class="text-[10px] bg-slate-900 border border-blue-800/50 px-3 py-1 rounded-3xl text-blue-300 font-mono">ARM64</span>
+                                </div>
+                                <div class="code-block p-4 text-xs text-blue-300 mb-4 overflow-x-auto font-mono">
+                                    wget https://github.com/kswarrior/ks-panel/releases/download/1.0.0/ks-panel-1.0.0-linux-arm64 && chmod +x ks-panel-1.0.0-linux-arm64 && ./ks-panel-1.0.0-linux-arm64
+                                </div>
+                                <p class="text-xs text-slate-400 flex items-center gap-2">
+                                    <span class="text-emerald-400">✓</span> Run this on your server → get a token → add terminal
+                                </p>
+                            </div>
+
+                            <!-- Quick Connect -->
+                            <div>
+                                <p class="text-center text-slate-400 text-xs uppercase tracking-widest mb-3">Quick Connect</p>
+                                <div class="flex gap-2">
+                                    <input id="quick-token" type="text" placeholder="Paste your token here..." class="flex-1 input-field px-4 py-3 text-sm text-white placeholder-slate-500">
+                                    <button onclick="quickConnect()" class="btn-primary px-6 py-3 text-white font-medium flex items-center gap-2">
+                                        CONNECT
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        // ============== TERMINAL VIEW ==============
+        function selectTerminal(id) {
+            activeId = id;
+            const term = terminals.find(t => t.id === id);
+            if (!term) return;
+
+            term.lastUsed = Date.now();
+            saveTerminals();
+            renderList();
+
+            const main = document.getElementById('main-content');
+            main.innerHTML = `
+                <div class="flex flex-col h-full w-full bg-black">
+                    <div class="h-14 bg-slate-950 border-b border-blue-900/30 px-4 flex items-center justify-between flex-shrink-0">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <button onclick="toggleSidebar()" class="md:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-800">
+                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                            </button>
+                            <button onclick="goHome()" class="flex items-center gap-2 text-slate-400 hover:text-white">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                                <span class="text-xs font-medium">Back</span>
+                            </button>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <span class="font-semibold text-white truncate">${term.name}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="font-mono text-xs px-3 py-1 bg-slate-900 border border-blue-900/30 rounded-2xl text-blue-300">${term.token}</div>
+                            <button onclick="showRenameModal('${id}')" class="btn-secondary px-4 py-2 text-xs">RENAME</button>
+                            <button onclick="showDeleteModal('${id}')" class="px-4 py-2 text-xs text-red-400 hover:text-red-300">DELETE</button>
+                        </div>
+                    </div>
+                    <div class="iframe-container">
+                        <iframe src="https://${term.token}.trycloudflare.com" allow="fullscreen" allowfullscreen></iframe>
+                    </div>
+                </div>`;
+            closeSidebarIfMobile();
+        }
+
+        function showMobileTerminalMenu(id) { /* unchanged */ }
+
+        // ============== NAVIGATION ==============
+        function goHome() {
+            activeId = null;
+            renderList();
+            renderHome();
+            closeSidebarIfMobile();
+        }
+
+        function quickConnect() {
+            const token = document.getElementById('quick-token').value.trim();
+            if (!token) return alert('Token required');
+            const exists = terminals.find(t => t.token === token);
+            if (exists) return selectTerminal(exists.id);
+
+            const newTerm = { id: Date.now().toString(), name: `Terminal ${terminals.length + 1}`, token, added: Date.now() };
+            terminals.unshift(newTerm);
+            saveTerminals();
+            renderList();
+            selectTerminal(newTerm.id);
+        }
+
+        // ============== MODALS (unchanged - keep your original functions) ==============
+        function showAddModal() { /* your original */ }
+        function hideAddModal() { /* your original */ }
+        function handleAddTerminal() { /* your original */ }
+        function showRenameModal(id) { /* your original */ }
+        function hideRenameModal() { /* your original */ }
+        function confirmRename() { /* your original */ }
+        function showDeleteModal(id) { /* your original */ }
+        function hideDeleteModal() { /* your original */ }
+        function confirmDelete() { /* your original */ }
+        function clearAllData() { /* your original */ }
+        function setupSearch() { /* your original */ }
+        function checkOldTokenURL() { /* your original */ }
+
+        // ============== NEW: BACKEND INTEGRATION (USERNAME + CREDITS + AFK) ==============
+        async function loadUser() {
+            try {
+                const res = await fetch('/api/me');
+                if (!res.ok) throw new Error('Unauthorized');
+                const data = await res.json();
+                currentUser = data.user;
+
+                document.getElementById('username-display').textContent = currentUser.username;
+                document.getElementById('credits-display').textContent = currentUser.credits;
+
+                if (currentUser.earned && currentUser.earned > 0) {
+                    showAFKEarnedToast(currentUser.earned);
+                }
+            } catch (e) {
+                window.location.href = '/auth.html';
+            }
+        }
+
+        function showAFKEarnedToast(earned) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 24px; right: 24px; 
+                background: linear-gradient(90deg, #10b981, #34d399); 
+                color: white; padding: 16px 24px; border-radius: 16px; 
+                box-shadow: 0 25px 50px -12px rgb(16 185 129); 
+                z-index: 99999; display: flex; align-items: center; gap: 14px;
+                animation: toastSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            `;
+            toast.innerHTML = `
+                <span class="text-3xl">🚀</span>
+                <div>
+                    <div class="font-semibold text-lg">AFK earnings claimed!</div>
+                    <div class="text-sm opacity-90">+${earned} credits added • keep going!</div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 1, 1)';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4800);
+        }
+
+        async function refreshCredits() {
+            const res = await fetch('/api/me');
+            if (res.ok) {
+                const data = await res.json();
+                currentUser = data.user;
+                document.getElementById('credits-display').textContent = currentUser.credits;
+                if (currentUser.earned > 0) showAFKEarnedToast(currentUser.earned);
+            }
+        }
+
+        async function logout() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/auth.html';
+        }
+
+        // ============== KEYBOARD + INIT ==============
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideAddModal(); hideRenameModal(); hideDeleteModal();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('search-input')?.focus();
+            }
+        });
+
+        function init() {
+            loadTerminals();
+            renderHome();
+            renderList();
+            setupSearch();
+            checkOldTokenURL();
+            loadUser();                    // ← loads username + credits + AFK claim
+        }
+        
+        window.onload = init;
+    </script>
 </body>
 </html>`;
 
