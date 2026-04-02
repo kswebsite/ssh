@@ -1,4 +1,4 @@
-import { renderHtml } from "./renderHtml";
+import { renderHtml } from "./authhtml";
 
 export default {
 	async fetch(request, env) {
