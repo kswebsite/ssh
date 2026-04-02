@@ -2,76 +2,507 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SSH • Login / Register</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-    body { font-family: 'Inter', system_ui, sans-serif; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body { 
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #000000;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background */
+    .bg-mesh {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(37, 99, 235, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(30, 58, 138, 0.05) 0%, transparent 70%);
+      animation: pulse 8s ease-in-out infinite;
+    }
+
+    .bg-mesh::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(59, 130, 246, 0.03) 2px,
+          rgba(59, 130, 246, 0.03) 4px
+        );
+      animation: scan 20s linear infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    @keyframes scan {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(50px); }
+    }
+
+    /* Glass Card */
+    .glass-card {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.8),
+        0 0 0 1px rgba(59, 130, 246, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    /* Input Styling */
+    .input-field {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(71, 85, 105, 0.5);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .input-field:hover {
+      border-color: rgba(59, 130, 246, 0.5);
+      background: rgba(30, 41, 59, 0.9);
+    }
+
+    .input-field:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 0 20px rgba(59, 130, 246, 0.1);
+      background: rgba(30, 41, 59, 1);
+      outline: none;
+    }
+
+    /* Button Styling */
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn-primary:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px -10px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* Tab Styling */
+    .tab-btn {
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      transition: width 0.3s ease;
+      border-radius: 2px;
+    }
+
+    .tab-btn.active {
+      color: #60a5fa;
+      text-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
+    }
+
+    .tab-btn.active::after {
+      width: 60%;
+    }
+
+    .tab-btn:not(.active):hover {
+      color: #93c5fd;
+    }
+
+    /* Logo Glow */
+    .logo-icon {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    /* Form Transition */
+    .form-container {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .form-container.hidden {
+      display: none;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .form-container.visible {
+      opacity: 1;
+      transform: translateY(0);
+      animation: slideUp 0.4s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Error Message */
+    .error-msg {
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #1e40af;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3b82f6;
+    }
+
+    /* Mobile Optimizations */
+    @media (max-width: 640px) {
+      .glass-card {
+        margin: 0;
+        border-radius: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: none;
+        background: rgba(15, 23, 42, 0.95);
+      }
+
+      .input-field {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 1rem 1.25rem;
+      }
+
+      .btn-primary {
+        padding: 1.25rem;
+        font-size: 1.1rem;
+      }
+
+      .tab-btn {
+        padding-bottom: 1rem;
+        font-size: 1.1rem;
+      }
+    }
+
+    /* Desktop Enhancements */
+    @media (min-width: 641px) {
+      .glass-card {
+        border-radius: 2rem;
+      }
+
+      .input-field {
+        padding: 0.875rem 1.25rem;
+      }
+
+      /* Hover effects only on desktop */
+      .glass-card:hover {
+        box-shadow: 
+          0 25px 50px -12px rgba(0, 0, 0, 0.8),
+          0 0 0 1px rgba(59, 130, 246, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05),
+          0 0 40px rgba(59, 130, 246, 0.1);
+      }
+    }
+
+    /* Large Desktop */
+    @media (min-width: 1024px) {
+      .glass-card {
+        max-width: 480px;
+      }
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Focus Visible for Accessibility */
+    .input-field:focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
+
+    /* Loading State */
+    .btn-primary.loading {
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    .btn-primary.loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      margin-left: -10px;
+      margin-top: -10px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
-<body class="bg-gray-950 text-white min-h-screen flex items-center justify-center">
-  <div class="max-w-md w-full mx-4">
-    <div class="bg-gray-900 rounded-3xl shadow-2xl p-8">
-      <div class="flex justify-center mb-8">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-emerald-500 rounded-2xl flex items-center justify-center text-xl">🔑</div>
-          <h1 class="text-3xl font-semibold tracking-tight">SSH</h1>
+<body class="text-slate-200 antialiased">
+  <div class="bg-mesh"></div>
+  
+  <div class="min-h-screen min-h-[100dvh] flex items-center justify-center p-0 sm:p-4 lg:p-8">
+    <div class="glass-card w-full max-w-md sm:max-w-lg lg:max-w-md p-6 sm:p-8 lg:p-10 relative">
+      
+      <!-- Decorative Elements -->
+      <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
+      <div class="absolute -top-20 -right-20 w-40 h-40 bg-blue-500 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+      <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-indigo-500 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+
+      <!-- Header -->
+      <div class="flex justify-center mb-8 sm:mb-10 relative z-10">
+        <div class="flex items-center gap-3 sm:gap-4">
+          <div class="logo-icon w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-lg">
+            🔑
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+            SSH
+          </h1>
         </div>
       </div>
 
-      <div class="flex border-b border-gray-800 mb-6">
-        <button onclick="switchTab(0)" id="tab-login" class="flex-1 pb-4 text-lg font-medium border-b-2 border-emerald-500 text-white">Login</button>
-        <button onclick="switchTab(1)" id="tab-register" class="flex-1 pb-4 text-lg font-medium text-gray-400">Register</button>
+      <!-- Tabs -->
+      <div class="flex border-b border-slate-700/50 mb-6 sm:mb-8 relative">
+        <button onclick="switchTab(0)" id="tab-login" class="tab-btn active flex-1 pb-3 sm:pb-4 text-base sm:text-lg font-medium text-blue-400">
+          Login
+        </button>
+        <button onclick="switchTab(1)" id="tab-register" class="tab-btn flex-1 pb-3 sm:pb-4 text-base sm:text-lg font-medium text-slate-400">
+          Register
+        </button>
       </div>
 
       <!-- LOGIN FORM -->
-      <div id="login-form">
+      <div id="login-form" class="form-container visible">
         <form onsubmit="handleLogin(event)">
-          <div class="space-y-5">
-            <div>
-              <label class="text-sm text-gray-400 block mb-1">Email or Username</label>
-              <input id="login-identifier" type="text" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+          <div class="space-y-4 sm:space-y-5">
+            <div class="group">
+              <label class="text-xs sm:text-sm text-slate-400 block mb-2 font-medium tracking-wide uppercase">
+                Email or Username
+              </label>
+              <input 
+                id="login-identifier" 
+                type="text" 
+                required 
+                class="input-field w-full rounded-xl sm:rounded-2xl text-white placeholder-slate-500"
+                placeholder="Enter your email or username"
+                autocomplete="username"
+              >
             </div>
-            <div>
-              <label class="text-sm text-gray-400 block mb-1">Password</label>
-              <input id="login-password" type="password" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+            
+            <div class="group">
+              <label class="text-xs sm:text-sm text-slate-400 block mb-2 font-medium tracking-wide uppercase">
+                Password
+              </label>
+              <input 
+                id="login-password" 
+                type="password" 
+                required 
+                class="input-field w-full rounded-xl sm:rounded-2xl text-white placeholder-slate-500"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+              >
             </div>
-            <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 transition py-4 rounded-2xl font-semibold text-lg">Login</button>
+
+            <div class="flex items-center justify-between text-xs sm:text-sm pt-1">
+              <label class="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" class="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0">
+                <span class="text-slate-400 group-hover:text-slate-300 transition">Remember me</span>
+              </label>
+              <a href="#" class="text-blue-400 hover:text-blue-300 transition font-medium">Forgot?</a>
+            </div>
+
+            <button 
+              type="submit" 
+              class="btn-primary w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-semibold text-base sm:text-lg text-white mt-2 shadow-lg shadow-blue-500/25"
+            >
+              Sign In
+            </button>
           </div>
         </form>
-        <p id="login-error" class="text-red-400 text-center mt-4 text-sm hidden"></p>
+        <p id="login-error" class="text-red-400 text-center mt-4 text-sm hidden font-medium"></p>
       </div>
 
       <!-- REGISTER FORM -->
-      <div id="register-form" class="hidden">
+      <div id="register-form" class="form-container hidden">
         <form onsubmit="handleRegister(event)">
-          <div class="space-y-5">
-            <div>
-              <label class="text-sm text-gray-400 block mb-1">Username</label>
-              <input id="reg-username" type="text" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+          <div class="space-y-4 sm:space-y-5">
+            <div class="group">
+              <label class="text-xs sm:text-sm text-slate-400 block mb-2 font-medium tracking-wide uppercase">
+                Username
+              </label>
+              <input 
+                id="reg-username" 
+                type="text" 
+                required 
+                class="input-field w-full rounded-xl sm:rounded-2xl text-white placeholder-slate-500"
+                placeholder="Choose a username"
+                autocomplete="username"
+              >
             </div>
-            <div>
-              <label class="text-sm text-gray-400 block mb-1">Email</label>
-              <input id="reg-email" type="email" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+
+            <div class="group">
+              <label class="text-xs sm:text-sm text-slate-400 block mb-2 font-medium tracking-wide uppercase">
+                Email
+              </label>
+              <input 
+                id="reg-email" 
+                type="email" 
+                required 
+                class="input-field w-full rounded-xl sm:rounded-2xl text-white placeholder-slate-500"
+                placeholder="your@email.com"
+                autocomplete="email"
+              >
             </div>
-            <div>
-              <label class="text-sm text-gray-400 block mb-1">Password</label>
-              <input id="reg-password" type="password" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+
+            <div class="group">
+              <label class="text-xs sm:text-sm text-slate-400 block mb-2 font-medium tracking-wide uppercase">
+                Password
+              </label>
+              <input 
+                id="reg-password" 
+                type="password" 
+                required 
+                class="input-field w-full rounded-xl sm:rounded-2xl text-white placeholder-slate-500"
+                placeholder="Create a strong password"
+                autocomplete="new-password"
+              >
             </div>
-            <div>
-              <label class="text-sm text-gray-400 block mb-1">Confirm Password</label>
-              <input id="reg-confirm" type="password" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+
+            <div class="group">
+              <label class="text-xs sm:text-sm text-slate-400 block mb-2 font-medium tracking-wide uppercase">
+                Confirm Password
+              </label>
+              <input 
+                id="reg-confirm" 
+                type="password" 
+                required 
+                class="input-field w-full rounded-xl sm:rounded-2xl text-white placeholder-slate-500"
+                placeholder="Confirm your password"
+                autocomplete="new-password"
+              >
             </div>
-            <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 transition py-4 rounded-2xl font-semibold text-lg">Create Account</button>
+
+            <div class="flex items-start gap-2 text-xs sm:text-sm pt-1">
+              <input type="checkbox" required class="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 flex-shrink-0">
+              <span class="text-slate-400 leading-relaxed">
+                I agree to the <a href="#" class="text-blue-400 hover:text-blue-300 transition">Terms</a> and <a href="#" class="text-blue-400 hover:text-blue-300 transition">Privacy Policy</a>
+              </span>
+            </div>
+
+            <button 
+              type="submit" 
+              class="btn-primary w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-semibold text-base sm:text-lg text-white mt-2 shadow-lg shadow-blue-500/25"
+            >
+              Create Account
+            </button>
           </div>
         </form>
-        <p id="register-error" class="text-red-400 text-center mt-4 text-sm hidden"></p>
+        <p id="register-error" class="text-red-400 text-center mt-4 text-sm hidden font-medium"></p>
       </div>
 
-      <p class="text-center text-xs text-gray-500 mt-8">
-        Your credits increase while you're AFK.<br>Come back later and claim them!
-      </p>
+      <!-- Footer -->
+      <div class="mt-8 sm:mt-10 text-center relative z-10">
+        <p class="text-[10px] sm:text-xs text-slate-500 leading-relaxed">
+          Your credits increase while you're AFK.<br>
+          <span class="text-blue-400/60">Come back later and claim them!</span>
+        </p>
+        
+        <!-- Social Proof / Trust Indicators -->
+        <div class="flex justify-center gap-4 mt-6 opacity-50">
+          <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs">🔒</div>
+          <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs">🛡️</div>
+          <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs">⚡</div>
+        </div>
+      </div>
     </div>
   </div>
 
