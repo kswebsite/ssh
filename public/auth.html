@@ -1,1 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSH • Login / Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    body { font-family: 'Inter', system_ui, sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-950 text-white min-h-screen flex items-center justify-center">
+  <div class="max-w-md w-full mx-4">
+    <div class="bg-gray-900 rounded-3xl shadow-2xl p-8">
+      <div class="flex justify-center mb-8">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-emerald-500 rounded-2xl flex items-center justify-center text-xl">🔑</div>
+          <h1 class="text-3xl font-semibold tracking-tight">SSH</h1>
+        </div>
+      </div>
 
+      <div class="flex border-b border-gray-800 mb-6">
+        <button onclick="switchTab(0)" id="tab-login" class="flex-1 pb-4 text-lg font-medium border-b-2 border-emerald-500 text-white">Login</button>
+        <button onclick="switchTab(1)" id="tab-register" class="flex-1 pb-4 text-lg font-medium text-gray-400">Register</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="login-form">
+        <form onsubmit="handleLogin(event)">
+          <div class="space-y-5">
+            <div>
+              <label class="text-sm text-gray-400 block mb-1">Email or Username</label>
+              <input id="login-identifier" type="text" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+            </div>
+            <div>
+              <label class="text-sm text-gray-400 block mb-1">Password</label>
+              <input id="login-password" type="password" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+            </div>
+            <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 transition py-4 rounded-2xl font-semibold text-lg">Login</button>
+          </div>
+        </form>
+        <p id="login-error" class="text-red-400 text-center mt-4 text-sm hidden"></p>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="register-form" class="hidden">
+        <form onsubmit="handleRegister(event)">
+          <div class="space-y-5">
+            <div>
+              <label class="text-sm text-gray-400 block mb-1">Username</label>
+              <input id="reg-username" type="text" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+            </div>
+            <div>
+              <label class="text-sm text-gray-400 block mb-1">Email</label>
+              <input id="reg-email" type="email" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+            </div>
+            <div>
+              <label class="text-sm text-gray-400 block mb-1">Password</label>
+              <input id="reg-password" type="password" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+            </div>
+            <div>
+              <label class="text-sm text-gray-400 block mb-1">Confirm Password</label>
+              <input id="reg-confirm" type="password" required class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-2xl px-4 py-3 outline-none text-white">
+            </div>
+            <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 transition py-4 rounded-2xl font-semibold text-lg">Create Account</button>
+          </div>
+        </form>
+        <p id="register-error" class="text-red-400 text-center mt-4 text-sm hidden"></p>
+      </div>
+
+      <p class="text-center text-xs text-gray-500 mt-8">
+        Your credits increase while you're AFK.<br>Come back later and claim them!
+      </p>
+    </div>
+  </div>
+
+  <script src="/auth.js"></script>
+</body>
+</html>
