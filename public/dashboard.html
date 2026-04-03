@@ -761,7 +761,7 @@
                                 <span class="hidden md:inline">DELETE</span>
                             </button>
                             
-                            <!-- FULLSCREEN BUTTON - Added exactly as requested -->
+                            <!-- FULLSCREEN BUTTON - Added at the top of the frame (header) -->
                             <button id="fullscreen-btn" onclick="toggleFullscreen()" 
                                     class="btn-secondary px-2.5 py-1.5 text-xs font-medium flex items-center gap-1 hidden sm:flex">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -806,16 +806,14 @@
             }
         }
 
-        // ============== FULLSCREEN TOGGLE (added - makes iframe full screen + header hides automatically) ==============
+        // ============== FULLSCREEN TOGGLE (button at top of frame) ==============
         function toggleFullscreen() {
             const container = document.querySelector('.iframe-container');
             if (!container) return;
 
             if (document.fullscreenElement) {
-                // Exit fullscreen → header becomes visible again
                 document.exitFullscreen();
             } else {
-                // Enter fullscreen → iframe fills screen and header goes up / becomes hidden
                 container.requestFullscreen().catch(err => {
                     console.error('Fullscreen request failed:', err);
                 });
