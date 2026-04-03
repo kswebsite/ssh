@@ -24,7 +24,7 @@
         body, html {
             margin: 0;
             padding: 0;
-            height: 100%;
+            height: 100dvh;
             width: 100%;
             overflow: hidden;
             background: var(--black);
@@ -761,6 +761,15 @@
                                 <span class="hidden md:inline">DELETE</span>
                             </button>
                             
+                            <!-- FULLSCREEN BUTTON - Added exactly as requested -->
+                            <button id="fullscreen-btn" onclick="toggleFullscreen()" 
+                                    class="btn-secondary px-2.5 py-1.5 text-xs font-medium flex items-center gap-1 hidden sm:flex">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                                </svg>
+                                <span class="hidden md:inline">FULLSCREEN</span>
+                            </button>
+                            
                             <!-- Mobile menu -->
                             <button onclick="showMobileTerminalMenu('${id}')" class="sm:hidden w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -794,6 +803,22 @@
                 showDeleteModal(id);
             } else {
                 showRenameModal(id);
+            }
+        }
+
+        // ============== FULLSCREEN TOGGLE (added - makes iframe full screen + header hides automatically) ==============
+        function toggleFullscreen() {
+            const container = document.querySelector('.iframe-container');
+            if (!container) return;
+
+            if (document.fullscreenElement) {
+                // Exit fullscreen → header becomes visible again
+                document.exitFullscreen();
+            } else {
+                // Enter fullscreen → iframe fills screen and header goes up / becomes hidden
+                container.requestFullscreen().catch(err => {
+                    console.error('Fullscreen request failed:', err);
+                });
             }
         }
 
