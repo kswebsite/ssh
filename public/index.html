@@ -320,9 +320,9 @@
              class="hidden fixed inset-0 bg-black/60 sidebar-overlay z-40 md:hidden">
         </div>
 
-        <!-- MAIN AREA -->
+        <!-- MAIN AREA (Home + Terminal Frame live here) -->
         <div id="main-content" class="flex-1 flex flex-col bg-black h-full w-full md:ml-0">
-            <!-- Dynamically rendered -->
+            <!-- Dynamically rendered by JavaScript (home or iframe) -->
         </div>
     </div>
 
@@ -521,15 +521,6 @@
             localStorage.setItem('ks_ssh_terminals', JSON.stringify(terminals));
         }
 
-        // ============== DATE FORMAT ==============
-        function formatTime(timestamp) {
-            const date = new Date(timestamp);
-            return date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
-            });
-        }
-
         // ============== MOBILE SIDEBAR ==============
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -575,7 +566,7 @@
                 return;
             }
 
-            filtered.forEach((term, index) => {
+            filtered.forEach((term) => {
                 const isActive = term.id === activeId;
                 
                 const div = document.createElement('div');
@@ -608,7 +599,6 @@
                     </div>
                 `;
                 
-                // Show actions on hover
                 div.addEventListener('mouseenter', () => {
                     div.querySelector('.flex.items-center.gap-0\\.5').classList.remove('opacity-0');
                 });
@@ -650,7 +640,6 @@
                     <!-- Home Content -->
                     <div class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
                         <div class="max-w-lg w-full">
-                            
                             <!-- Hero -->
                             <div class="text-center mb-10">
                                 <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/30 rounded-md mb-4">
@@ -707,7 +696,7 @@
                 </div>`;
         }
 
-        // ============== TERMINAL VIEW ==============
+        // ============== TERMINAL VIEW (FRAME) ==============
         function selectTerminal(id) {
             activeId = id;
             const term = terminals.find(t => t.id === id);
@@ -762,7 +751,6 @@
                                 <span class="hidden md:inline">DELETE</span>
                             </button>
                             
-                            <!-- FULLSCREEN BUTTON -->
                             <button id="fullscreen-btn" onclick="toggleFullscreen()" 
                                     class="btn-secondary px-2.5 py-1.5 text-xs font-medium flex items-center gap-1 hidden sm:flex">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -771,7 +759,6 @@
                                 <span class="hidden md:inline">FULLSCREEN</span>
                             </button>
                             
-                            <!-- Mobile menu -->
                             <button onclick="showMobileTerminalMenu('${id}')" class="sm:hidden w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
@@ -784,7 +771,7 @@
                         </div>
                     </div>
                     
-                    <!-- IFRAME -->
+                    <!-- IFRAME (Terminal Frame) -->
                     <div class="iframe-container">
                         <iframe 
                             src="https://${term.token}.trycloudflare.com"
@@ -800,31 +787,25 @@
         function showMobileTerminalMenu(id) {
             const term = terminals.find(t => t.id === id);
             const choice = confirm(`"${term.name}"\n\nOK = Delete\nCancel = Rename`);
-            if (choice) {
-                showDeleteModal(id);
-            } else {
-                showRenameModal(id);
-            }
+            if (choice) showDeleteModal(id);
+            else showRenameModal(id);
         }
 
         // ============== FULLSCREEN TOGGLE ==============
         function toggleFullscreen() {
             const container = document.querySelector('.iframe-container');
             if (!container) return;
-
             if (document.fullscreenElement) {
                 document.exitFullscreen();
             } else {
-                container.requestFullscreen().catch(err => {
-                    console.error('Fullscreen request failed:', err);
-                });
+                container.requestFullscreen().catch(() => {});
             }
         }
 
         // ============== NAVIGATION ==============
         function goHome() {
             activeId = null;
-            localStorage.setItem('lastActiveId', 'home');   // SAVE HOME AS LAST PAGE
+            localStorage.setItem('lastActiveId', 'home');
             renderList();
             renderHome();
             closeSidebarIfMobile();
@@ -833,7 +814,6 @@
         function quickConnect() {
             const input = document.getElementById('quick-token');
             const token = input.value.trim();
-            
             if (!token) {
                 alert('Please enter a valid token');
                 return;
@@ -858,7 +838,7 @@
             selectTerminal(newTerm.id);
         }
 
-        // ============== ADD MODAL ==============
+        // ============== ADD / RENAME / DELETE MODALS (unchanged) ==============
         function showAddModal() {
             document.getElementById('modal-name').value = '';
             document.getElementById('modal-token').value = '';
@@ -882,7 +862,6 @@
                 alert('Token is required');
                 return;
             }
-            
             if (terminals.some(t => t.token === token)) {
                 alert('This token is already saved!');
                 return;
@@ -902,11 +881,9 @@
             selectTerminal(newTerm.id);
         }
 
-        // ============== RENAME SUBPAGE ==============
         function showRenameModal(id) {
             const term = terminals.find(t => t.id === id);
             if (!term) return;
-            
             pendingRenameId = id;
             document.getElementById('rename-current-name').textContent = `Current: ${term.name}`;
             document.getElementById('rename-token-display').textContent = term.token;
@@ -927,31 +904,24 @@
 
         function confirmRename() {
             if (!pendingRenameId) return;
-            
             const newName = document.getElementById('rename-input').value.trim();
             if (!newName) {
                 alert('Please enter a name');
                 return;
             }
-            
             const term = terminals.find(t => t.id === pendingRenameId);
             if (term) {
                 term.name = newName;
                 saveTerminals();
                 renderList();
-                if (activeId === pendingRenameId) {
-                    selectTerminal(pendingRenameId);
-                }
+                if (activeId === pendingRenameId) selectTerminal(pendingRenameId);
             }
-            
             hideRenameModal();
         }
 
-        // ============== DELETE SUBPAGE ==============
         function showDeleteModal(id) {
             const term = terminals.find(t => t.id === id);
             if (!term) return;
-            
             pendingDeleteId = id;
             document.getElementById('delete-name-display').textContent = term.name;
             document.getElementById('delete-token-display').textContent = term.token;
@@ -970,19 +940,13 @@
 
         function confirmDelete() {
             if (!pendingDeleteId) return;
-            
             terminals = terminals.filter(t => t.id !== pendingDeleteId);
             saveTerminals();
             renderList();
-            
-            if (activeId === pendingDeleteId) {
-                goHome();
-            }
-            
+            if (activeId === pendingDeleteId) goHome();
             hideDeleteModal();
         }
 
-        // ============== CLEAR ALL ==============
         function clearAllData() {
             if (confirm('Delete ALL saved terminals? This cannot be undone.')) {
                 localStorage.removeItem('ks_ssh_terminals');
@@ -994,7 +958,6 @@
             }
         }
 
-        // ============== SEARCH ==============
         function setupSearch() {
             const input = document.getElementById('search-input');
             input.addEventListener('input', () => {
@@ -1003,7 +966,6 @@
             });
         }
 
-        // ============== URL HANDLING ==============
         function checkOldTokenURL() {
             const match = window.location.pathname.match(/^\/token=([a-z0-9.-]+)$/i);
             if (match) {
@@ -1012,12 +974,7 @@
                 if (exists) {
                     selectTerminal(exists.id);
                 } else {
-                    const newTerm = {
-                        id: Date.now().toString(),
-                        name: 'Imported',
-                        token: token,
-                        added: Date.now()
-                    };
+                    const newTerm = { id: Date.now().toString(), name: 'Imported', token: token, added: Date.now() };
                     terminals.unshift(newTerm);
                     saveTerminals();
                     renderList();
@@ -1026,19 +983,6 @@
             }
         }
 
-        // ============== KEYBOARD SHORTCUTS ==============
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                hideAddModal();
-                hideRenameModal();
-                hideDeleteModal();
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                document.getElementById('search-input')?.focus();
-            }
-        });
-
         // ============== BACKEND INTEGRATION ==============
         async function loadUser() {
             try {
@@ -1046,13 +990,9 @@
                 if (!res.ok) throw new Error('Unauthorized');
                 const data = await res.json();
                 currentUser = data.user;
-
                 document.getElementById('username-display').textContent = currentUser.username;
                 document.getElementById('credits-display').textContent = currentUser.credits;
-
-                if (currentUser.earned && currentUser.earned > 0) {
-                    showAFKEarnedToast(currentUser.earned);
-                }
+                if (currentUser.earned && currentUser.earned > 0) showAFKEarnedToast(currentUser.earned);
             } catch (e) {
                 window.location.href = '/auth.html';
             }
@@ -1060,21 +1000,8 @@
 
         function showAFKEarnedToast(earned) {
             const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed; bottom: 24px; right: 24px; 
-                background: linear-gradient(90deg, #10b981, #34d399); 
-                color: white; padding: 16px 24px; border-radius: 16px; 
-                box-shadow: 0 25px 50px -12px rgb(16 185 129); 
-                z-index: 99999; display: flex; align-items: center; gap: 14px;
-                animation: toastSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            `;
-            toast.innerHTML = `
-                <span class="text-3xl">🚀</span>
-                <div>
-                    <div class="font-semibold text-lg">AFK earnings claimed!</div>
-                    <div class="text-sm opacity-90">+${earned} credits added • keep going!</div>
-                </div>
-            `;
+            toast.style.cssText = `position: fixed; bottom: 24px; right: 24px; background: linear-gradient(90deg, #10b981, #34d399); color: white; padding: 16px 24px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgb(16 185 129); z-index: 99999; display: flex; align-items: center; gap: 14px; animation: toastSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);`;
+            toast.innerHTML = `<span class="text-3xl">🚀</span><div><div class="font-semibold text-lg">AFK earnings claimed!</div><div class="text-sm opacity-90">+${earned} credits added • keep going!</div></div>`;
             document.body.appendChild(toast);
             setTimeout(() => {
                 toast.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 1, 1)';
@@ -1094,16 +1021,11 @@
             }
         }
 
-        async function logout() {
-            await fetch('/api/logout', { method: 'POST' });
-            window.location.href = '/auth.html';
-        }
-
-        // ============== INIT - RESTORES LAST OPENED PAGE (HOME OR TERMINAL) ==============
+        // ============== INIT - Sidebar + Frame in SAME file + remembers last page ==============
         function init() {
             loadTerminals();
             
-            // RESTORE LAST OPENED PAGE
+            // Restore last opened page (home or terminal)
             const savedActive = localStorage.getItem('lastActiveId');
             if (savedActive && savedActive !== 'home' && terminals.some(t => t.id === savedActive)) {
                 activeId = savedActive;
