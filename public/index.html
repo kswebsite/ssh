@@ -378,6 +378,30 @@
             width: 100%;
             max-width: 384px;
         }
+
+        /* ==================== NEW CSS FOR TOP-BAR CREDITS (optimistic pill) ==================== */
+        .top-credits-pill {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 9999px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .top-credits-pill:hover {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .top-credits-pill .credit-number {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Extra optimistic animation for credit refresh */
+        .credit-refreshing {
+            animation: creditPulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
     </style>
 </head>
 <body>
@@ -430,7 +454,7 @@
             <!-- Terminals List -->
             <div class="terminals-list-container" id="terminals-list"></div>
 
-            <!-- USER PROFILE + CREDITS -->
+            <!-- USER PROFILE + CREDITS (kept in sidebar as requested) -->
             <div class="user-credits-container">
                 <div class="glass-panel rounded-large padding-4 flex-row items-center gap-medium">
                     <div class="flex-1 min-width-zero">
@@ -627,6 +651,23 @@
             localStorage.setItem('ks_ssh_terminals', JSON.stringify(terminals));
         }
 
+        // ============== OPTIMISTIC CREDITS UI UPDATE (new) ==============
+        function updateCreditsUI() {
+            if (!currentUser) return;
+            
+            // Sidebar credits (already existed)
+            const sidebarCred = document.getElementById('credits-display');
+            if (sidebarCred) {
+                sidebarCred.textContent = currentUser.credits;
+            }
+            
+            // Top-bar credits (new optimistic display)
+            const topCred = document.getElementById('top-credits-display');
+            if (topCred) {
+                topCred.textContent = currentUser.credits;
+            }
+        }
+
         // ============== MOBILE SIDEBAR ==============
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -697,12 +738,11 @@
                         </button>
                     </div>
                 `;
-                div.addEventListener('click', () => selectTerminal(term.id));
                 container.appendChild(div);
             });
         }
 
-        // ============== RENDER HOME ==============
+        // ============== RENDER HOME (with new top-bar credits) ==============
         function renderHome() {
             const main = document.getElementById('main-content');
             main.innerHTML = `
@@ -725,6 +765,11 @@
                             <div class="font-mono small-text padding-horizontal-2 padding-vertical-1 bg-slate-900 rounded-medium border border-blue-900/30 text-emerald-400/80 hidden md:block">
                                 KS DASHBOARD
                             </div>
+                            <!-- NEW: Credits in right top of top bar (optimistic pill) -->
+                            <div onclick="refreshCredits()" class="top-credits-pill flex-row items-center gap-small padding-horizontal-3 padding-vertical-1 cursor-pointer">
+                                <span class="small-text semi-bold-text text-emerald-400">CREDITS</span>
+                                <span id="top-credits-display" class="credit-number semi-bold-text text-emerald-400">${currentUser ? currentUser.credits : 0}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="iframe-container">
@@ -734,7 +779,7 @@
             closeSidebarIfMobile();
         }
 
-        // ============== TERMINAL FRAME ==============
+        // ============== TERMINAL FRAME (with new top-bar credits) ==============
         function selectTerminal(id) {
             activeId = id;
             const term = terminals.find(t => t.id === id);
@@ -796,6 +841,11 @@
                             </button>
                             <div class="font-mono small-text padding-horizontal-2 padding-vertical-1 bg-slate-900 rounded-medium border border-blue-900/30 text-blue-400/80 hidden md:block">
                                 ${term.token}
+                            </div>
+                            <!-- NEW: Credits in right top of top bar (optimistic pill) -->
+                            <div onclick="refreshCredits()" class="top-credits-pill flex-row items-center gap-small padding-horizontal-3 padding-vertical-1 cursor-pointer">
+                                <span class="small-text semi-bold-text text-emerald-400">CREDITS</span>
+                                <span id="top-credits-display" class="credit-number semi-bold-text text-emerald-400">${currentUser ? currentUser.credits : 0}</span>
                             </div>
                         </div>
                     </div>
@@ -974,7 +1024,7 @@
             });
         }
 
-        // ============== BACKEND INTEGRATION ==============
+        // ============== BACKEND INTEGRATION (now fully optimistic UI) ==============
         async function loadUser() {
             try {
                 const res = await fetch('/api/me');
@@ -982,18 +1032,27 @@
                 const data = await res.json();
                 currentUser = data.user;
                 document.getElementById('username-display').textContent = currentUser.username;
-                document.getElementById('credits-display').textContent = currentUser.credits;
+                updateCreditsUI();   // ← optimistic update for both sidebar + top bar
             } catch (e) {
                 window.location.href = '/auth.html';
             }
         }
 
         async function refreshCredits() {
-            const res = await fetch('/api/me');
-            if (res.ok) {
-                const data = await res.json();
-                currentUser = data.user;
-                document.getElementById('credits-display').textContent = currentUser.credits;
+            const topPill = document.querySelector('.top-credits-pill');
+            if (topPill) topPill.classList.add('credit-refreshing');
+            
+            try {
+                const res = await fetch('/api/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = data.user;
+                    updateCreditsUI();   // ← instant optimistic refresh (no delay)
+                }
+            } catch (e) {
+                console.error('Credit refresh failed', e);
+            } finally {
+                if (topPill) topPill.classList.remove('credit-refreshing');
             }
         }
 
@@ -1011,7 +1070,7 @@
             
             renderList();
             setupSearch();
-            loadUser();
+            loadUser();   // async → credits appear instantly via updateCreditsUI
         }
         
         window.onload = init;
