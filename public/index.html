@@ -523,17 +523,43 @@
             });
         }
 
-        // ============== RENDER HOME (clean default when no last terminal) ==============
+        // ============== RENDER HOME (now always shows dashboard.html with top bar) ==============
         function renderHome() {
             const main = document.getElementById('main-content');
             main.innerHTML = `
-                <div class="flex flex-col h-full w-full bg-black items-center justify-center text-center p-8">
-                    <div class="text-slate-400 text-lg">No terminal selected</div>
-                    <div class="text-slate-500 text-sm mt-2">Choose a terminal from the sidebar or add a new one</div>
+                <div class="flex flex-col h-full w-full bg-black">
+                    <!-- Always-visible Top Bar (same style as terminal view) -->
+                    <div class="h-12 md:h-14 bg-slate-950 border-b border-blue-900/30 px-3 md:px-4 flex items-center justify-between flex-shrink-0">
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <button onclick="toggleSidebar()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-800 transition-colors flex-shrink-0">
+                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                                </svg>
+                            </button>
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1v-5m-6 0a1 1 0 001-1v5" />
+                                </svg>
+                                <span class="font-semibold text-sm text-white truncate">Dashboard</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                            <div class="font-mono text-[10px] px-2 py-1 bg-slate-900 rounded border border-blue-900/30 text-emerald-400/80 hidden md:block">
+                                KS DASHBOARD
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dashboard iframe -->
+                    <div class="iframe-container">
+                        <iframe src="dashboard.html" allow="fullscreen" allowfullscreen></iframe>
+                    </div>
                 </div>`;
+            
+            closeSidebarIfMobile();
         }
 
-        // ============== TERMINAL FRAME (last saved) ==============
+        // ============== TERMINAL FRAME ==============
         function selectTerminal(id) {
             activeId = id;
             const term = terminals.find(t => t.id === id);
