@@ -134,8 +134,8 @@ export default {
       return env.ASSETS.fetch(new URL("/auth.html", request.url));
     }
 
-    if (url.pathname === "/dashboard.html") {
-      return env.ASSETS.fetch(new URL("/dashboard.html", request.url));
+    if (url.pathname === "/") {
+      return env.ASSETS.fetch(new URL("/", request.url));
     }
 
     if (url.pathname === "/auth.js") {
