@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KS SSH — Web Terminal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         
@@ -27,8 +26,10 @@
             overflow: hidden;
             background: var(--black);
             font-family: 'Inter', sans-serif;
+            color: #ffffff;
         }
-        
+
+        /* ==================== EXISTING CUSTOM STYLES (unchanged) ==================== */
         #sidebar {
             width: var(--sidebar-width);
             min-width: var(--sidebar-width);
@@ -181,16 +182,218 @@
         .icon-btn-danger:hover {
             background: rgba(220, 38, 38, 0.2);
         }
+
+        /* ==================== RAW CSS REPLACEMENTS FOR ALL TAILWIND CLASSES ==================== */
+        .main-wrapper {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar-container {
+            height: 100%;
+            background: #0f172a;
+            border-right: 1px solid rgba(59, 130, 246, 0.3);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: 10px 0 15px -3px rgba(59, 130, 246, 0.1);
+        }
+        
+        @media (min-width: 768px) {
+            .sidebar-container {
+                position: static;
+                transform: translateX(0);
+            }
+        }
+        
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.5);
+        }
+        
+        .sidebar-search {
+            padding: 12px 12px 8px;
+        }
+        
+        .sidebar-add-btn-wrapper {
+            padding: 0 12px 12px;
+        }
+        
+        .terminals-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .user-credits-section {
+            padding: 12px;
+            border-top: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.5);
+        }
+        
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 40;
+            backdrop-filter: blur(4px);
+        }
+        
+        .main-content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #020617;
+            height: 100%;
+            width: 100%;
+        }
+        
+        .top-bar {
+            height: 48px;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        
+        @media (min-width: 768px) {
+            .top-bar {
+                height: 56px;
+                padding: 0 16px;
+            }
+        }
+        
+        .flex-center {
+            display: flex;
+            align-items: center;
+        }
+        
+        .flex-between {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .gap-1\.5 { gap: 6px; }
+        
+        .px-4 { padding-left: 16px; padding-right: 16px; }
+        .py-4 { padding-top: 16px; padding-bottom: 16px; }
+        .px-3 { padding-left: 12px; padding-right: 12px; }
+        .pt-3 { padding-top: 12px; }
+        .pb-2 { padding-bottom: 8px; }
+        .pb-3 { padding-bottom: 12px; }
+        .px-2 { padding-left: 8px; padding-right: 8px; }
+        .py-1 { padding-top: 4px; padding-bottom: 4px; }
+        .p-4 { padding: 16px; }
+        .p-6 { padding: 24px; }
+        .p-3 { padding: 12px; }
+        .py-3 { padding-top: 12px; padding-bottom: 12px; }
+        
+        .text-lg { font-size: 18px; line-height: 24px; font-weight: 700; }
+        .text-sm { font-size: 14px; }
+        .text-xs { font-size: 12px; }
+        .text-4xl { font-size: 36px; line-height: 1; font-weight: 700; }
+        
+        .font-bold { font-weight: 700; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        
+        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .min-w-0 { min-width: 0; }
+        
+        .rounded-md { border-radius: 6px; }
+        .rounded-lg { border-radius: 8px; }
+        .rounded-2xl { border-radius: 16px; }
+        
+        .hidden { display: none; }
+        .flex { display: flex; }
+        
+        .w-full { width: 100%; }
+        .max-w-sm { max-width: 384px; }
+        
+        .relative { position: relative; }
+        
+        .bg-slate-900 { background: #0f172a; }
+        .bg-slate-950 { background: #020617; }
+        .bg-black { background: #020617; }
+        
+        .border-blue-900\/30 { border-color: rgba(59, 130, 246, 0.3); }
+        .border-blue-800\/50 { border-color: rgba(59, 130, 246, 0.5); }
+        .border-slate-700 { border-color: #334155; }
+        .border-red-900\/30 { border-color: rgba(220, 38, 38, 0.3); }
+        .border-red-500\/20 { border-color: rgba(239, 68, 68, 0.2); }
+        
+        .text-blue-400 { color: #60a5fa; }
+        .text-slate-400 { color: #94a3b8; }
+        .text-slate-500 { color: #64748b; }
+        .text-slate-200 { color: #e2e8f0; }
+        .text-emerald-400 { color: #34d399; }
+        .text-emerald-300 { color: #6ee7b7; }
+        .text-red-400 { color: #f87171; }
+        .text-white { color: #ffffff; }
+        
+        .hover\:bg-slate-800:hover { background: #1e2937; }
+        .hover\:text-white:hover { color: #ffffff; }
+        .hover\:text-red-400:hover { color: #f87171; }
+        
+        .cursor-pointer { cursor: pointer; }
+        
+        .modal-wrapper {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        
+        .modal-content {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0);
+        }
     </style>
 </head>
-<body class="bg-black text-white antialiased">
-    <div class="flex h-screen w-screen relative overflow-hidden">
+<body>
+    <div class="main-wrapper">
         
-        <!-- SIDEBAR + HEADER (only these stay visible) -->
-        <div id="sidebar" class="h-full bg-slate-950 border-r border-blue-900/30 flex flex-col fixed md:static inset-y-0 left-0 z-50 -translate-x-full md:translate-x-0 shadow-xl shadow-blue-900/10">
+        <!-- SIDEBAR -->
+        <div id="sidebar" class="sidebar-container">
             
             <!-- Header -->
-            <div class="px-4 py-4 border-b border-blue-900/30 flex items-center gap-3 bg-slate-900/50">
+            <div class="sidebar-header">
                 <div class="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-md text-white shadow-lg shadow-blue-600/30">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
@@ -207,7 +410,7 @@
             </div>
 
             <!-- Search -->
-            <div class="px-3 pt-3 pb-2">
+            <div class="sidebar-search">
                 <div class="relative">
                     <input 
                         id="search-input"
@@ -222,7 +425,7 @@
             </div>
 
             <!-- Add Button -->
-            <div class="px-3 pb-3">
+            <div class="sidebar-add-btn-wrapper">
                 <button onclick="showAddModal()" 
                         class="w-full btn-primary text-white font-medium py-2 rounded-md flex items-center justify-center gap-1.5 text-xs">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,12 +436,12 @@
             </div>
 
             <!-- Terminals List -->
-            <div class="flex-1 overflow-y-auto px-2 py-1 space-y-1" id="terminals-list">
+            <div class="terminals-list-container" id="terminals-list">
                 <!-- Populated by JavaScript -->
             </div>
 
             <!-- USER PROFILE + CREDITS -->
-            <div class="px-3 py-3 border-t border-blue-900/30">
+            <div class="user-credits-section">
                 <div class="glass-panel rounded-2xl p-4 flex items-center gap-3">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
@@ -265,7 +468,7 @@
             </div>
 
             <!-- Footer -->
-            <div class="mt-auto border-t border-blue-900/30 p-3 bg-slate-950/50">
+            <div class="sidebar-footer">
                 <div class="flex items-center justify-between text-[9px] text-slate-500">
                     <div class="flex items-center gap-1">
                         <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
@@ -286,11 +489,11 @@
         <!-- MOBILE OVERLAY -->
         <div onclick="if(event.target.id === 'sidebar-overlay') toggleSidebar()" 
              id="sidebar-overlay"
-             class="hidden fixed inset-0 bg-black/60 sidebar-overlay z-40 md:hidden">
+             class="mobile-overlay">
         </div>
 
         <!-- MAIN FRAME AREA -->
-        <div id="main-content" class="flex-1 flex flex-col bg-black h-full w-full md:ml-0">
+        <div id="main-content" class="main-content-area">
             <!-- Terminal iframe or default view rendered here -->
         </div>
     </div>
@@ -298,8 +501,8 @@
     <!-- ADD TERMINAL MODAL -->
     <div onclick="if(event.target.id === 'add-modal') hideAddModal()" 
          id="add-modal"
-         class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-        <div onclick="event.stopImmediatePropagation()" class="modal glass-panel w-full max-w-sm rounded-lg p-6 shadow-2xl">
+         class="modal-wrapper">
+        <div onclick="event.stopImmediatePropagation()" class="modal-content w-full max-w-sm rounded-lg p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-bold text-white">Add New Terminal</h2>
                 <button onclick="hideAddModal()" class="text-slate-400 hover:text-white transition-colors">
@@ -339,8 +542,8 @@
     <!-- RENAME MODAL -->
     <div onclick="if(event.target.id === 'rename-modal') hideRenameModal()" 
          id="rename-modal"
-         class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-        <div onclick="event.stopImmediatePropagation()" class="modal glass-panel w-full max-w-sm rounded-lg p-6 shadow-2xl">
+         class="modal-wrapper">
+        <div onclick="event.stopImmediatePropagation()" class="modal-content w-full max-w-sm rounded-lg p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 bg-blue-500/20 rounded-md flex items-center justify-center">
@@ -384,8 +587,8 @@
     <!-- DELETE MODAL -->
     <div onclick="if(event.target.id === 'delete-modal') hideDeleteModal()" 
          id="delete-modal"
-         class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-        <div onclick="event.stopImmediatePropagation()" class="modal glass-panel w-full max-w-sm rounded-lg p-6 shadow-2xl border-red-500/20">
+         class="modal-wrapper">
+        <div onclick="event.stopImmediatePropagation()" class="modal-content w-full max-w-sm rounded-lg p-6 shadow-2xl border-red-500/20">
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 bg-red-500/20 rounded-md flex items-center justify-center">
@@ -450,9 +653,11 @@
             if (sidebar.classList.contains('-translate-x-full')) {
                 sidebar.classList.remove('-translate-x-full');
                 overlay.classList.remove('hidden');
+                overlay.style.display = 'flex';
             } else {
                 sidebar.classList.add('-translate-x-full');
                 overlay.classList.add('hidden');
+                overlay.style.display = 'none';
             }
         }
 
@@ -462,7 +667,10 @@
             const overlay = document.getElementById('sidebar-overlay');
             if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
                 sidebar.classList.add('-translate-x-full');
-                if (overlay) overlay.classList.add('hidden');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    overlay.style.display = 'none';
+                }
             }
         }
 
@@ -490,7 +698,7 @@
             filtered.forEach(term => {
                 const isActive = term.id === activeId;
                 const div = document.createElement('div');
-                div.className = `terminal-list-item flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer mx-1 ${isActive ? 'active' : 'hover:bg-slate-800/50'}`;
+                div.className = `terminal-list-item flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer mx-1 ${isActive ? 'active' : ''}`;
                 
                 div.innerHTML = `
                     <div class="flex-1 min-w-0 mr-2" onclick="selectTerminal('${term.id}')">
@@ -516,34 +724,40 @@
                     </div>
                 `;
                 
-                div.addEventListener('mouseenter', () => div.querySelector('.flex.items-center.gap-0\\.5').classList.remove('opacity-0'));
-                div.addEventListener('mouseleave', () => { if (!isActive) div.querySelector('.flex.items-center.gap-0\\.5').classList.add('opacity-0'); });
+                div.addEventListener('mouseenter', () => {
+                    const btnGroup = div.querySelector('.flex.items-center.gap-0\\.5');
+                    if (btnGroup) btnGroup.classList.remove('opacity-0');
+                });
+                div.addEventListener('mouseleave', () => { 
+                    const btnGroup = div.querySelector('.flex.items-center.gap-0\\.5');
+                    if (btnGroup && !isActive) btnGroup.classList.add('opacity-0'); 
+                });
                 div.addEventListener('click', () => selectTerminal(term.id));
                 container.appendChild(div);
             });
         }
 
-        // ============== RENDER HOME (now always shows dashboard.html with top bar) ==============
+        // ============== RENDER HOME ==============
         function renderHome() {
             const main = document.getElementById('main-content');
             main.innerHTML = `
                 <div class="flex flex-col h-full w-full bg-black">
-                    <!-- Always-visible Top Bar (same style as terminal view) -->
-                    <div class="h-12 md:h-14 bg-slate-950 border-b border-blue-900/30 px-3 md:px-4 flex items-center justify-between flex-shrink-0">
-                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <!-- Always-visible Top Bar -->
+                    <div class="top-bar">
+                        <div class="flex-center gap-2 flex-1 min-w-0">
                             <button onclick="toggleSidebar()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-800 transition-colors flex-shrink-0">
                                 <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                                 </svg>
                             </button>
-                            <div class="flex items-center gap-1.5 min-w-0">
+                            <div class="flex-center gap-1.5 min-w-0">
                                 <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1v-5m-6 0a1 1 0 001-1v5" />
                                 </svg>
                                 <span class="font-semibold text-sm text-white truncate">Dashboard</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                        <div class="flex-center gap-1 md:gap-2 flex-shrink-0">
                             <div class="font-mono text-[10px] px-2 py-1 bg-slate-900 rounded border border-blue-900/30 text-emerald-400/80 hidden md:block">
                                 KS DASHBOARD
                             </div>
@@ -575,28 +789,28 @@
             main.innerHTML = `
                 <div class="flex flex-col h-full w-full bg-black">
                     <!-- Terminal Header -->
-                    <div class="h-12 md:h-14 bg-slate-950 border-b border-blue-900/30 px-3 md:px-4 flex items-center justify-between flex-shrink-0">
-                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <div class="top-bar">
+                        <div class="flex-center gap-2 flex-1 min-w-0">
                             <button onclick="toggleSidebar()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-800 transition-colors flex-shrink-0">
                                 <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                                 </svg>
                             </button>
-                            <button onclick="goHome()" class="flex items-center gap-1 text-slate-400 hover:text-white transition-colors flex-shrink-0">
+                            <button onclick="goHome()" class="flex-center gap-1 text-slate-400 hover:text-white transition-colors flex-shrink-0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                                 </svg>
                                 <span class="text-xs font-medium hidden sm:inline">Back</span>
                             </button>
                             <div class="h-4 w-px bg-blue-900/30 hidden sm:block"></div>
-                            <div class="flex items-center gap-1.5 min-w-0">
+                            <div class="flex-center gap-1.5 min-w-0">
                                 <svg class="w-3.5 h-3.5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                                 <span class="font-semibold text-sm text-white truncate">${term.name}</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                        <div class="flex-center gap-1 md:gap-2 flex-shrink-0">
                             <button onclick="showRenameModal('${id}')" class="btn-secondary px-2.5 py-1.5 text-xs font-medium hidden sm:flex items-center gap-1">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -688,15 +902,12 @@
             document.getElementById('modal-name').value = '';
             document.getElementById('modal-token').value = '';
             const modal = document.getElementById('add-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => document.getElementById('modal-name').focus(), 50);
+            modal.style.display = 'flex';
         }
 
         function hideAddModal() {
             const modal = document.getElementById('add-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            modal.style.display = 'none';
         }
 
         function handleAddTerminal() {
@@ -732,15 +943,13 @@
             document.getElementById('rename-token-display').textContent = term.token;
             document.getElementById('rename-input').value = term.name;
             const modal = document.getElementById('rename-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            modal.style.display = 'flex';
             setTimeout(() => document.getElementById('rename-input').focus(), 50);
         }
 
         function hideRenameModal() {
             const modal = document.getElementById('rename-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            modal.style.display = 'none';
             pendingRenameId = null;
         }
 
@@ -769,14 +978,12 @@
             document.getElementById('delete-name-display').textContent = term.name;
             document.getElementById('delete-token-display').textContent = term.token;
             const modal = document.getElementById('delete-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            modal.style.display = 'flex';
         }
 
         function hideDeleteModal() {
             const modal = document.getElementById('delete-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            modal.style.display = 'none';
             pendingDeleteId = null;
         }
 
