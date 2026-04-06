@@ -311,6 +311,208 @@
         .text-white { color: #ffffff; }
         .text-blue-400 { color: #60a5fa; }
         .text-slate-400 { color: #94a3b8; }
+
+        /* ==================== OPTIMIZED RESPONSIVE STYLES FOR PHONE + DESKTOP (stylish & smooth) ==================== */
+        /* Mobile-first optimizations - perfect touch targets, balanced spacing, stylish scaling */
+        @media (max-width: 640px) {
+            .hero-section {
+                padding-top: 48px;
+                padding-bottom: 32px;
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            
+            .logo-wrapper {
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+            
+            .logo-image {
+                width: 52px;
+                height: 52px;
+                border-radius: 18px;
+            }
+            
+            .brand-name {
+                font-size: 2.85rem;
+                letter-spacing: -0.04em;
+            }
+            
+            .hero-title {
+                font-size: 1.95rem;
+                line-height: 2.25rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.05rem;
+                line-height: 1.6rem;
+                max-width: 24rem;
+            }
+            
+            .quick-connect-section {
+                padding-left: 16px;
+                padding-right: 16px;
+                margin-bottom: 48px;
+            }
+            
+            .quick-connect-box {
+                padding: 24px;
+                border-radius: 20px;
+            }
+            
+            .input-field {
+                padding: 18px 20px;
+                font-size: 1.1rem;
+            }
+            
+            .btn-primary {
+                padding: 18px 28px;
+                font-size: 1.1rem;
+                min-height: 58px;
+            }
+            
+            .feature-section {
+                padding-left: 16px;
+                padding-right: 16px;
+                padding-bottom: 48px;
+            }
+            
+            .section-heading {
+                font-size: 2rem;
+                line-height: 2.25rem;
+            }
+            
+            .feature-grid {
+                gap: 18px;
+            }
+            
+            .feature-card-inner {
+                padding: 22px;
+            }
+            
+            .feature-icon {
+                font-size: 2.75rem;
+                margin-bottom: 14px;
+            }
+            
+            .screenshot-section {
+                padding-left: 16px;
+                padding-right: 16px;
+                padding-top: 48px;
+                padding-bottom: 48px;
+            }
+            
+            .screenshot-heading {
+                font-size: 1.65rem;
+                line-height: 2rem;
+                margin-bottom: 32px;
+            }
+            
+            .screenshot-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 12px;
+            }
+            
+            .screenshot-item {
+                border-radius: 18px;
+            }
+        }
+        
+        /* Desktop enhancements - more breathing room, premium feel while keeping exact original look */
+        @media (min-width: 1024px) {
+            .hero-section {
+                padding-top: 80px;
+                padding-bottom: 56px;
+            }
+            
+            .brand-name {
+                font-size: 4.25rem;
+            }
+            
+            .logo-image {
+                width: 72px;
+                height: 72px;
+            }
+            
+            .hero-title {
+                font-size: 3.4rem;
+            }
+            
+            .quick-connect-box {
+                padding: 40px;
+                border-radius: 28px;
+            }
+            
+            .feature-section {
+                padding-bottom: 80px;
+            }
+            
+            .feature-card-inner {
+                padding: 32px;
+            }
+            
+            .screenshot-section {
+                padding-top: 80px;
+                padding-bottom: 80px;
+            }
+            
+            .screenshot-grid {
+                gap: 24px;
+            }
+        }
+        
+        /* Extra small phones - ultra-smooth & stylish */
+        @media (max-width: 480px) {
+            .brand-name {
+                font-size: 2.6rem;
+            }
+            
+            .hero-title {
+                font-size: 1.8rem;
+                line-height: 2.1rem;
+            }
+            
+            .quick-connect-box {
+                padding: 20px;
+            }
+            
+            .input-field {
+                padding: 16px 18px;
+            }
+            
+            .feature-icon {
+                font-size: 2.5rem;
+            }
+            
+            .feature-description li {
+                font-size: 0.95rem;
+            }
+        }
+        
+        /* Very large desktop - elegant wide layout */
+        @media (min-width: 1280px) {
+            .feature-grid {
+                gap: 32px;
+            }
+            
+            .section-subheading {
+                max-width: 42rem;
+            }
+        }
+        
+        /* Stylish input & button touch feedback for phones */
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .input-field {
+            min-height: 58px;
+        }
+        
+        /* Ensure glass panels stay crisp on all screens */
+        .glass-panel {
+            box-shadow: 0 10px 15px -3px rgb(59 130 246 / 0.1);
+        }
     </style>
 </head>
 <body>
