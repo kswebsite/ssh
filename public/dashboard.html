@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KS SSH</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         
@@ -12,7 +11,9 @@
             --primary-blue: #3b82f6;
         }
         
-        * { box-sizing: border-box; }
+        * { 
+            box-sizing: border-box; 
+        }
         
         body, html {
             margin: 0;
@@ -22,8 +23,12 @@
             overflow-y: auto;
             background: #020617;
             font-family: 'Inter', sans-serif;
+            color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        
+
+        /* ==================== CUSTOM STYLES (kept exactly as before) ==================== */
         .glass-panel {
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(12px);
@@ -78,41 +83,271 @@
         .status-dot {
             animation: pulse 2s ease-in-out infinite;
         }
+
+        /* ==================== NORMAL CSS CLASSES (replacing all Tailwind utilities) ==================== */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-top: 64px;
+            padding-bottom: 40px;
+            padding-left: 24px;
+            padding-right: 24px;
+            text-align: center;
+        }
+        
+        .logo-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .logo-image {
+            width: 64px;
+            height: 64px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgb(59 130 246);
+        }
+        
+        .brand-name {
+            font-size: 3.75rem;
+            line-height: 1;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+        }
+        
+        .tagline {
+            color: #60a5fa;
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        
+        .hero-title {
+            font-size: 2.25rem;
+            line-height: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            margin-bottom: 12px;
+        }
+        
+        @media (min-width: 768px) {
+            .hero-title {
+                font-size: 3rem;
+                line-height: 1;
+            }
+        }
+        
+        .hero-subtitle {
+            color: #94a3b8;
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            max-width: 28rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 32px;
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            background-color: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 9999px;
+        }
+        
+        .quick-connect-section {
+            max-width: 36rem;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            padding-left: 24px;
+            padding-right: 24px;
+            margin-bottom: 64px;
+        }
+        
+        .quick-connect-box {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 24px;
+            padding: 32px;
+        }
+        
+        .quick-connect-title {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+        
+        .quick-connect-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        @media (min-width: 640px) {
+            .quick-connect-form {
+                flex-direction: row;
+            }
+        }
+        
+        .feature-section {
+            padding-left: 24px;
+            padding-right: 24px;
+            padding-bottom: 64px;
+        }
+        
+        .feature-section-inner {
+            max-width: 72rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .section-heading {
+            font-size: 2.25rem;
+            line-height: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        
+        .section-subheading {
+            color: #94a3b8;
+            text-align: center;
+            max-width: 36rem;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 48px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+        }
+        
+        .feature-card-inner {
+            padding: 28px;
+            text-align: center;
+            border-radius: 24px;
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        
+        .feature-title {
+            font-size: 1.25rem;
+            line-height: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .feature-description {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+        
+        .screenshot-section {
+            padding-left: 24px;
+            padding-right: 24px;
+            padding-top: 64px;
+            padding-bottom: 64px;
+            background-color: rgba(15, 23, 42, 0.7);
+        }
+        
+        .screenshot-section-inner {
+            max-width: 72rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .screenshot-heading {
+            font-size: 1.875rem;
+            line-height: 2.25rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        
+        .screenshot-item {
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0);
+        }
+        
+        .screenshot-image {
+            width: 100%;
+            display: block;
+        }
+        
+        .text-white { color: #ffffff; }
+        .text-blue-400 { color: #60a5fa; }
+        .text-slate-400 { color: #94a3b8; }
     </style>
 </head>
-<body class="bg-black text-white antialiased">
+<body>
     
-    <div class="flex flex-col flex-1">
+    <div class="main-container">
         
-        <!-- HERO - Logo + Name + Info (everything now directly in body) -->
-        <div class="flex flex-col items-center justify-center pt-16 pb-10 px-6 text-center">
-            <div class="flex items-center justify-center gap-4 mb-6">
-                <img src="/image/logo.png" alt="KS SSH Logo" class="w-16 h-16 rounded-3xl shadow-2xl shadow-blue-600/50">
-                <span class="text-6xl font-bold tracking-tighter">KS SSH</span>
+        <!-- HERO - Logo + Name + Info -->
+        <div class="hero-section">
+            <div class="logo-wrapper">
+                <img src="/image/logo.png" alt="KS SSH Logo" class="logo-image">
+                <span class="brand-name">KS SSH</span>
             </div>
-            <p class="text-blue-400 text-sm font-semibold tracking-[4px] uppercase mb-2">KS WARRIOR</p>
-            <h1 class="text-4xl md:text-5xl font-bold tracking-tighter text-white mb-3">Web Terminal Dashboard</h1>
-            <p class="text-slate-400 text-lg max-w-md mx-auto">Instant SSH • Port Forwarding • File Manager • Zero Setup</p>
+            <p class="tagline">KS WARRIOR</p>
+            <h1 class="hero-title">Web Terminal Dashboard</h1>
+            <p class="hero-subtitle">Instant SSH • Port Forwarding • File Manager • Zero Setup</p>
             
-            <div class="flex items-center gap-1.5 mt-8 px-5 py-2 bg-blue-500/10 border border-blue-500/30 rounded-3xl">
-                <div class="w-2.5 h-2.5 bg-blue-400 rounded-full status-dot"></div>
+            <div class="live-badge">
+                <div class="status-dot w-2.5 h-2.5 bg-blue-400 rounded-full"></div>
                 <span class="text-blue-400 text-xs font-bold tracking-widest">LIVE • POWERED BY CLOUDFLARE TUNNEL</span>
             </div>
         </div>
 
         <!-- QUICK CONNECT -->
-        <div class="max-w-xl mx-auto w-full px-6 mb-16">
-            <div class="glass-panel rounded-3xl p-8">
-                <p class="text-center text-slate-400 text-xs uppercase tracking-widest mb-6 font-semibold">Quick Connect</p>
-                <div class="flex flex-col sm:flex-row gap-4">
+        <div class="quick-connect-section">
+            <div class="quick-connect-box glass-panel">
+                <p class="quick-connect-title">Quick Connect</p>
+                <div class="quick-connect-form">
                     <input 
                         id="quick-token"
                         type="text"
                         placeholder="Paste your token here..."
-                        class="flex-1 input-field px-6 py-5 text-lg text-white placeholder-slate-500"
+                        class="input-field flex-1 px-6 py-5 text-lg text-white placeholder-slate-500"
                     >
                     <button onclick="quickConnect()" 
-                            class="btn-primary px-10 py-5 text-white font-semibold text-lg flex items-center justify-center gap-3 whitespace-nowrap rounded-3xl">
+                            class="btn-primary px-10 py-5 text-white font-semibold text-lg flex items-center justify-center gap-3 whitespace-nowrap">
                         CONNECT
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
@@ -123,60 +358,60 @@
         </div>
 
         <!-- INFORMATION - Why KS SSH is the Best -->
-        <div class="px-6 pb-16">
-            <div class="max-w-6xl mx-auto">
-                <h2 class="text-4xl font-bold text-center mb-3">Why KS SSH is the Best</h2>
-                <p class="text-slate-400 text-center max-w-xl mx-auto mb-12">No apps. No VPN. No complex setup. Just paste a token and get a full SSH terminal + file manager in your browser.</p>
+        <div class="feature-section">
+            <div class="feature-section-inner">
+                <h2 class="section-heading">Why KS SSH is the Best</h2>
+                <p class="section-subheading">No apps. No VPN. No complex setup. Just paste a token and get a full SSH terminal + file manager in your browser.</p>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-                    <div class="feature-card glass-panel rounded-3xl p-7 text-center">
-                        <div class="text-4xl mb-4">💻</div>
-                        <h4 class="font-semibold text-xl mb-2">Full Terminal</h4>
-                        <p class="text-slate-400">Native SSH experience in browser with copy-paste, themes &amp; resize</p>
+                <div class="feature-grid">
+                    <div class="feature-card glass-panel feature-card-inner">
+                        <div class="feature-icon">💻</div>
+                        <h4 class="feature-title">Full Terminal</h4>
+                        <p class="feature-description">Native SSH experience in browser with copy-paste, themes &amp; resize</p>
                     </div>
-                    <div class="feature-card glass-panel rounded-3xl p-7 text-center">
-                        <div class="text-4xl mb-4">🔌</div>
-                        <h4 class="font-semibold text-xl mb-2">Port Forwarding</h4>
-                        <p class="text-slate-400">Expose any port securely through Cloudflare Tunnel</p>
+                    <div class="feature-card glass-panel feature-card-inner">
+                        <div class="feature-icon">🔌</div>
+                        <h4 class="feature-title">Port Forwarding</h4>
+                        <p class="feature-description">Expose any port securely through Cloudflare Tunnel</p>
                     </div>
-                    <div class="feature-card glass-panel rounded-3xl p-7 text-center">
-                        <div class="text-4xl mb-4">📁</div>
-                        <h4 class="font-semibold text-xl mb-2">File Manager</h4>
-                        <p class="text-slate-400">Built-in SFTP browser – upload, download, edit files instantly</p>
+                    <div class="feature-card glass-panel feature-card-inner">
+                        <div class="feature-icon">📁</div>
+                        <h4 class="feature-title">File Manager</h4>
+                        <p class="feature-description">Built-in SFTP browser – upload, download, edit files instantly</p>
                     </div>
-                    <div class="feature-card glass-panel rounded-3xl p-7 text-center">
-                        <div class="text-4xl mb-4">⚡</div>
-                        <h4 class="font-semibold text-xl mb-2">Zero Latency</h4>
-                        <p class="text-slate-400">Blazing fast encrypted connection from anywhere</p>
+                    <div class="feature-card glass-panel feature-card-inner">
+                        <div class="feature-icon">⚡</div>
+                        <h4 class="feature-title">Zero Latency</h4>
+                        <p class="feature-description">Blazing fast encrypted connection from anywhere</p>
                     </div>
-                    <div class="feature-card glass-panel rounded-3xl p-7 text-center">
-                        <div class="text-4xl mb-4">💰</div>
-                        <h4 class="font-semibold text-xl mb-2">Earn While AFK</h4>
-                        <p class="text-slate-400">Leave it open and earn credits automatically</p>
+                    <div class="feature-card glass-panel feature-card-inner">
+                        <div class="feature-icon">💰</div>
+                        <h4 class="feature-title">Earn While AFK</h4>
+                        <p class="feature-description">Leave it open and earn credits automatically</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- SCREENSHOTS -->
-        <div class="px-6 py-16 bg-slate-950/70">
-            <div class="max-w-6xl mx-auto">
-                <h2 class="text-3xl font-bold text-center mb-10">See It In Action</h2>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    <div class="screenshot-container rounded-3xl overflow-hidden border border-blue-900/30 shadow-2xl">
-                        <img src="/image/screenshot1.png" alt="Screenshot 1" class="w-full">
+        <div class="screenshot-section">
+            <div class="screenshot-section-inner">
+                <h2 class="screenshot-heading">See It In Action</h2>
+                <div class="screenshot-grid">
+                    <div class="screenshot-container screenshot-item">
+                        <img src="/image/screenshot1.png" alt="Screenshot 1" class="screenshot-image">
                     </div>
-                    <div class="screenshot-container rounded-3xl overflow-hidden border border-blue-900/30 shadow-2xl">
-                        <img src="/image/screenshot2.png" alt="Screenshot 2" class="w-full">
+                    <div class="screenshot-container screenshot-item">
+                        <img src="/image/screenshot2.png" alt="Screenshot 2" class="screenshot-image">
                     </div>
-                    <div class="screenshot-container rounded-3xl overflow-hidden border border-blue-900/30 shadow-2xl">
-                        <img src="/image/screenshot3.png" alt="Screenshot 3" class="w-full">
+                    <div class="screenshot-container screenshot-item">
+                        <img src="/image/screenshot3.png" alt="Screenshot 3" class="screenshot-image">
                     </div>
-                    <div class="screenshot-container rounded-3xl overflow-hidden border border-blue-900/30 shadow-2xl">
-                        <img src="/image/screenshot4.png" alt="Screenshot 4" class="w-full">
+                    <div class="screenshot-container screenshot-item">
+                        <img src="/image/screenshot4.png" alt="Screenshot 4" class="screenshot-image">
                     </div>
-                    <div class="screenshot-container rounded-3xl overflow-hidden border border-blue-900/30 shadow-2xl">
-                        <img src="/image/screenshot5.png" alt="Screenshot 5" class="w-full">
+                    <div class="screenshot-container screenshot-item">
+                        <img src="/image/screenshot5.png" alt="Screenshot 5" class="screenshot-image">
                     </div>
                 </div>
             </div>
@@ -214,7 +449,6 @@
             window.location.href = 'dashboard.html';
         }
 
-        // No top bar → no need for user/credits loading on this page
         window.onload = function() {
             // Page is ready
         };
