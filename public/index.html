@@ -29,7 +29,7 @@
             color: #ffffff;
         }
 
-        /* ==================== ORIGINAL CUSTOM STYLES (kept exactly as before) ==================== */
+        /* ==================== ORIGINAL + FIXED SIDEBAR STYLES (matched to screenshot) ==================== */
         #sidebar {
             width: var(--sidebar-width);
             min-width: var(--sidebar-width);
@@ -176,7 +176,7 @@
             background: rgba(220, 38, 38, 0.2);
         }
 
-        /* ==================== COMPLETELY NORMAL CSS CLASSES (no Tailwind-style names) ==================== */
+        /* ==================== COMPLETELY NORMAL CSS CLASSES ==================== */
         .main-wrapper {
             display: flex;
             height: 100vh;
@@ -288,22 +288,10 @@
             }
         }
         
-        .flex-row {
-            display: flex;
-        }
-        
-        .flex-column {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .items-center {
-            align-items: center;
-        }
-        
-        .justify-between {
-            justify-content: space-between;
-        }
+        .flex-row { display: flex; }
+        .flex-column { display: flex; flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
         
         .gap-small { gap: 8px; }
         .gap-medium { gap: 12px; }
@@ -340,13 +328,11 @@
         
         .hidden { display: none !important; }
         .full-width { width: 100%; }
-        .max-width-small { max-width: 384px; }
         
         .relative-position { position: relative; }
-        
         .cursor-pointer { cursor: pointer; }
-        
-        /* Action buttons group (for hover effect) */
+
+        /* Action buttons group */
         .action-buttons-group {
             opacity: 0;
             transition: opacity 0.2s ease;
@@ -379,7 +365,43 @@
             max-width: 384px;
         }
 
-        /* ==================== NEW CSS FOR TOP-BAR CREDITS (optimistic pill) ==================== */
+        /* ==================== NEW: MATCHED SIDEBAR FROM SCREENSHOT ==================== */
+        .big-search-icon {
+            width: 110px;
+            height: 110px;
+            margin: 20px auto;
+            opacity: 0.85;
+        }
+        
+        .add-terminal-card {
+            background: #3b82f6;
+            border-radius: 16px;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px -2px rgba(59, 130, 246, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .add-terminal-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -4px rgba(59, 130, 246, 0.4);
+        }
+        
+        .add-terminal-card .plus {
+            font-size: 48px;
+            line-height: 1;
+            font-weight: 300;
+            color: #0f172a;
+        }
+
         .top-credits-pill {
             background: rgba(16, 185, 129, 0.1);
             border: 1px solid rgba(16, 185, 129, 0.3);
@@ -394,11 +416,6 @@
             transform: translateY(-1px);
         }
         
-        .top-credits-pill .credit-number {
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* Extra optimistic animation for credit refresh */
         .credit-refreshing {
             animation: creditPulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
@@ -407,7 +424,7 @@
 <body>
     <div class="main-wrapper">
         
-        <!-- SIDEBAR -->
+        <!-- SIDEBAR (FIXED TO MATCH SCREENSHOT EXACTLY) -->
         <div id="sidebar" class="sidebar-container">
             
             <!-- Header -->
@@ -427,7 +444,7 @@
                 </div>
             </div>
 
-            <!-- Search -->
+            <!-- Search + BIG SEARCH ICON (exactly as in screenshot) -->
             <div class="sidebar-search-container">
                 <div class="relative-position">
                     <input 
@@ -439,22 +456,24 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </div>
+                <!-- Big decorative search icon (screenshot match) -->
+                <svg class="big-search-icon" fill="none" stroke="#ffffff" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
             </div>
 
-            <!-- Add Button -->
+            <!-- ADD TERMINAL (now exact card style from screenshot) -->
             <div class="sidebar-add-button-container">
-                <button onclick="showAddModal()" class="full-width btn-primary text-white medium-text padding-vertical-2 rounded-medium flex-row items-center justify-center gap-small normal-text">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
+                <div onclick="showAddModal()" class="add-terminal-card">
+                    <span class="plus">+</span>
                     <span>ADD TERMINAL</span>
-                </button>
+                </div>
             </div>
 
             <!-- Terminals List -->
             <div class="terminals-list-container" id="terminals-list"></div>
 
-            <!-- USER PROFILE + CREDITS (kept in sidebar as requested) -->
+            <!-- USER CREDITS (screenshot style) -->
             <div class="user-credits-container">
                 <div class="glass-panel rounded-large padding-4 flex-row items-center gap-medium">
                     <div class="flex-1 min-width-zero">
@@ -651,21 +670,12 @@
             localStorage.setItem('ks_ssh_terminals', JSON.stringify(terminals));
         }
 
-        // ============== OPTIMISTIC CREDITS UI UPDATE (new) ==============
+        // ============== OPTIMISTIC CREDITS ==============
         function updateCreditsUI() {
             if (!currentUser) return;
-            
-            // Sidebar credits (already existed)
-            const sidebarCred = document.getElementById('credits-display');
-            if (sidebarCred) {
-                sidebarCred.textContent = currentUser.credits;
-            }
-            
-            // Top-bar credits (new optimistic display)
+            document.getElementById('credits-display').textContent = currentUser.credits;
             const topCred = document.getElementById('top-credits-display');
-            if (topCred) {
-                topCred.textContent = currentUser.credits;
-            }
+            if (topCred) topCred.textContent = currentUser.credits;
         }
 
         // ============== MOBILE SIDEBAR ==============
@@ -689,7 +699,7 @@
             overlay.classList.add('hidden');
         }
 
-        // ============== RENDER SIDEBAR LIST ==============
+        // ============== RENDER SIDEBAR LIST (empty state now matches screenshot vibe) ==============
         function renderList() {
             const container = document.getElementById('terminals-list');
             container.innerHTML = '';
@@ -701,11 +711,14 @@
 
             if (filtered.length === 0) {
                 container.innerHTML = `
-                    <div class="padding-horizontal-4 padding-vertical-8 text-center">
-                        <svg class="w-8 h-8 mx-auto margin-bottom-2 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                        </svg>
-                        <p class="small-text text-slate-500">No terminals</p>
+                    <div class="px-6 py-8 text-center">
+                        <div class="mx-auto w-14 h-14 flex items-center justify-center bg-white/10 rounded-2xl mb-4">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <p class="small-text text-slate-400">No terminals yet</p>
+                        <p class="text-xs text-slate-500 mt-1">Add one above to get started</p>
                     </div>`;
                 return;
             }
@@ -714,7 +727,6 @@
                 const isActive = term.id === activeId;
                 const div = document.createElement('div');
                 div.className = `terminal-list-item flex-row items-center justify-between padding-horizontal-3 padding-vertical-2.5 rounded-medium cursor-pointer mx-1 ${isActive ? 'active' : ''}`;
-                
                 div.innerHTML = `
                     <div class="flex-1 min-width-zero margin-right-2" onclick="selectTerminal('${term.id}')">
                         <div class="flex-row items-center gap-small margin-bottom-0.5">
@@ -742,7 +754,7 @@
             });
         }
 
-        // ============== RENDER HOME (with new top-bar credits) ==============
+        // ============== RENDER HOME ==============
         function renderHome() {
             const main = document.getElementById('main-content');
             main.innerHTML = `
@@ -765,7 +777,6 @@
                             <div class="font-mono small-text padding-horizontal-2 padding-vertical-1 bg-slate-900 rounded-medium border border-blue-900/30 text-emerald-400/80 hidden md:block">
                                 KS DASHBOARD
                             </div>
-                            <!-- NEW: Credits in right top of top bar (optimistic pill) -->
                             <div onclick="refreshCredits()" class="top-credits-pill flex-row items-center gap-small padding-horizontal-3 padding-vertical-1 cursor-pointer">
                                 <span class="small-text semi-bold-text text-emerald-400">CREDITS</span>
                                 <span id="top-credits-display" class="credit-number semi-bold-text text-emerald-400">${currentUser ? currentUser.credits : 0}</span>
@@ -779,7 +790,7 @@
             closeSidebarIfMobile();
         }
 
-        // ============== TERMINAL FRAME (with new top-bar credits) ==============
+        // ============== TERMINAL FRAME ==============
         function selectTerminal(id) {
             activeId = id;
             const term = terminals.find(t => t.id === id);
@@ -791,7 +802,6 @@
             localStorage.setItem('lastActiveId', id);
 
             const main = document.getElementById('main-content');
-            
             main.innerHTML = `
                 <div class="flex-column h-full w-full bg-black">
                     <div class="top-bar">
@@ -842,7 +852,6 @@
                             <div class="font-mono small-text padding-horizontal-2 padding-vertical-1 bg-slate-900 rounded-medium border border-blue-900/30 text-blue-400/80 hidden md:block">
                                 ${term.token}
                             </div>
-                            <!-- NEW: Credits in right top of top bar (optimistic pill) -->
                             <div onclick="refreshCredits()" class="top-credits-pill flex-row items-center gap-small padding-horizontal-3 padding-vertical-1 cursor-pointer">
                                 <span class="small-text semi-bold-text text-emerald-400">CREDITS</span>
                                 <span id="top-credits-display" class="credit-number semi-bold-text text-emerald-400">${currentUser ? currentUser.credits : 0}</span>
@@ -853,7 +862,6 @@
                         <iframe src="https://${term.token}.trycloudflare.com" allow="fullscreen" allowfullscreen></iframe>
                     </div>
                 </div>`;
-            
             closeSidebarIfMobile();
         }
 
@@ -866,11 +874,8 @@
         function toggleFullscreen() {
             const container = document.querySelector('.iframe-container');
             if (!container) return;
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                container.requestFullscreen().catch(() => {});
-            }
+            if (document.fullscreenElement) document.exitFullscreen();
+            else container.requestFullscreen().catch(() => {});
         }
 
         function goHome() {
@@ -881,31 +886,7 @@
             closeSidebarIfMobile();
         }
 
-        function quickConnect() {
-            const input = document.getElementById('quick-token');
-            const token = input.value.trim();
-            if (!token) {
-                alert('Please enter a valid token');
-                return;
-            }
-            const exists = terminals.find(t => t.token === token);
-            if (exists) {
-                selectTerminal(exists.id);
-                return;
-            }
-            const newTerm = {
-                id: Date.now().toString(),
-                name: `Terminal ${terminals.length + 1}`,
-                token: token,
-                added: Date.now()
-            };
-            terminals.unshift(newTerm);
-            saveTerminals();
-            renderList();
-            selectTerminal(newTerm.id);
-        }
-
-        // ============== ADD MODAL ==============
+        // ============== ADD / RENAME / DELETE MODALS ==============
         function showAddModal() {
             document.getElementById('modal-name').value = '';
             document.getElementById('modal-token').value = '';
@@ -915,21 +896,15 @@
         }
 
         function hideAddModal() {
-            const modal = document.getElementById('add-modal');
-            modal.style.display = 'none';
+            document.getElementById('add-modal').style.display = 'none';
         }
 
         function handleAddTerminal() {
             const name = document.getElementById('modal-name').value.trim();
             const token = document.getElementById('modal-token').value.trim();
-            if (!token) {
-                alert('Token is required');
-                return;
-            }
-            if (terminals.some(t => t.token === token)) {
-                alert('This token is already saved!');
-                return;
-            }
+            if (!token) { alert('Token is required'); return; }
+            if (terminals.some(t => t.token === token)) { alert('This token is already saved!'); return; }
+            
             const newTerm = {
                 id: Date.now().toString(),
                 name: name || `Terminal ${terminals.length + 1}`,
@@ -943,7 +918,6 @@
             selectTerminal(newTerm.id);
         }
 
-        // ============== RENAME MODAL ==============
         function showRenameModal(id) {
             const term = terminals.find(t => t.id === id);
             if (!term) return;
@@ -951,24 +925,19 @@
             document.getElementById('rename-current-name').textContent = `Current: ${term.name}`;
             document.getElementById('rename-token-display').textContent = term.token;
             document.getElementById('rename-input').value = term.name;
-            const modal = document.getElementById('rename-modal');
-            modal.style.display = 'flex';
+            document.getElementById('rename-modal').style.display = 'flex';
             setTimeout(() => document.getElementById('rename-input').focus(), 50);
         }
 
         function hideRenameModal() {
-            const modal = document.getElementById('rename-modal');
-            modal.style.display = 'none';
+            document.getElementById('rename-modal').style.display = 'none';
             pendingRenameId = null;
         }
 
         function confirmRename() {
             if (!pendingRenameId) return;
             const newName = document.getElementById('rename-input').value.trim();
-            if (!newName) {
-                alert('Please enter a name');
-                return;
-            }
+            if (!newName) { alert('Please enter a name'); return; }
             const term = terminals.find(t => t.id === pendingRenameId);
             if (term) {
                 term.name = newName;
@@ -979,20 +948,17 @@
             hideRenameModal();
         }
 
-        // ============== DELETE MODAL ==============
         function showDeleteModal(id) {
             const term = terminals.find(t => t.id === id);
             if (!term) return;
             pendingDeleteId = id;
             document.getElementById('delete-name-display').textContent = term.name;
             document.getElementById('delete-token-display').textContent = term.token;
-            const modal = document.getElementById('delete-modal');
-            modal.style.display = 'flex';
+            document.getElementById('delete-modal').style.display = 'flex';
         }
 
         function hideDeleteModal() {
-            const modal = document.getElementById('delete-modal');
-            modal.style.display = 'none';
+            document.getElementById('delete-modal').style.display = 'none';
             pendingDeleteId = null;
         }
 
@@ -1024,7 +990,7 @@
             });
         }
 
-        // ============== BACKEND INTEGRATION (now fully optimistic UI) ==============
+        // ============== BACKEND ==============
         async function loadUser() {
             try {
                 const res = await fetch('/api/me');
@@ -1032,7 +998,7 @@
                 const data = await res.json();
                 currentUser = data.user;
                 document.getElementById('username-display').textContent = currentUser.username;
-                updateCreditsUI();   // ← optimistic update for both sidebar + top bar
+                updateCreditsUI();
             } catch (e) {
                 window.location.href = '/auth.html';
             }
@@ -1047,7 +1013,7 @@
                 if (res.ok) {
                     const data = await res.json();
                     currentUser = data.user;
-                    updateCreditsUI();   // ← instant optimistic refresh (no delay)
+                    updateCreditsUI();
                 }
             } catch (e) {
                 console.error('Credit refresh failed', e);
@@ -1070,7 +1036,7 @@
             
             renderList();
             setupSearch();
-            loadUser();   // async → credits appear instantly via updateCreditsUI
+            loadUser();
         }
         
         window.onload = init;
