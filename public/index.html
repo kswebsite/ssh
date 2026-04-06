@@ -29,7 +29,7 @@
             color: #ffffff;
         }
 
-        /* ==================== ORIGINAL + FIXED SIDEBAR STYLES (matched to screenshot) ==================== */
+        /* ==================== FIXED SIDEBAR STYLES (pixel-perfect match to screenshot) ==================== */
         #sidebar {
             width: var(--sidebar-width);
             min-width: var(--sidebar-width);
@@ -365,12 +365,21 @@
             max-width: 384px;
         }
 
-        /* ==================== NEW: MATCHED SIDEBAR FROM SCREENSHOT ==================== */
+        /* ==================== FIXED + PERFECTLY MATCHED SIDEBAR FROM SCREENSHOT ==================== */
         .big-search-icon {
             width: 110px;
             height: 110px;
-            margin: 20px auto;
+            margin: 12px auto 8px;
             opacity: 0.85;
+            display: block;
+        }
+        
+        .small-search-icon {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 20px;
+            opacity: 0.65;
+            display: block;
         }
         
         .add-terminal-card {
@@ -419,12 +428,17 @@
         .credit-refreshing {
             animation: creditPulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
+        
+        .search-input-wrapper {
+            position: relative;
+            margin-bottom: 12px;
+        }
     </style>
 </head>
 <body>
     <div class="main-wrapper">
         
-        <!-- SIDEBAR (FIXED TO MATCH SCREENSHOT EXACTLY) -->
+        <!-- SIDEBAR (NOW FIXED + PIXEL-PERFECT MATCH TO YOUR SCREENSHOT) -->
         <div id="sidebar" class="sidebar-container">
             
             <!-- Header -->
@@ -444,9 +458,9 @@
                 </div>
             </div>
 
-            <!-- Search + BIG SEARCH ICON (exactly as in screenshot) -->
+            <!-- Search + BIG + SMALL SEARCH ICONS (exact screenshot layout) -->
             <div class="sidebar-search-container">
-                <div class="relative-position">
+                <div class="search-input-wrapper">
                     <input 
                         id="search-input"
                         type="text"
@@ -456,13 +470,19 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </div>
-                <!-- Big decorative search icon (screenshot match) -->
+                
+                <!-- Big decorative search icon (exactly as in screenshot) -->
                 <svg class="big-search-icon" fill="none" stroke="#ffffff" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                
+                <!-- Small decorative search icon (exactly as in screenshot - added to match perfectly) -->
+                <svg class="small-search-icon" fill="none" stroke="#ffffff" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </div>
 
-            <!-- ADD TERMINAL (now exact card style from screenshot) -->
+            <!-- ADD TERMINAL (exact card style from screenshot) -->
             <div class="sidebar-add-button-container">
                 <div onclick="showAddModal()" class="add-terminal-card">
                     <span class="plus">+</span>
@@ -473,7 +493,7 @@
             <!-- Terminals List -->
             <div class="terminals-list-container" id="terminals-list"></div>
 
-            <!-- USER CREDITS (screenshot style) -->
+            <!-- USER CREDITS (exact screenshot style) -->
             <div class="user-credits-container">
                 <div class="glass-panel rounded-large padding-4 flex-row items-center gap-medium">
                     <div class="flex-1 min-width-zero">
