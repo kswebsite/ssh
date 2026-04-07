@@ -19,6 +19,7 @@
       background: #000000;
       height: 100dvh;
       overflow-x: hidden;
+      overflow-y: hidden; /* No vertical scroll */
     }
 
     /* Animated Background */
@@ -62,18 +63,6 @@
     @keyframes scan {
       0% { transform: translateY(0); }
       100% { transform: translateY(50px); }
-    }
-
-    /* Glass Card */
-    .glass-card {
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(59, 130, 246, 0.2);
-      box-shadow: 
-        0 25px 50px -12px rgba(0, 0, 0, 0.8),
-        0 0 0 1px rgba(59, 130, 246, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
     /* Input Styling */
@@ -228,18 +217,15 @@
       background: #3b82f6;
     }
 
-    /* Mobile Optimizations */
+    /* Mobile Optimizations - No card, full height, no extra space */
     @media (max-width: 640px) {
-      .glass-card {
+      .auth-panel {
         margin: 0;
+        padding: 1.5rem 1rem; /* Tight padding for mobile */
         border-radius: 0;
-        min-height: 100vh;
-        min-height: 100dvh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        border: none;
-        background: rgba(15, 23, 42, 0.95);
+        width: 100%;
+        max-width: none;
+        height: auto;
       }
 
       .input-field {
@@ -258,29 +244,16 @@
       }
     }
 
-    /* Desktop Enhancements */
+    /* Desktop Enhancements - No card, clean look */
     @media (min-width: 641px) {
-      .glass-card {
-        border-radius: 2rem;
-      }
-
-      .input-field {
-        padding: 0.875rem 1.25rem;
-      }
-
-      /* Hover effects only on desktop */
-      .glass-card:hover {
-        box-shadow: 
-          0 25px 50px -12px rgba(0, 0, 0, 0.8),
-          0 0 0 1px rgba(59, 130, 246, 0.2),
-          inset 0 1px 0 rgba(255, 255, 255, 0.05),
-          0 0 40px rgba(59, 130, 246, 0.1);
+      .auth-panel {
+        padding: 2.5rem;
       }
     }
 
     /* Large Desktop */
     @media (min-width: 1024px) {
-      .glass-card {
+      .auth-panel {
         max-width: 480px;
       }
     }
@@ -329,10 +302,13 @@
 <body class="text-slate-200 antialiased">
   <div class="bg-mesh"></div>
   
-  <div class="min-h-screen min-h-[100dvh] flex items-center justify-center p-0 sm:p-4 lg:p-8">
-    <div class="glass-card w-full max-w-md sm:max-w-lg lg:max-w-md p-6 sm:p-8 lg:p-10 relative">
+  <!-- Full height container - exactly 100dvh, no padding, no scroll possible -->
+  <div class="h-[100dvh] flex items-center justify-center p-0">
+    
+    <!-- No card / no glass / no border / no shadow - pure form on background -->
+    <div class="auth-panel w-full max-w-md sm:max-w-lg lg:max-w-md p-6 sm:p-8 lg:p-10 relative">
       
-      <!-- Decorative Elements -->
+      <!-- Decorative Elements (kept but now positioned directly on full screen) -->
       <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
       <div class="absolute -top-20 -right-20 w-40 h-40 bg-blue-500 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
       <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-indigo-500 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
