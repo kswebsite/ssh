@@ -8,8 +8,9 @@
 <style>
 :root {
     --blue: #3b82f6;
+    --blue-dark: #2563eb;
     --dark: #020617;
-    --card: #0f172a;
+    --card: rgba(15, 23, 42, 0.95);
 }
 
 /* RESET */
@@ -20,75 +21,118 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
     background: var(--dark);
     color: white;
+    font-family: 'Inter', sans-serif;
 }
 
-/* CENTER */
-.container {
-    min-height: 100vh;
+/* CONTAINER */
+.main-container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    text-align: center;
 }
 
-/* LOGO */
-.logo {
+/* HERO */
+.hero-section {
+    text-align: center;
+    padding: 60px 20px 40px;
+}
+
+.logo-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.logo-image {
     width: 70px;
+    height: 70px;
     border-radius: 20px;
-    margin-bottom: 10px;
     box-shadow: 0 0 25px var(--blue);
 }
 
-.title {
-    font-size: 42px;
+.brand-name {
+    font-size: 3rem;
     font-weight: bold;
 }
 
-.subtitle {
+.tagline {
+    color: var(--blue);
+    font-size: 12px;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+}
+
+.hero-title {
+    font-size: 2.2rem;
+    font-weight: bold;
+}
+
+.hero-subtitle {
     color: #94a3b8;
-    margin-bottom: 30px;
+    margin-top: 8px;
 }
 
-/* CARD */
-.card {
-    background: rgba(15, 23, 42, 0.9);
+/* GLASS */
+.glass-panel {
+    background: var(--card);
+    backdrop-filter: blur(12px);
     border: 1px solid rgba(59,130,246,0.2);
-    backdrop-filter: blur(10px);
-    padding: 25px;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 400px;
 }
 
-/* INPUT */
-.input {
-    width: 100%;
+/* QUICK CONNECT */
+.quick-connect-section {
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+}
+
+.quick-connect-box {
+    border-radius: 20px;
+    padding: 25px;
+}
+
+.quick-connect-title {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 12px;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+.quick-connect-form {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+}
+
+@media(min-width:640px){
+    .quick-connect-form {
+        flex-direction: row;
+    }
+}
+
+.input-field {
+    flex: 1;
     padding: 14px;
     border-radius: 10px;
     border: 1px solid rgba(59,130,246,0.3);
     background: #020617;
     color: white;
-    margin-bottom: 15px;
-    font-size: 15px;
 }
 
-.input:focus {
+.input-field:focus {
     outline: none;
     border-color: var(--blue);
     box-shadow: 0 0 10px rgba(59,130,246,0.4);
 }
 
-/* BUTTON */
-.btn {
-    width: 100%;
-    padding: 14px;
+.btn-primary {
     background: var(--blue);
     border: none;
+    padding: 14px 20px;
     border-radius: 10px;
     color: white;
     font-weight: bold;
@@ -96,91 +140,244 @@ body {
     transition: 0.2s;
 }
 
-.btn:hover {
-    background: #2563eb;
+.btn-primary:hover {
+    background: var(--blue-dark);
     transform: scale(1.03);
 }
 
 /* FEATURES */
-.features {
-    margin-top: 40px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
-    gap: 15px;
-    width: 100%;
-    max-width: 600px;
+.feature-section {
+    padding: 40px 20px;
 }
 
-.feature {
-    background: var(--card);
-    padding: 15px;
-    border-radius: 12px;
-    border: 1px solid rgba(59,130,246,0.2);
-    transition: 0.2s;
+.feature-section-inner {
+    max-width: 1000px;
+    margin: auto;
 }
 
-.feature:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(59,130,246,0.2);
+.section-heading {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 10px;
 }
 
-.feature h4 {
-    margin-bottom: 5px;
-    color: var(--blue);
-}
-
-.feature p {
-    font-size: 13px;
+.section-subheading {
+    text-align: center;
     color: #94a3b8;
+    margin-bottom: 30px;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+    gap: 20px;
+}
+
+.feature-card {
+    border-radius: 16px;
+    padding: 20px;
+    transition: 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(59,130,246,0.2);
+}
+
+.feature-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.feature-title {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+}
+
+.feature-description {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* SCREENSHOT */
+.screenshot-section {
+    padding: 50px 20px;
+    background: rgba(15,23,42,0.7);
+}
+
+.screenshot-section-inner {
+    max-width: 1000px;
+    margin: auto;
+}
+
+.screenshot-heading {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+}
+
+.screenshot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+    gap: 15px;
+}
+
+.screenshot-item {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(59,130,246,0.3);
+}
+
+.screenshot-container:hover {
+    transform: scale(1.03);
+}
+
+.screenshot-image {
+    width: 100%;
+    display: block;
+}
+
+/* ANIMATION */
+@keyframes pulse {
+    0%,100%{opacity:1}
+    50%{opacity:0.4}
+}
+
+.status-dot {
+    animation: pulse 2s infinite;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="main-container">
 
-    <img src="/image/logo.png" class="logo">
-    <div class="title">KS SSH</div>
-    <div class="subtitle">Web Terminal • Ports • File Manager</div>
-
-    <!-- CONNECT -->
-    <div class="card">
-        <input id="token" class="input" placeholder="Enter your token...">
-        <button class="btn" onclick="connect()">Connect</button>
+<!-- HERO -->
+<div class="hero-section">
+    <div class="logo-wrapper">
+        <img src="/image/logo.png" class="logo-image">
+        <div class="brand-name">KS SSH</div>
     </div>
 
-    <!-- FEATURES -->
-    <div class="features">
-        <div class="feature">
-            <h4>💻 Terminal</h4>
-            <p>Multi terminal, resize, themes</p>
-        </div>
+    <div class="tagline">𝑲𝑺 𝑾𝒂𝒓𝒓𝒊𝒐𝒓</div>
+    <div class="hero-title">Web Terminal</div>
+    <div class="hero-subtitle">Terminal + Ports + File</div>
+</div>
 
-        <div class="feature">
-            <h4>🔌 Ports</h4>
-            <p>Monitor & preview ports</p>
-        </div>
+<!-- QUICK CONNECT -->
+<div class="quick-connect-section">
+    <div class="quick-connect-box glass-panel">
+        <div class="quick-connect-title">Quick Connect</div>
 
-        <div class="feature">
-            <h4>📁 Files</h4>
-            <p>Full file manager support</p>
-        </div>
+        <div class="quick-connect-form">
+            <input id="quick-token" class="input-field" placeholder="Paste your token here...">
 
-        <div class="feature">
-            <h4>⚡ Fast</h4>
-            <p>Lightweight & smooth</p>
+            <button onclick="quickConnect()" class="btn-primary">
+                CONNECT →
+            </button>
         </div>
     </div>
+</div>
+
+<!-- FEATURES -->
+<div class="feature-section">
+    <div class="feature-section-inner">
+
+        <div class="section-heading">Why KS SSH is the Best</div>
+        <div class="section-subheading">
+            Easy to use. No VPN. No complex setup. Just run installation code, paste token and get full SSH terminal + ports + file manager.
+        </div>
+
+        <div class="feature-grid">
+
+            <div class="feature-card glass-panel">
+                <div class="feature-icon">💻</div>
+                <div class="feature-title">Full Terminal</div>
+                <div class="feature-description">
+                    <li>Multi Terminal</li>
+                    <li>Theme, resize</li>
+                    <li>Custom Buttons</li>
+                </div>
+            </div>
+
+            <div class="feature-card glass-panel">
+                <div class="feature-icon">🔌</div>
+                <div class="feature-title">Ports</div>
+                <div class="feature-description">
+                    <li>HTTP/HTTPS Preview</li>
+                    <li>Monitor all ports</li>
+                </div>
+            </div>
+
+            <div class="feature-card glass-panel">
+                <div class="feature-icon">📁</div>
+                <div class="feature-title">Files</div>
+                <div class="feature-description">
+                    <li>Edit, rename, delete</li>
+                    <li>Upload from URL</li>
+                    <li>Full file manager</li>
+                </div>
+            </div>
+
+            <div class="feature-card glass-panel">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Advance</div>
+                <div class="feature-description">
+                    <li>Resource monitor</li>
+                    <li>CTRL/ALT keys mobile</li>
+                </div>
+            </div>
+
+            <div class="feature-card glass-panel">
+                <div class="feature-icon">💰</div>
+                <div class="feature-title">Provides</div>
+                <div class="feature-description">
+                    <li>Free</li>
+                    <li>Custom URL</li>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- SCREENSHOTS -->
+<div class="screenshot-section">
+    <div class="screenshot-section-inner">
+
+        <div class="screenshot-heading">See It In Action</div>
+
+        <div class="screenshot-grid">
+            <div class="screenshot-container screenshot-item">
+                <img src="/image/screenshot1.png" class="screenshot-image">
+            </div>
+            <div class="screenshot-container screenshot-item">
+                <img src="/image/screenshot2.png" class="screenshot-image">
+            </div>
+            <div class="screenshot-container screenshot-item">
+                <img src="/image/screenshot3.png" class="screenshot-image">
+            </div>
+            <div class="screenshot-container screenshot-item">
+                <img src="/image/screenshot4.png" class="screenshot-image">
+            </div>
+            <div class="screenshot-container screenshot-item">
+                <img src="/image/screenshot5.png" class="screenshot-image">
+            </div>
+        </div>
+
+    </div>
+</div>
 
 </div>
 
 <script>
-function connect() {
-    const token = document.getElementById("token").value.trim();
+function quickConnect() {
+    const input = document.getElementById('quick-token');
+    const token = input.value.trim();
 
     if (!token) {
-        alert("Enter token");
+        alert('Please enter a valid token');
         return;
     }
 
@@ -196,7 +393,7 @@ function connect() {
     const newTerm = {
         id: Date.now().toString(),
         name: `Terminal ${terminals.length + 1}`,
-        token,
+        token: token,
         added: Date.now()
     };
 
