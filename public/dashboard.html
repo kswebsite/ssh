@@ -33,7 +33,7 @@
             color: white;
         }
 
-        /* Top Bar - exactly like main app, perfectly balanced for mobile & desktop */
+        /* Top Bar - perfectly balanced for mobile & desktop */
         .top-bar {
             height: 56px;
             background: #0f172a;
@@ -112,7 +112,7 @@
             background: rgba(59, 130, 246, 0.25);
         }
 
-        /* Credits badge - same as sidebar header */
+        /* Credits badge */
         .credits-badge {
             display: flex;
             align-items: center;
@@ -140,7 +140,7 @@
             50% { opacity: 0.4; }
         }
 
-        /* Add button - same style as sidebar */
+        /* Add button */
         .btn-primary {
             background: #3b82f6;
             border-radius: 6px;
@@ -161,45 +161,6 @@
             background: #2563eb;
         }
 
-        /* Tabs - below top bar, clean and stylish */
-        .tabs {
-            display: flex;
-            gap: 4px;
-            padding: 12px 16px;
-            background: #020617;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-
-        .tabs::-webkit-scrollbar {
-            display: none;
-        }
-
-        .tab-btn {
-            padding: 8px 20px;
-            background: transparent;
-            border: none;
-            color: #64748b;
-            font-size: 13px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .tab-btn.active {
-            background: rgba(59, 130, 246, 0.15);
-            color: #60a5fa;
-        }
-
-        @media (min-width: 768px) {
-            .tabs {
-                padding: 16px 24px 12px;
-            }
-        }
-
         /* Content Area */
         .content {
             padding: 16px 16px 24px;
@@ -214,116 +175,122 @@
             }
         }
 
-        /* Grid System - perfectly responsive */
-        .grid-container {
+        /* Section Cards - always visible, stylish glass panels */
+        .section-card {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-header {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #e2e8f0;
+        }
+
+        .section-header::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #3b82f6;
+            border-radius: 50%;
+        }
+
+        /* Mini grid inside each section */
+        .mini-grid {
             display: grid;
             grid-template-columns: repeat(1, 1fr);
-            gap: 16px;
+            gap: 12px;
         }
 
         @media (min-width: 640px) {
-            .grid-container {
+            .mini-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
             }
         }
 
         @media (min-width: 1024px) {
-            .grid-container {
+            .mini-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
 
-        @media (min-width: 1280px) {
-            .grid-container {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        /* Glass Panel & Card - harder, same as sidebar */
-        .card {
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            padding: 20px;
+        /* Mini terminal cards - compact but same style */
+        .mini-card {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(59, 130, 246, 0.15);
             border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            padding: 14px;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
         }
 
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 30px -10px rgba(59, 130, 246, 0.25);
+        .mini-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -6px rgba(59, 130, 246, 0.3);
         }
 
-        .card-header {
+        .mini-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
         }
 
-        .card-title {
+        .mini-title {
             font-weight: 600;
-            font-size: 15px;
+            font-size: 14px;
         }
 
-        .status-dot {
+        .mini-status {
             color: #34d399;
-            font-size: 18px;
+            font-size: 16px;
             line-height: 1;
         }
 
-        .token-display {
+        .mini-token {
             background: #0f172a;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-size: 13px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
             font-family: 'JetBrains Mono', monospace;
             color: #93c5fd;
             word-break: break-all;
+            margin-bottom: 12px;
         }
 
-        .btn-connect {
-            margin-top: auto;
-            padding: 12px;
-            font-size: 14px;
+        .mini-connect {
+            width: 100%;
+            padding: 8px;
             background: #3b82f6;
             border-radius: 6px;
             border: none;
             color: white;
-            cursor: pointer;
+            font-size: 13px;
             font-weight: 500;
+            cursor: pointer;
         }
 
-        .btn-connect:hover {
+        .mini-connect:hover {
             background: #2563eb;
         }
 
-        /* Empty State */
-        .empty-state {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 80px 0;
+        /* Empty state inside sections */
+        .section-empty {
             text-align: center;
+            padding: 32px 20px;
             color: #64748b;
+            font-size: 13px;
         }
 
-        .empty-state.visible {
-            display: flex;
-        }
-
-        .empty-state h3 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-
-        /* Modal - same as main app */
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -427,14 +394,11 @@
 </head>
 <body>
 
-<!-- TOP BAR - exactly like main app, perfectly balanced for mobile & desktop -->
+<!-- TOP BAR -->
 <div class="top-bar">
-    <!-- LEFT: Workspaces dropdown + create button (exactly as requested) -->
     <div class="top-bar-left">
         <div class="workspaces-section">
             <select id="workspace-dropdown" class="form-input"></select>
-            
-            <!-- Create workspace button -->
             <button onclick="showCreateWorkspaceModal()" class="action-btn-small">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
@@ -443,15 +407,11 @@
         </div>
     </div>
 
-    <!-- RIGHT: Credits + Add button -->
     <div class="top-bar-right">
-        <!-- Credits -->
         <div class="credits-badge">
             <div class="dot"></div>
             <span id="header-credits">0</span>
         </div>
-
-        <!-- Add Terminal -->
         <button onclick="showAddModal()" class="btn-primary">
             <span style="font-size: 18px; line-height: 1;">+</span>
             <span>Add Terminal</span>
@@ -459,22 +419,30 @@
     </div>
 </div>
 
-<!-- TABS - below top bar / add button area -->
-<div class="tabs" id="tabs-container">
-    <button onclick="setTab('fast')" id="tab-fast" class="tab-btn">Fast</button>
-    <button onclick="setTab('recents')" id="tab-recents" class="tab-btn">Recents</button>
-    <button onclick="setTab('favorites')" id="tab-favorites" class="tab-btn">Favorites</button>
-    <button onclick="setTab('all')" id="tab-all" class="tab-btn active">All Terminals</button>
-</div>
-
-<!-- CONTENT -->
+<!-- CONTENT - three always-visible stylish cards -->
 <div class="content">
-    <div id="terminals-grid" class="grid-container"></div>
 
-    <div id="empty-state" class="empty-state">
-        <h3>No terminals in this workspace</h3>
-        <button onclick="showAddModal()" class="btn-primary" style="margin-top: 20px;">Add Terminal</button>
+    <!-- Recents Card -->
+    <div class="section-card">
+        <div class="section-header">Recents</div>
+        <div id="recents-grid" class="mini-grid"></div>
+        <div id="recents-empty" class="section-empty" style="display: none;">No recent terminals yet</div>
     </div>
+
+    <!-- Favorites Card -->
+    <div class="section-card">
+        <div class="section-header">Favorites</div>
+        <div id="favorites-grid" class="mini-grid"></div>
+        <div id="favorites-empty" class="section-empty" style="display: none;">No favorites yet</div>
+    </div>
+
+    <!-- All Terminals Card -->
+    <div class="section-card">
+        <div class="section-header">All Terminals</div>
+        <div id="all-grid" class="mini-grid"></div>
+        <div id="all-empty" class="section-empty" style="display: none;">No terminals in this workspace</div>
+    </div>
+
 </div>
 
 <!-- ADD TERMINAL MODAL -->
@@ -484,12 +452,10 @@
             <h2 class="modal-title">New Terminal</h2>
             <button onclick="hideAddModal()" class="modal-close">×</button>
         </div>
-
         <div style="display: flex; flex-direction: column; gap: 16px;">
             <input id="modal-name" placeholder="Display Name" class="input-field">
             <input id="modal-token" placeholder="Token (from KS Panel)" class="input-field input-mono">
         </div>
-
         <div class="modal-actions">
             <button onclick="hideAddModal()" class="btn-flex btn-secondary">Cancel</button>
             <button onclick="handleAddTerminal()" class="btn-flex btn-primary">Add Terminal</button>
@@ -516,7 +482,6 @@
     let terminals = [];
     let workspaces = [];
     let currentWorkspaceId = null;
-    let currentTab = 'all';
 
     function loadTerminals() {
         const saved = localStorage.getItem('ks_ssh_terminals');
@@ -554,56 +519,56 @@
         }
     }
 
-    function getFilteredTerminals() {
+    function getRecents() {
         let filtered = terminals.filter(t => t.workspaceId === currentWorkspaceId);
-
-        if (currentTab === 'recents') {
-            filtered.sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
-        } else if (currentTab === 'fast') {
-            filtered = filtered.slice(0, 6);
-        }
-        return filtered;
+        filtered.sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
+        return filtered.slice(0, 8);
     }
 
-    function renderCards() {
-        const grid = document.getElementById('terminals-grid');
-        const empty = document.getElementById('empty-state');
+    function getFavorites() {
+        // For now showing all terminals (you can add isFavorite flag later)
+        return terminals.filter(t => t.workspaceId === currentWorkspaceId);
+    }
+
+    function getAllTerminals() {
+        return terminals.filter(t => t.workspaceId === currentWorkspaceId);
+    }
+
+    function renderMiniGrid(gridId, emptyId, data) {
+        const grid = document.getElementById(gridId);
+        const emptyEl = document.getElementById(emptyId);
         grid.innerHTML = '';
 
-        const filtered = getFilteredTerminals();
-
-        if (filtered.length === 0) {
-            empty.classList.add('visible');
+        if (data.length === 0) {
+            emptyEl.style.display = 'block';
             return;
         }
 
-        empty.classList.remove('visible');
+        emptyEl.style.display = 'none';
 
-        filtered.forEach(term => {
+        data.forEach(term => {
             const card = document.createElement('div');
-            card.className = "card";
-
+            card.className = "mini-card";
             card.innerHTML = `
-                <div class="card-header">
-                    <div class="card-title">${term.name}</div>
-                    <div class="status-dot">●</div>
+                <div class="mini-header">
+                    <div class="mini-title">${term.name}</div>
+                    <div class="mini-status">●</div>
                 </div>
-                <div class="token-display">${term.token}</div>
-                <button onclick="connectTerminal('${term.id}')" class="btn-connect">Connect Now</button>
+                <div class="mini-token">${term.token}</div>
+                <button onclick="connectTerminal('${term.id}'); event.stopImmediatePropagation();" class="mini-connect">Connect Now</button>
             `;
-
             grid.appendChild(card);
         });
     }
 
-    function setTab(tab) {
-        currentTab = tab;
-        
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.id === `tab-${tab}`);
-        });
+    function renderAllSections() {
+        const recents = getRecents();
+        const favorites = getFavorites();
+        const allTerms = getAllTerminals();
 
-        renderCards();
+        renderMiniGrid('recents-grid', 'recents-empty', recents);
+        renderMiniGrid('favorites-grid', 'favorites-empty', favorites);
+        renderMiniGrid('all-grid', 'all-empty', allTerms);
     }
 
     function showAddModal() {
@@ -630,20 +595,24 @@
             name: name || `Terminal ${terminals.length + 1}`,
             token: token,
             workspaceId: currentWorkspaceId,
-            added: Date.now()
+            added: Date.now(),
+            lastUsed: Date.now()
         };
 
         terminals.unshift(newTerm);
         saveTerminals();
         hideAddModal();
-        renderCards();
+        renderAllSections();
     }
 
     function connectTerminal(id) {
         const term = terminals.find(t => t.id === id);
         if (term) {
+            term.lastUsed = Date.now();
+            saveTerminals();
             console.log('%c✅ Connecting to terminal: ' + term.name, 'color:#60a5fa; font-weight:bold');
             alert('Connecting to: ' + term.name + '\n\n(Token: ' + term.token + ')');
+            renderAllSections();
         }
     }
 
@@ -672,7 +641,7 @@
         populateWorkspaceDropdown();
         hideCreateWorkspaceModal();
         currentWorkspaceId = newWs.id;
-        renderCards();
+        renderAllSections();
     }
 
     function init() {
@@ -689,10 +658,10 @@
         document.getElementById('workspace-dropdown').addEventListener('change', function() {
             currentWorkspaceId = this.value;
             localStorage.setItem('ks_current_workspace', currentWorkspaceId);
-            renderCards();
+            renderAllSections();
         });
 
-        renderCards();
+        renderAllSections();
     }
 
     window.onload = init;
