@@ -255,10 +255,7 @@
         
         .icon-btn:hover { background: rgba(59, 130, 246, 0.2); }
         
-        .icon-btn.danger { color: #f87171; }
-        .icon-btn.danger:hover { background: rgba(248, 113, 113, 0.2); }
-        
-        .icon-btn svg { width: 14px; height: 14px; }
+        .icon-btn svg { width: 18px; height: 18px; }
         
         .empty-state {
             padding: 32px;
@@ -542,6 +539,41 @@
             height: 100%;
             border: 0;
             display: block;
+        }
+
+        /* Context Menu for 3-dot */
+        .context-menu {
+            position: absolute;
+            background: #1e293b;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            padding: 4px 0;
+            z-index: 10000;
+            min-width: 180px;
+            display: none;
+        }
+        .context-menu button {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: left;
+        }
+        .context-menu button:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+        .context-menu button.delete {
+            color: #f87171;
+        }
+        .context-menu button.delete:hover {
+            background: rgba(248, 113, 113, 0.1);
         }
         
         /* Modals */
@@ -1100,6 +1132,7 @@
         let currentUser = null;
         let currentWorkspaceId = 'all';
         let currentManageWorkspaceId = null;
+        let currentContextId = null;
 
         // ============== LOCALSTORAGE ==============
         function loadTerminals() {
@@ -1224,7 +1257,7 @@
                         <div class="terminal-token">${term.token}</div>
                     </div>
                     <div class="terminal-actions" style="opacity: 1;">
-                        <button class="icon-btn" onclick="event.stopPropagation(); showTerminalMenu('${term.id}');" title="Actions">
+                        <button class="icon-btn" onclick="event.stopPropagation(); showTerminalMenu('${term.id}', event);" title="Actions">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 5v.01M12 12v.01M12 19v.01"/>
                             </svg>
@@ -1267,7 +1300,7 @@
             closeSidebarIfMobile();
         }
 
-        // ============== TERMINAL FRAME ==============
+        // ============== TERMINAL FRAME (custom subpage - ssh.ksw.workers.dev removed) ==============
         function selectTerminal(id) {
             activeId = id;
             const term = terminals.find(t => t.id === id);
@@ -1374,16 +1407,63 @@
             closeSidebarIfMobile();
         }
 
-        // ============== TERMINAL 3-DOT MENU (Edit / Delete) ==============
-        function showTerminalMenu(id) {
-            const term = terminals.find(t => t.id === id);
-            if (!term) return;
-            const choice = confirm(`"${term.name}"\n\nChoose action:\n\nOK = Edit / Rename\nCancel = Delete`);
-            if (choice) {
-                showRenameModal(id);
-            } else {
-                showDeleteModal(id);
-            }
+        // ============== NEW 3-DOT CONTEXT MENU WITH SVG ICONS (Edit + Delete) ==============
+        function createContextMenu() {
+            const menu = document.createElement('div');
+            menu.id = 'context-menu';
+            menu.className = 'context-menu';
+            menu.innerHTML = `
+                <button onclick="contextEdit()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    <span>Edit / Rename</span>
+                </button>
+                <button onclick="contextDelete()" class="delete">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    <span>Delete Terminal</span>
+                </button>
+            `;
+            document.body.appendChild(menu);
+
+            // Hide menu when clicking anywhere else
+            document.addEventListener('click', function(e) {
+                if (menu && !menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            });
+
+            return menu;
+        }
+
+        function showTerminalMenu(id, event) {
+            event.stopImmediatePropagation();
+            currentContextId = id;
+
+            let menu = document.getElementById('context-menu');
+            if (!menu) menu = createContextMenu();
+
+            // Position menu near the clicked 3-dot button
+            const rect = event.currentTarget.getBoundingClientRect();
+            menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
+            menu.style.left = `${rect.left + window.scrollX - 10}px`;
+            menu.style.display = 'block';
+        }
+
+        function contextEdit() {
+            const menu = document.getElementById('context-menu');
+            if (menu) menu.style.display = 'none';
+            if (currentContextId) showRenameModal(currentContextId);
+            currentContextId = null;
+        }
+
+        function contextDelete() {
+            const menu = document.getElementById('context-menu');
+            if (menu) menu.style.display = 'none';
+            if (currentContextId) showDeleteModal(currentContextId);
+            currentContextId = null;
         }
 
         // ============== ADD MODAL ==============
