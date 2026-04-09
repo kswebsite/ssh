@@ -12,31 +12,21 @@
     }
 
     :root {
-  /* Deeper blacks for a true "void" theme */
-  --bg-primary: #000000;
-  --bg-secondary: #050505;
-  --bg-tertiary: #0a0c10;
-  --bg-input: #0d1117;
-
-  /* Sharper, more electric blue borders */
-  --border-color: #161b22;
-  --border-focus: #0077ff;
-
-  /* Text remains clean but slightly tinted */
-  --text-primary: #ffffff;
-  --text-secondary: #8b949e;
-  --text-muted: #484f58;
-
-  /* Vibrant Blue accents with a deeper glow */
-  --accent-primary: #0088ff;
-  --accent-secondary: #00d4ff;
-  --accent-glow: rgba(0, 136, 255, 0.4);
-
-  /* Standard status colors */
-  --error: #f85149;
-  --success: #3fb950;
-}
-
+      --bg-primary: #000000;
+      --bg-secondary: #0a0a0a;
+      --bg-tertiary: #111111;
+      --bg-input: #1a1a1a;
+      --border-color: #2a2a2a;
+      --border-focus: #00d4ff;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --text-muted: #666666;
+      --accent-primary: #00d4ff;
+      --accent-secondary: #0099cc;
+      --accent-glow: rgba(0, 212, 255, 0.3);
+      --error: #ff4444;
+      --success: #00ff88;
+    }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -594,7 +584,7 @@
   </style>
 </head>
 <body>
-  <div class="bg-mesh">🔑</div>
+  <div class="bg-mesh"></div>
   
   <div class="container">
     <div class="auth-panel">
@@ -605,7 +595,7 @@
       <!-- Header -->
       <div class="header">
         <div class="logo-wrapper">
-          <div class="logo-icon"></div>
+          <div class="logo-icon">🔑</div>
           <h1 class="title">SSH</h1>
         </div>
       </div>
@@ -721,6 +711,7 @@
         </form>
         <p id="register-error" class="error-message">Please check your inputs</p>
       </div>
+
     </div>
   </div>
 
