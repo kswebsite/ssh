@@ -812,8 +812,25 @@
                 </div>
                 <div class="status">
                     <div class="status-dot"></div>
-                    <span>LIVE</span>
+                    <span id="header-credits">0</span>
                 </div>
+            </div>
+
+            <!-- Workspaces Dropdown - Added exactly on top of search bar -->
+            <div style="padding: 0 12px 8px 12px;">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; color: #60a5fa;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1v-5m-6 0a1 1 0 001-1v5" />
+                    </svg>
+                    <span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #60a5fa; text-transform: uppercase;">WORKSPACES</span>
+                </div>
+                <select id="workspace-dropdown" class="form-input" style="font-size: 13px; padding: 9px 12px;">
+                    <option value="all">All Workspaces</option>
+                    <option value="personal">Personal</option>
+                    <option value="work">Work</option>
+                    <option value="dev">Development</option>
+                    <option value="prod">Production</option>
+                </select>
             </div>
 
             <div class="search-box">
@@ -839,16 +856,12 @@
                         <p>LOGGED IN AS</p>
                         <p id="username-display">@loading...</p>
                     </div>
-                    <div class="credits-section">
-                        <div class="credits-label">CREDITS</div>
-                        <div id="credits-display">0</div>
-                        <div class="refresh-btn" onclick="refreshCredits()">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.058 11H1M12 3v2m0 16v2m9-9H15"/>
-                            </svg>
-                            REFRESH
-                        </div>
-                    </div>
+                </div>
+
+                <!-- Account and Logout - Added in down section of user profile -->
+                <div style="margin-top: 12px; display: flex; gap: 8px; padding: 0 4px;">
+                    <button onclick="showAccount()" style="flex: 1; padding: 9px 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; color: #60a5fa; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Account</button>
+                    <button onclick="handleLogout()" style="flex: 1; padding: 9px 12px; background: transparent; border: 1px solid #f87171; border-radius: 6px; color: #f87171; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
                 </div>
             </div>
 
@@ -1343,7 +1356,16 @@
                 const data = await res.json();
                 currentUser = data.user;
                 document.getElementById('username-display').textContent = currentUser.username;
-                document.getElementById('credits-display').textContent = currentUser.credits;
+                
+                // Credits display removed from profile - only header credits is shown
+                const creditsDisplay = document.getElementById('credits-display');
+                if (creditsDisplay) {
+                    creditsDisplay.textContent = currentUser.credits;
+                }
+                const headerCredits = document.getElementById('header-credits');
+                if (headerCredits) {
+                    headerCredits.textContent = currentUser.credits || 0;
+                }
             } catch (e) {
                 window.location.href = '/auth.html';
             }
@@ -1354,7 +1376,23 @@
             if (res.ok) {
                 const data = await res.json();
                 currentUser = data.user;
-                document.getElementById('credits-display').textContent = currentUser.credits;
+                const creditsDisplay = document.getElementById('credits-display');
+                if (creditsDisplay) creditsDisplay.textContent = currentUser.credits;
+                const headerCredits = document.getElementById('header-credits');
+                if (headerCredits) headerCredits.textContent = currentUser.credits || 0;
+            }
+        }
+
+        // ============== NEW: Account & Logout functions ==============
+        function showAccount() {
+            alert('Account settings would open here.\n\n(Full account panel coming in future update)');
+        }
+
+        function handleLogout() {
+            if (confirm('Logout from KS SSH?\n\nThis will clear your session and return to login.')) {
+                localStorage.removeItem('ks_ssh_terminals');
+                localStorage.removeItem('lastActiveId');
+                window.location.href = '/auth.html';
             }
         }
 
