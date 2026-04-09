@@ -31,7 +31,7 @@ async function handleLogin(e) {
     return;
   }
 
-  window.location.href = '/dashboard.html';
+  window.location.href = '/';
 }
 
 async function handleRegister(e) {
