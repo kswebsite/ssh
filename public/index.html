@@ -782,7 +782,7 @@
                 </div>
             </div>
 
-            <!-- Workspaces Dropdown + Create (exactly as requested) -->
+            <!-- Workspaces Dropdown + Create (custom menu + dropdown + [ + ] add button in one line) -->
             <div style="padding: 0 12px 8px 12px;">
                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; color: #60a5fa;">
@@ -790,15 +790,16 @@
                     </svg>
                     <span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #60a5fa; text-transform: uppercase;">WORKSPACES</span>
                 </div>
-                <select id="workspace-dropdown" class="form-input" style="font-size: 13px; padding: 9px 12px;"></select>
                 
-                <!-- Create button at the bottom of the dropdown section (as requested) -->
-                <button onclick="showCreateWorkspaceModal()" style="margin-top: 8px; width: 100%; padding: 9px 12px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; color: #60a5fa; font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    CREATE NEW WORKSPACE
-                </button>
+                <!-- Dropdown + [ + ] button in ONE LINE -->
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <select id="workspace-dropdown" class="form-input" style="flex: 1; font-size: 13px; padding: 9px 12px;"></select>
+                    
+                    <button onclick="showCreateWorkspaceModal()" 
+                            style="padding: 9px 14px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; color: #60a5fa; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; min-width: 42px; flex-shrink: 0;">
+                        [ + ]
+                    </button>
+                </div>
             </div>
 
             <div class="search-box">
