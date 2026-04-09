@@ -4,60 +4,109 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KS SSH — Web Terminal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         
-        :root {
-            --sidebar-width: 225px;
-            --primary-blue: #3b82f6;
-            --electric-blue: #60a5fa;
-            --deep-blue: #1e3a8a;
-            --navy: #0f172a;
-            --black: #020617;
-        }
-        
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body, html {
-            margin: 0;
-            padding: 0;
             height: 100dvh;
             width: 100%;
             overflow: hidden;
-            background: var(--black);
+            background: #020617;
             font-family: 'Inter', sans-serif;
+            color: white;
         }
         
-        #sidebar {
-            width: var(--sidebar-width);
-            min-width: var(--sidebar-width);
-            max-width: var(--sidebar-width);
-        }
-        
-        .iframe-container {
+        /* Layout */
+        .app {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
             position: relative;
-            flex: 1;
-            overflow: hidden;
-            background: #000;
-            width: 100%;
-            height: 100dvh;
         }
         
-        .iframe-container iframe {
-            width: 100%;
-            height: 100dvh;
-            border: 0;
-            display: block;
+        /* Sidebar */
+        #sidebar {
+            width: 225px;
+            min-width: 225px;
+            background: #0f172a;
+            border-right: 1px solid rgba(59, 130, 246, 0.2);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
         }
         
-        .modal {
-            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        #sidebar.open { transform: translateX(0); }
+        
+        @media (min-width: 768px) {
+            #sidebar { position: static; transform: translateX(0); }
         }
         
-        @keyframes modalPop {
-            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
+        /* Header */
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.5);
+        }
+        
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #3b82f6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo svg { width: 20px; height: 20px; }
+        
+        .brand h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .brand p {
+            font-size: 10px;
+            color: #60a5fa;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        
+        .status {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 4px;
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #60a5fa;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status span {
+            font-size: 9px;
+            color: #60a5fa;
+            font-weight: 700;
         }
         
         @keyframes pulse {
@@ -65,198 +114,737 @@
             50% { opacity: 0.4; }
         }
         
-        .terminal-list-item {
-            transition: all 0.2s ease;
+        /* Search */
+        .search-box {
+            padding: 12px;
+            position: relative;
         }
         
-        .terminal-list-item:hover {
-            background: rgba(59, 130, 246, 0.1);
-        }
-        
-        .terminal-list-item.active {
-            background: rgba(59, 130, 246, 0.15);
-            border-left: 2px solid #3b82f6;
-        }
-
-        #sidebar {
-            transition: transform 0.3s ease;
+        .search-box input {
+            width: 100%;
             background: #0f172a;
-        }
-        
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-        
-        .input-field {
-            background: rgba(15, 23, 42, 0.8);
             border: 1px solid rgba(59, 130, 246, 0.3);
             border-radius: 6px;
-            transition: all 0.2s ease;
-        }
-        
-        .input-field:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            padding: 8px 8px 8px 28px;
+            color: #e2e8f0;
+            font-size: 12px;
             outline: none;
         }
         
-        .btn-primary {
+        .search-box input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .search-box svg {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            color: #3b82f6;
+        }
+        
+        /* Add Button */
+        .add-btn {
+            margin: 0 12px 12px;
+            padding: 10px;
             background: #3b82f6;
+            border: none;
             border-radius: 6px;
-            transition: all 0.2s ease;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s;
         }
         
-        .btn-primary:hover {
-            background: #2563eb;
+        .add-btn:hover { background: #2563eb; }
+        
+        .add-btn svg { width: 14px; height: 14px; }
+        
+        /* Terminal List */
+        .terminals-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px;
         }
         
-        .btn-danger {
-            background: #dc2626;
+        .terminal-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            margin: 0 4px 4px;
             border-radius: 6px;
-            transition: all 0.2s ease;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         
-        .btn-danger:hover {
-            background: #b91c1c;
+        .terminal-item:hover { background: rgba(59, 130, 246, 0.1); }
+        
+        .terminal-item.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-left: 2px solid #3b82f6;
         }
         
-        .btn-secondary {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 6px;
-            color: #60a5fa;
-            transition: all 0.2s ease;
+        .terminal-info {
+            flex: 1;
+            min-width: 0;
+            margin-right: 8px;
         }
         
-        .btn-secondary:hover {
-            background: rgba(59, 130, 246, 0.2);
+        .terminal-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 2px;
         }
         
-        .code-block {
-            background: #0f172a;
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 6px;
+        .terminal-name svg {
+            width: 14px;
+            height: 14px;
+            color: #64748b;
+            flex-shrink: 0;
+        }
+        
+        .terminal-item.active .terminal-name svg { color: #60a5fa; }
+        
+        .terminal-name span {
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .terminal-token {
             font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            color: #64748b;
+            padding-left: 22px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
-        .status-dot {
-            animation: pulse 2s ease-in-out infinite;
+        .terminal-actions {
+            display: flex;
+            gap: 2px;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
         
-        .sidebar-overlay {
-            backdrop-filter: blur(4px);
-        }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(59, 130, 246, 0.4);
-            border-radius: 2px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(59, 130, 246, 0.6);
-        }
+        .terminal-item:hover .terminal-actions,
+        .terminal-item.active .terminal-actions { opacity: 1; }
         
         .icon-btn {
             padding: 6px;
             border-radius: 4px;
-            transition: all 0.2s ease;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #60a5fa;
+            transition: all 0.2s;
         }
         
-        .icon-btn:hover {
+        .icon-btn:hover { background: rgba(59, 130, 246, 0.2); }
+        
+        .icon-btn.danger { color: #f87171; }
+        .icon-btn.danger:hover { background: rgba(248, 113, 113, 0.2); }
+        
+        .icon-btn svg { width: 14px; height: 14px; }
+        
+        .empty-state {
+            padding: 32px;
+            text-align: center;
+            color: #475569;
+        }
+        
+        .empty-state svg {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+        
+        .empty-state p { font-size: 12px; }
+        
+        /* User Profile */
+        .user-profile {
+            padding: 12px;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        
+        .profile-card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .avatar {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .user-info p:first-child {
+            font-size: 10px;
+            color: #64748b;
+            letter-spacing: 1px;
+        }
+        
+        #username-display {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .credits-section {
+            text-align: right;
+            border-left: 1px solid rgba(59, 130, 246, 0.2);
+            padding-left: 16px;
+        }
+        
+        .credits-label {
+            font-size: 10px;
+            color: #34d399;
+            font-weight: 500;
+        }
+        
+        #credits-display {
+            font-size: 32px;
+            font-weight: 700;
+            color: #34d399;
+            line-height: 1;
+            margin: 4px 0;
+        }
+        
+        .refresh-btn {
+            font-size: 10px;
+            color: #6ee7b7;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+        
+        .refresh-btn:hover { color: #34d399; }
+        
+        .refresh-btn svg { width: 12px; height: 12px; }
+        
+        /* Footer */
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(15, 23, 42, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #64748b;
+        }
+        
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .secure-badge svg {
+            width: 12px;
+            height: 12px;
+            color: #22c55e;
+        }
+        
+        .reset-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 9px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+        
+        .reset-btn:hover { color: #f87171; }
+        
+        .reset-btn svg { width: 12px; height: 12px; }
+        
+        /* Overlay */
+        #sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 40;
+            display: none;
+        }
+        
+        #sidebar-overlay.show { display: block; }
+        
+        /* Main Content */
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+            margin-left: 0;
+        }
+        
+        @media (min-width: 768px) {
+            #main-content { margin-left: 0; }
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            height: 48px;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        
+        @media (min-width: 768px) {
+            .top-bar { height: 56px; padding: 0 16px; }
+        }
+        
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .menu-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            color: #60a5fa;
+            cursor: pointer;
+        }
+        
+        .menu-btn:hover { background: #1e293b; }
+        
+        .menu-btn svg { width: 16px; height: 16px; }
+        
+        @media (min-width: 768px) {
+            .menu-btn { display: none; }
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #94a3b8;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .back-btn:hover { color: white; }
+        
+        .back-btn svg { width: 16px; height: 16px; }
+        
+        .divider {
+            width: 1px;
+            height: 16px;
+            background: rgba(59, 130, 246, 0.3);
+            margin: 0 8px;
+        }
+        
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+        
+        .page-title svg {
+            width: 14px;
+            height: 14px;
+            color: #3b82f6;
+            flex-shrink: 0;
+        }
+        
+        .page-title span {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .action-btn {
+            padding: 6px 10px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            color: #60a5fa;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover { background: rgba(59, 130, 246, 0.2); }
+        
+        .action-btn.danger {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.3);
+            background: transparent;
+        }
+        
+        .action-btn.danger:hover { background: rgba(248, 113, 113, 0.1); }
+        
+        .action-btn svg { width: 14px; height: 14px; }
+        
+        .token-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 4px 8px;
+            background: #0f172a;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 4px;
+            color: rgba(96, 165, 250, 0.8);
+        }
+        
+        @media (max-width: 767px) {
+            .action-btn span { display: none; }
+            .action-btn { padding: 6px; }
+            .token-badge { display: none; }
+        }
+        
+        @media (max-width: 639px) {
+            .action-btn:not(.mobile-menu) { display: none; }
+        }
+        
+        /* Iframe Container */
+        .iframe-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+        
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        
+        .modal-overlay.show { display: flex; }
+        
+        .modal {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 360px;
+            padding: 24px;
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .modal.danger { border-color: rgba(248, 113, 113, 0.2); }
+        
+        @keyframes modalPop {
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .modal-icon {
+            width: 32px;
+            height: 32px;
             background: rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        .icon-btn-danger:hover {
-            background: rgba(220, 38, 38, 0.2);
+        .modal-icon.danger { background: rgba(248, 113, 113, 0.2); }
+        
+        .modal-icon svg { width: 16px; height: 16px; color: #60a5fa; }
+        .modal-icon.danger svg { color: #f87171; }
+        
+        .modal-title-text h2 {
+            font-size: 18px;
+            font-weight: 700;
         }
+        
+        .modal-title-text p {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        
+        .modal-title-text p.danger { color: #f87171; }
+        
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .modal-close:hover { color: white; }
+        
+        .modal-close svg { width: 20px; height: 20px; }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #60a5fa;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        
+        .form-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+        }
+        
+        .form-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .form-input.mono { font-family: 'JetBrains Mono', monospace; color: #93c5fd; }
+        
+        .form-hint {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        
+        .form-hint svg { width: 12px; height: 12px; color: #3b82f6; }
+        
+        .info-box {
+            background: #0f172a;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .info-box.danger {
+            background: rgba(248, 113, 113, 0.1);
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+        
+        .info-label {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .info-box.danger .info-label { color: rgba(248, 113, 113, 0.8); }
+        
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .info-token {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #94a3b8;
+        }
+        
+        .btn-secondary:hover {
+            background: #1e293b;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover { background: #2563eb; }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn-danger:hover { background: #b91c1c; }
+        
+        .btn svg { width: 16px; height: 16px; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.6); }
     </style>
 </head>
-<body class="bg-black text-white antialiased">
-    <div class="flex h-screen w-screen relative overflow-hidden">
-        
-        <!-- SIDEBAR + HEADER (only these stay visible) -->
-        <div id="sidebar" class="h-full bg-slate-950 border-r border-blue-900/30 flex flex-col fixed md:static inset-y-0 left-0 z-50 -translate-x-full md:translate-x-0 shadow-xl shadow-blue-900/10">
-            
-            <!-- Header -->
-            <div class="px-4 py-4 border-b border-blue-900/30 flex items-center gap-3 bg-slate-900/50">
-                <div class="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-md text-white shadow-lg shadow-blue-600/30">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <h1 class="text-lg font-bold tracking-tight text-white truncate">KS SSH</h1>
-                    <p class="text-blue-400 text-[10px] font-semibold tracking-wider uppercase">KS WARRIOR</p>
+                <div class="brand">
+                    <h1>KS SSH</h1>
+                    <p>KS WARRIOR</p>
                 </div>
-                <div class="flex items-center gap-1 px-2 py-1 bg-blue-500/10 border border-blue-500/30 rounded">
-                    <div class="w-1.5 h-1.5 bg-blue-400 rounded-full status-dot"></div>
-                    <span class="text-blue-400 text-[9px] font-bold">LIVE</span>
-                </div>
-            </div>
-
-            <!-- Search -->
-            <div class="px-3 pt-3 pb-2">
-                <div class="relative">
-                    <input 
-                        id="search-input"
-                        type="text"
-                        placeholder="Search..."
-                        class="w-full bg-slate-900 border border-blue-800/50 focus:border-blue-500 rounded-md py-2 pl-8 pr-3 text-xs outline-none text-slate-200 placeholder-slate-500"
-                    >
-                    <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
+                <div class="status">
+                    <div class="status-dot"></div>
+                    <span>LIVE</span>
                 </div>
             </div>
 
-            <!-- Add Button -->
-            <div class="px-3 pb-3">
-                <button onclick="showAddModal()" 
-                        class="w-full btn-primary text-white font-medium py-2 rounded-md flex items-center justify-center gap-1.5 text-xs">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span>ADD TERMINAL</span>
-                </button>
+            <div class="search-box">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input id="search-input" type="text" placeholder="Search...">
             </div>
 
-            <!-- Terminals List -->
-            <div class="flex-1 overflow-y-auto px-2 py-1 space-y-1" id="terminals-list">
-                <!-- Populated by JavaScript -->
-            </div>
+            <button class="add-btn" onclick="showAddModal()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span>ADD TERMINAL</span>
+            </button>
 
-            <!-- USER PROFILE + CREDITS -->
-            <div class="px-3 py-3 border-t border-blue-900/30">
-                <div class="glass-panel rounded-2xl p-4 flex items-center gap-3">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                            <div class="w-7 h-7 bg-gradient-to-br from-blue-400 to-emerald-400 rounded-2xl flex items-center justify-center text-sm font-bold shadow-inner">👤</div>
-                            <div class="min-w-0">
-                                <p class="text-xs text-slate-400 tracking-widest">LOGGED IN AS</p>
-                                <p id="username-display" class="font-semibold text-white text-sm truncate">@loading...</p>
-                            </div>
-                        </div>
+            <div class="terminals-list" id="terminals-list"></div>
+
+            <div class="user-profile">
+                <div class="profile-card">
+                    <div class="avatar">👤</div>
+                    <div class="user-info">
+                        <p>LOGGED IN AS</p>
+                        <p id="username-display">@loading...</p>
                     </div>
-                    <div class="text-right border-l border-blue-900/30 pl-4">
-                        <div class="flex items-baseline justify-end gap-1">
-                            <span class="text-[10px] font-medium text-emerald-400">CREDITS</span>
-                        </div>
-                        <div id="credits-display" class="text-4xl font-bold text-emerald-400 tabular-nums leading-none">0</div>
-                        <div onclick="refreshCredits()" class="text-[10px] text-emerald-300 hover:text-emerald-400 cursor-pointer flex items-center justify-end gap-1 mt-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.058 11H1M12 3v2m0 16v2m9-9H15" />
+                    <div class="credits-section">
+                        <div class="credits-label">CREDITS</div>
+                        <div id="credits-display">0</div>
+                        <div class="refresh-btn" onclick="refreshCredits()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.058 11H1M12 3v2m0 16v2m9-9H15"/>
                             </svg>
                             REFRESH
                         </div>
@@ -264,71 +852,59 @@
                 </div>
             </div>
 
-            <!-- Footer -->
-            <div class="mt-auto border-t border-blue-900/30 p-3 bg-slate-950/50">
-                <div class="flex items-center justify-between text-[9px] text-slate-500">
-                    <div class="flex items-center gap-1">
-                        <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <span>Secure</span>
-                    </div>
-                    <button onclick="clearAllData()" class="hover:text-red-400 transition-colors font-medium flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
-                        RESET
-                    </button>
+            <div class="sidebar-footer">
+                <div class="secure-badge">
+                    <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>Secure</span>
                 </div>
+                <button class="reset-btn" onclick="clearAllData()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    RESET
+                </button>
             </div>
         </div>
 
-        <!-- MOBILE OVERLAY -->
-        <div onclick="if(event.target.id === 'sidebar-overlay') toggleSidebar()" 
-             id="sidebar-overlay"
-             class="hidden fixed inset-0 bg-black/60 sidebar-overlay z-40 md:hidden">
-        </div>
+        <!-- Overlay -->
+        <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-        <!-- MAIN FRAME AREA -->
-        <div id="main-content" class="flex-1 flex flex-col bg-black h-full w-full md:ml-0">
-            <!-- Terminal iframe or default view rendered here -->
-        </div>
+        <!-- Main Content -->
+        <div id="main-content"></div>
     </div>
 
-    <!-- ADD TERMINAL MODAL -->
-    <div onclick="if(event.target.id === 'add-modal') hideAddModal()" 
-         id="add-modal"
-         class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-        <div onclick="event.stopImmediatePropagation()" class="modal glass-panel w-full max-w-sm rounded-lg p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-bold text-white">Add New Terminal</h2>
-                <button onclick="hideAddModal()" class="text-slate-400 hover:text-white transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Add Modal -->
+    <div id="add-modal" class="modal-overlay" onclick="if(event.target.id === 'add-modal') hideAddModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Add New Terminal</h2>
+                <button class="modal-close" onclick="hideAddModal()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] uppercase tracking-wider text-blue-400 mb-1.5 block font-semibold">Display Name</label>
-                    <input id="modal-name" type="text" placeholder="My Server" class="w-full input-field px-3 py-2.5 text-sm text-white placeholder-slate-500">
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase tracking-wider text-blue-400 mb-1.5 block font-semibold">Token</label>
-                    <input id="modal-token" type="text" placeholder="abc123-def456" class="w-full input-field px-3 py-2.5 text-sm font-mono text-blue-300 placeholder-slate-600">
-                    <p class="text-[10px] text-slate-500 mt-2 flex items-center gap-1.5">
-                        <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>From your KS Panel</span>
-                    </p>
+            <div class="form-group">
+                <label class="form-label">Display Name</label>
+                <input id="modal-name" type="text" placeholder="My Server" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Token</label>
+                <input id="modal-token" type="text" placeholder="abc123-def456" class="form-input mono">
+                <div class="form-hint">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>From your KS Panel</span>
                 </div>
             </div>
-            <div class="flex gap-2 mt-6">
-                <button onclick="hideAddModal()" class="flex-1 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md border border-slate-700 font-medium text-sm transition-all">CANCEL</button>
-                <button onclick="handleAddTerminal()" class="flex-1 py-2.5 btn-primary text-white font-medium text-sm flex items-center justify-center gap-1.5">
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideAddModal()">CANCEL</button>
+                <button class="btn btn-primary" onclick="handleAddTerminal()">
                     <span>ADD</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                     </svg>
                 </button>
@@ -336,43 +912,39 @@
         </div>
     </div>
 
-    <!-- RENAME MODAL -->
-    <div onclick="if(event.target.id === 'rename-modal') hideRenameModal()" 
-         id="rename-modal"
-         class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-        <div onclick="event.stopImmediatePropagation()" class="modal glass-panel w-full max-w-sm rounded-lg p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-blue-500/20 rounded-md flex items-center justify-center">
-                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Rename Modal -->
+    <div id="rename-modal" class="modal-overlay" onclick="if(event.target.id === 'rename-modal') hideRenameModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                     </div>
-                    <div>
-                        <h2 class="text-lg font-bold text-white">Rename Terminal</h2>
-                        <p class="text-xs text-slate-400" id="rename-current-name"></p>
+                    <div class="modal-title-text">
+                        <h2>Rename Terminal</h2>
+                        <p id="rename-current-name">Current: ...</p>
                     </div>
                 </div>
-                <button onclick="hideRenameModal()" class="text-slate-400 hover:text-white transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button class="modal-close" onclick="hideRenameModal()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] uppercase tracking-wider text-blue-400 mb-1.5 block font-semibold">New Name</label>
-                    <input id="rename-input" type="text" placeholder="Enter new name..." class="w-full input-field px-3 py-2.5 text-sm text-white placeholder-slate-500">
-                </div>
-                <div class="bg-slate-900/50 rounded-md p-3 border border-blue-900/30">
-                    <div class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Token (unchanged)</div>
-                    <div class="font-mono text-xs text-blue-400/80 truncate" id="rename-token-display"></div>
-                </div>
+            <div class="form-group">
+                <label class="form-label">New Name</label>
+                <input id="rename-input" type="text" placeholder="Enter new name..." class="form-input">
             </div>
-            <div class="flex gap-2 mt-6">
-                <button onclick="hideRenameModal()" class="flex-1 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md border border-slate-700 font-medium text-sm transition-all">CANCEL</button>
-                <button onclick="confirmRename()" class="flex-1 py-2.5 btn-primary text-white font-medium text-sm flex items-center justify-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="info-box">
+                <div class="info-label">Token (unchanged)</div>
+                <div class="info-token" id="rename-token-display"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideRenameModal()">CANCEL</button>
+                <button class="btn btn-primary" onclick="confirmRename()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                     <span>SAVE</span>
@@ -381,41 +953,39 @@
         </div>
     </div>
 
-    <!-- DELETE MODAL -->
-    <div onclick="if(event.target.id === 'delete-modal') hideDeleteModal()" 
-         id="delete-modal"
-         class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-        <div onclick="event.stopImmediatePropagation()" class="modal glass-panel w-full max-w-sm rounded-lg p-6 shadow-2xl border-red-500/20">
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-red-500/20 rounded-md flex items-center justify-center">
-                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Delete Modal -->
+    <div id="delete-modal" class="modal-overlay" onclick="if(event.target.id === 'delete-modal') hideDeleteModal()">
+        <div class="modal danger" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-icon danger">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
                     </div>
-                    <div>
-                        <h2 class="text-lg font-bold text-white">Delete Terminal</h2>
-                        <p class="text-xs text-red-400">This action cannot be undone</p>
+                    <div class="modal-title-text">
+                        <h2>Delete Terminal</h2>
+                        <p class="danger">This action cannot be undone</p>
                     </div>
                 </div>
-                <button onclick="hideDeleteModal()" class="text-slate-400 hover:text-white transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button class="modal-close" onclick="hideDeleteModal()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-            <div class="space-y-3 mb-6">
-                <div class="bg-red-950/30 border border-red-900/50 rounded-md p-4">
-                    <div class="text-[10px] text-red-400/80 uppercase tracking-wider mb-1">Terminal to delete</div>
-                    <div class="font-semibold text-white text-sm mb-1" id="delete-name-display"></div>
-                    <div class="font-mono text-xs text-slate-500" id="delete-token-display"></div>
-                </div>
-                <p class="text-xs text-slate-400 leading-relaxed">Are you sure you want to delete this terminal? All saved data will be permanently removed from your local storage.</p>
+            <div class="info-box danger">
+                <div class="info-label">Terminal to delete</div>
+                <div class="info-value" id="delete-name-display"></div>
+                <div class="info-token" id="delete-token-display"></div>
             </div>
-            <div class="flex gap-2">
-                <button onclick="hideDeleteModal()" class="flex-1 py-2.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-md border border-slate-700 font-medium text-sm transition-all">CANCEL</button>
-                <button onclick="confirmDelete()" class="flex-1 py-2.5 btn-danger text-white font-medium text-sm flex items-center justify-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
+                Are you sure you want to delete this terminal? All saved data will be permanently removed from your local storage.
+            </p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideDeleteModal()">CANCEL</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
                     <span>DELETE</span>
@@ -447,23 +1017,16 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            if (sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-            }
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
         }
 
         function closeSidebarIfMobile() {
             if (window.innerWidth >= 768) return;
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
-                sidebar.classList.add('-translate-x-full');
-                if (overlay) overlay.classList.add('hidden');
-            }
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
         }
 
         // ============== RENDER SIDEBAR LIST ==============
@@ -478,11 +1041,11 @@
 
             if (filtered.length === 0) {
                 container.innerHTML = `
-                    <div class="px-4 py-8 text-center">
-                        <svg class="w-8 h-8 mx-auto mb-2 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                         </svg>
-                        <p class="text-xs text-slate-500">No terminals</p>
+                        <p>No terminals</p>
                     </div>`;
                 return;
             }
@@ -490,67 +1053,59 @@
             filtered.forEach(term => {
                 const isActive = term.id === activeId;
                 const div = document.createElement('div');
-                div.className = `terminal-list-item flex items-center justify-between px-3 py-2.5 rounded-md cursor-pointer mx-1 ${isActive ? 'active' : 'hover:bg-slate-800/50'}`;
+                div.className = 'terminal-item ' + (isActive ? 'active' : '');
                 
                 div.innerHTML = `
-                    <div class="flex-1 min-w-0 mr-2" onclick="selectTerminal('${term.id}')">
-                        <div class="flex items-center gap-2 mb-0.5">
-                            <svg class="w-3.5 h-3.5 ${isActive ? 'text-blue-400' : 'text-slate-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="terminal-info" onclick="selectTerminal('${term.id}')">
+                        <div class="terminal-name">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
-                            <div class="font-medium text-xs text-white truncate">${term.name}</div>
+                            <span>${term.name}</span>
                         </div>
-                        <div class="font-mono text-[9px] text-slate-500 truncate pl-5">${term.token}</div>
+                        <div class="terminal-token">${term.token}</div>
                     </div>
-                    <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="event.stopImmediatePropagation(); showRenameModal('${term.id}');" class="icon-btn text-blue-400 hover:text-blue-300" title="Rename">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="terminal-actions">
+                        <button class="icon-btn" onclick="event.stopPropagation(); showRenameModal('${term.id}');" title="Rename">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
                         </button>
-                        <button onclick="event.stopImmediatePropagation(); showDeleteModal('${term.id}');" class="icon-btn icon-btn-danger text-red-400 hover:text-red-300" title="Delete">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button class="icon-btn danger" onclick="event.stopPropagation(); showDeleteModal('${term.id}');" title="Delete">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
                         </button>
                     </div>
                 `;
                 
-                div.addEventListener('mouseenter', () => div.querySelector('.flex.items-center.gap-0\\.5').classList.remove('opacity-0'));
-                div.addEventListener('mouseleave', () => { if (!isActive) div.querySelector('.flex.items-center.gap-0\\.5').classList.add('opacity-0'); });
-                div.addEventListener('click', () => selectTerminal(term.id));
                 container.appendChild(div);
             });
         }
 
-        // ============== RENDER HOME (now always shows dashboard.html with top bar) ==============
+        // ============== RENDER HOME ==============
         function renderHome() {
             const main = document.getElementById('main-content');
             main.innerHTML = `
-                <div class="flex flex-col h-full w-full bg-black">
-                    <!-- Always-visible Top Bar (same style as terminal view) -->
-                    <div class="h-12 md:h-14 bg-slate-950 border-b border-blue-900/30 px-3 md:px-4 flex items-center justify-between flex-shrink-0">
-                        <div class="flex items-center gap-2 flex-1 min-w-0">
-                            <button onclick="toggleSidebar()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-800 transition-colors flex-shrink-0">
-                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style="display: flex; flex-direction: column; height: 100%; width: 100%; background: #000;">
+                    <div class="top-bar">
+                        <div class="top-bar-left">
+                            <button class="menu-btn" onclick="toggleSidebar()">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                                 </svg>
                             </button>
-                            <div class="flex items-center gap-1.5 min-w-0">
-                                <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="page-title">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1v-5m-6 0a1 1 0 001-1v5" />
                                 </svg>
-                                <span class="font-semibold text-sm text-white truncate">Dashboard</span>
+                                <span>Dashboard</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                            <div class="font-mono text-[10px] px-2 py-1 bg-slate-900 rounded border border-blue-900/30 text-emerald-400/80 hidden md:block">
-                                KS DASHBOARD
-                            </div>
+                        <div class="top-bar-right">
+                            <div class="token-badge" style="display: none;">KS DASHBOARD</div>
                         </div>
                     </div>
-                    
-                    <!-- Dashboard iframe -->
                     <div class="iframe-container">
                         <iframe src="dashboard.html" allow="fullscreen" allowfullscreen></iframe>
                     </div>
@@ -573,71 +1128,79 @@
             const main = document.getElementById('main-content');
             
             main.innerHTML = `
-                <div class="flex flex-col h-full w-full bg-black">
-                    <!-- Terminal Header -->
-                    <div class="h-12 md:h-14 bg-slate-950 border-b border-blue-900/30 px-3 md:px-4 flex items-center justify-between flex-shrink-0">
-                        <div class="flex items-center gap-2 flex-1 min-w-0">
-                            <button onclick="toggleSidebar()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-md hover:bg-slate-800 transition-colors flex-shrink-0">
-                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style="display: flex; flex-direction: column; height: 100%; width: 100%; background: #000;">
+                    <div class="top-bar">
+                        <div class="top-bar-left">
+                            <button class="menu-btn" onclick="toggleSidebar()">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                                 </svg>
                             </button>
-                            <button onclick="goHome()" class="flex items-center gap-1 text-slate-400 hover:text-white transition-colors flex-shrink-0">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button class="back-btn" onclick="goHome()">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                                 </svg>
-                                <span class="text-xs font-medium hidden sm:inline">Back</span>
+                                <span class="back-text">Back</span>
                             </button>
-                            <div class="h-4 w-px bg-blue-900/30 hidden sm:block"></div>
-                            <div class="flex items-center gap-1.5 min-w-0">
-                                <svg class="w-3.5 h-3.5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="divider" style="display: none;"></div>
+                            <div class="page-title">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
-                                <span class="font-semibold text-sm text-white truncate">${term.name}</span>
+                                <span>${term.name}</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                            <button onclick="showRenameModal('${id}')" class="btn-secondary px-2.5 py-1.5 text-xs font-medium hidden sm:flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="top-bar-right">
+                            <button class="action-btn" onclick="showRenameModal('${id}')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
-                                <span class="hidden md:inline">RENAME</span>
+                                <span>RENAME</span>
                             </button>
-                            <button onclick="showDeleteModal('${id}')" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-900/30 transition-all hidden sm:flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button class="action-btn danger" onclick="showDeleteModal('${id}')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
-                                <span class="hidden md:inline">DELETE</span>
+                                <span>DELETE</span>
                             </button>
-                            <button onclick="toggleFullscreen()" class="btn-secondary px-2.5 py-1.5 text-xs font-medium flex items-center gap-1 hidden sm:flex">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button class="action-btn" onclick="toggleFullscreen()">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                                 </svg>
-                                <span class="hidden md:inline">FULLSCREEN</span>
+                                <span>FULLSCREEN</span>
                             </button>
-                            <button onclick="showMobileTerminalMenu('${id}')" class="sm:hidden w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button class="action-btn mobile-menu" onclick="showMobileMenu('${id}')" style="display: none;">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
                                 </svg>
                             </button>
-                            <div class="font-mono text-[10px] px-2 py-1 bg-slate-900 rounded border border-blue-900/30 text-blue-400/80 hidden md:block">
-                                ${term.token}
-                            </div>
+                            <div class="token-badge">${term.token}</div>
                         </div>
                     </div>
-                    
-                    <!-- IFRAME -->
                     <div class="iframe-container">
                         <iframe src="https://${term.token}.trycloudflare.com" allow="fullscreen" allowfullscreen></iframe>
                     </div>
                 </div>`;
             
+            // Show mobile menu button on small screens
+            const mobileBtn = main.querySelector('.mobile-menu');
+            const backText = main.querySelector('.back-text');
+            const divider = main.querySelector('.divider');
+            
+            if (window.innerWidth < 640) {
+                if (mobileBtn) mobileBtn.style.display = 'flex';
+            }
+            if (window.innerWidth >= 640) {
+                if (backText) backText.style.display = 'inline';
+                if (divider) divider.style.display = 'block';
+            }
+            
             closeSidebarIfMobile();
         }
 
-        function showMobileTerminalMenu(id) {
+        function showMobileMenu(id) {
             const term = terminals.find(t => t.id === id);
-            const choice = confirm(`"${term.name}"\n\nOK = Delete\nCancel = Rename`);
+            const choice = confirm(`"${term.name}"\\n\\nOK = Delete\\nCancel = Rename`);
             if (choice) showDeleteModal(id); else showRenameModal(id);
         }
 
@@ -659,44 +1222,16 @@
             closeSidebarIfMobile();
         }
 
-        function quickConnect() {
-            const input = document.getElementById('quick-token');
-            const token = input.value.trim();
-            if (!token) {
-                alert('Please enter a valid token');
-                return;
-            }
-            const exists = terminals.find(t => t.token === token);
-            if (exists) {
-                selectTerminal(exists.id);
-                return;
-            }
-            const newTerm = {
-                id: Date.now().toString(),
-                name: `Terminal ${terminals.length + 1}`,
-                token: token,
-                added: Date.now()
-            };
-            terminals.unshift(newTerm);
-            saveTerminals();
-            renderList();
-            selectTerminal(newTerm.id);
-        }
-
         // ============== ADD MODAL ==============
         function showAddModal() {
             document.getElementById('modal-name').value = '';
             document.getElementById('modal-token').value = '';
-            const modal = document.getElementById('add-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            document.getElementById('add-modal').classList.add('show');
             setTimeout(() => document.getElementById('modal-name').focus(), 50);
         }
 
         function hideAddModal() {
-            const modal = document.getElementById('add-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            document.getElementById('add-modal').classList.remove('show');
         }
 
         function handleAddTerminal() {
@@ -728,19 +1263,15 @@
             const term = terminals.find(t => t.id === id);
             if (!term) return;
             pendingRenameId = id;
-            document.getElementById('rename-current-name').textContent = `Current: ${term.name}`;
+            document.getElementById('rename-current-name').textContent = 'Current: ' + term.name;
             document.getElementById('rename-token-display').textContent = term.token;
             document.getElementById('rename-input').value = term.name;
-            const modal = document.getElementById('rename-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            document.getElementById('rename-modal').classList.add('show');
             setTimeout(() => document.getElementById('rename-input').focus(), 50);
         }
 
         function hideRenameModal() {
-            const modal = document.getElementById('rename-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            document.getElementById('rename-modal').classList.remove('show');
             pendingRenameId = null;
         }
 
@@ -768,15 +1299,11 @@
             pendingDeleteId = id;
             document.getElementById('delete-name-display').textContent = term.name;
             document.getElementById('delete-token-display').textContent = term.token;
-            const modal = document.getElementById('delete-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            document.getElementById('delete-modal').classList.add('show');
         }
 
         function hideDeleteModal() {
-            const modal = document.getElementById('delete-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            document.getElementById('delete-modal').classList.remove('show');
             pendingDeleteId = null;
         }
 
