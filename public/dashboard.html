@@ -33,7 +33,7 @@
             color: white;
         }
 
-        /* Top Bar - exactly like main app */
+        /* Top Bar - exactly like main app, perfectly balanced for mobile & desktop */
         .top-bar {
             height: 56px;
             background: #0f172a;
@@ -43,6 +43,14 @@
             align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
+            box-shadow: 0 1px 0 rgba(59, 130, 246, 0.1);
+        }
+
+        @media (min-width: 768px) {
+            .top-bar {
+                padding: 0 24px;
+                height: 64px;
+            }
         }
 
         .top-bar-left {
@@ -50,19 +58,23 @@
             align-items: center;
             gap: 12px;
             flex: 1;
+            min-width: 0;
         }
 
         .top-bar-right {
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-shrink: 0;
         }
 
-        /* Workspaces section - same style as sidebar */
+        /* Workspaces section - clean, same line, responsive */
         .workspaces-section {
             display: flex;
             align-items: center;
             gap: 8px;
+            width: 100%;
+            max-width: 420px;
         }
 
         .form-input {
@@ -73,7 +85,8 @@
             color: white;
             font-size: 13px;
             outline: none;
-            min-width: 180px;
+            flex: 1;
+            min-width: 0;
         }
 
         .form-input:focus {
@@ -92,13 +105,14 @@
             justify-content: center;
             cursor: pointer;
             min-width: 42px;
+            flex-shrink: 0;
         }
 
         .action-btn-small:hover {
             background: rgba(59, 130, 246, 0.25);
         }
 
-        /* Credits badge - same as header */
+        /* Credits badge - same as sidebar header */
         .credits-badge {
             display: flex;
             align-items: center;
@@ -110,6 +124,7 @@
             font-size: 13px;
             color: #60a5fa;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .credits-badge .dot {
@@ -118,6 +133,11 @@
             background: #60a5fa;
             border-radius: 50%;
             animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
         /* Add button - same style as sidebar */
@@ -134,19 +154,26 @@
             padding: 10px 20px;
             font-size: 13px;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .btn-primary:hover {
             background: #2563eb;
         }
 
-        /* Tabs below top bar */
+        /* Tabs - below top bar, clean and stylish */
         .tabs {
             display: flex;
             gap: 4px;
-            padding: 16px 24px 12px;
+            padding: 12px 16px;
             background: #020617;
             border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
         }
 
         .tab-btn {
@@ -159,6 +186,7 @@
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .tab-btn.active {
@@ -166,23 +194,37 @@
             color: #60a5fa;
         }
 
+        @media (min-width: 768px) {
+            .tabs {
+                padding: 16px 24px 12px;
+            }
+        }
+
         /* Content Area */
         .content {
-            padding: 0 24px 24px;
+            padding: 16px 16px 24px;
             overflow-y: auto;
             height: calc(100dvh - 56px);
         }
 
-        /* Grid System - same as before but glass style */
+        @media (min-width: 768px) {
+            .content {
+                padding: 24px;
+                height: calc(100dvh - 64px);
+            }
+        }
+
+        /* Grid System - perfectly responsive */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(1, 1fr);
-            gap: 20px;
+            gap: 16px;
         }
 
-        @media (min-width: 768px) {
+        @media (min-width: 640px) {
             .grid-container {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
             }
         }
 
@@ -209,6 +251,7 @@
             flex-direction: column;
             gap: 16px;
             transition: all 0.2s ease;
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
         }
 
         .card:hover {
@@ -384,7 +427,7 @@
 </head>
 <body>
 
-<!-- TOP BAR - same style as main app -->
+<!-- TOP BAR - exactly like main app, perfectly balanced for mobile & desktop -->
 <div class="top-bar">
     <!-- LEFT: Workspaces dropdown + create button (exactly as requested) -->
     <div class="top-bar-left">
@@ -416,7 +459,7 @@
     </div>
 </div>
 
-<!-- TABS - below add button area -->
+<!-- TABS - below top bar / add button area -->
 <div class="tabs" id="tabs-container">
     <button onclick="setTab('fast')" id="tab-fast" class="tab-btn">Fast</button>
     <button onclick="setTab('recents')" id="tab-recents" class="tab-btn">Recents</button>
@@ -505,7 +548,6 @@
             select.appendChild(opt);
         });
 
-        // Auto-select first workspace if none selected
         if (workspaces.length > 0 && (!currentWorkspaceId || currentWorkspaceId === 'all')) {
             currentWorkspaceId = workspaces[0].id;
             select.value = currentWorkspaceId;
@@ -517,14 +559,9 @@
 
         if (currentTab === 'recents') {
             filtered.sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
-        } else if (currentTab === 'favorites') {
-            // For now show all (can be extended later with isFavorite flag)
-            filtered = filtered;
         } else if (currentTab === 'fast') {
-            filtered = filtered.slice(0, 6); // Quick access - top 6
+            filtered = filtered.slice(0, 6);
         }
-        // 'all' shows everything
-
         return filtered;
     }
 
@@ -562,7 +599,6 @@
     function setTab(tab) {
         currentTab = tab;
         
-        // Update active tab
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.toggle('active', btn.id === `tab-${tab}`);
         });
@@ -606,14 +642,11 @@
     function connectTerminal(id) {
         const term = terminals.find(t => t.id === id);
         if (term) {
-            // Open terminal in the main app style (you can replace with real navigation if needed)
             console.log('%c✅ Connecting to terminal: ' + term.name, 'color:#60a5fa; font-weight:bold');
             alert('Connecting to: ' + term.name + '\n\n(Token: ' + term.token + ')');
-            // In real integration you could do: window.parent.postMessage({action:'openTerminal', id: id}, '*');
         }
     }
 
-    // Create Workspace
     function showCreateWorkspaceModal() {
         document.getElementById('ws-name-input').value = '';
         document.getElementById('create-ws-modal').classList.add('visible');
@@ -647,14 +680,12 @@
         loadWorkspaces();
         populateWorkspaceDropdown();
 
-        // Load last selected workspace if saved
         const savedWs = localStorage.getItem('ks_current_workspace');
         if (savedWs && workspaces.some(w => w.id === savedWs)) {
             currentWorkspaceId = savedWs;
             document.getElementById('workspace-dropdown').value = savedWs;
         }
 
-        // Workspace change handler
         document.getElementById('workspace-dropdown').addEventListener('change', function() {
             currentWorkspaceId = this.value;
             localStorage.setItem('ks_current_workspace', currentWorkspaceId);
