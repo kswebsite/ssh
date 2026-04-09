@@ -782,7 +782,7 @@
                 </div>
             </div>
 
-            <!-- Workspaces Dropdown + Create (custom menu + dropdown + [ + ] add button in one line) -->
+            <!-- Workspaces Dropdown + Create + Settings (in one line) -->
             <div style="padding: 0 12px 8px 12px;">
                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; color: #60a5fa;">
@@ -791,13 +791,24 @@
                     <span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #60a5fa; text-transform: uppercase;">WORKSPACES</span>
                 </div>
                 
-                <!-- Dropdown + [ + ] button in ONE LINE -->
+                <!-- Dropdown + [ + ] Create + Settings (SVG only) in ONE LINE -->
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <select id="workspace-dropdown" class="form-input" style="flex: 1; font-size: 13px; padding: 9px 12px;"></select>
                     
+                    <!-- Create Workspace Button (using SVG) -->
                     <button onclick="showCreateWorkspaceModal()" 
-                            style="padding: 9px 14px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; color: #60a5fa; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; min-width: 42px; flex-shrink: 0;">
-                        [ + ]
+                            style="padding: 9px 14px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; color: #60a5fa; display: flex; align-items: center; justify-content: center; cursor: pointer; min-width: 42px; flex-shrink: 0;">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                    </button>
+                    
+                    <!-- Settings Button (SVG only) -->
+                    <button onclick="openWorkspaceSettings()" 
+                            style="padding: 9px 14px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; color: #60a5fa; display: flex; align-items: center; justify-content: center; cursor: pointer; min-width: 42px; flex-shrink: 0;">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 00.817 1.194 1.724 1.724 0 01.817 1.194c-.94 1.543.827 3.31 2.37 2.37 1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 01-2.573 1.066 1.724 1.724 0 01-.817 1.194c-.94 1.543.827 3.31 2.37 2.37 1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 01-2.573 1.066 1.724 1.724 0 01-.817 1.194c-.94 1.543.827 3.31 2.37 2.37zM15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -1128,7 +1139,7 @@
         // ============== WORKSPACES MANAGEMENT ==============
         function populateWorkspaceDropdown() {
             const select = document.getElementById('workspace-dropdown');
-            select.innerHTML = '<option value="all">All Workspaces</option>';
+            select.innerHTML = '';
             workspaces.forEach(ws => {
                 const opt = document.createElement('option');
                 opt.value = ws.id;
@@ -1136,6 +1147,11 @@
                 if (ws.id === currentWorkspaceId) opt.selected = true;
                 select.appendChild(opt);
             });
+            // ensure a workspace is always selected (no "All Workspaces")
+            if (workspaces.length > 0 && (currentWorkspaceId === 'all' || !currentWorkspaceId)) {
+                currentWorkspaceId = workspaces[0].id;
+                select.value = currentWorkspaceId;
+            }
         }
 
         function createDefaultWorkspace() {
@@ -1207,15 +1223,10 @@
                         </div>
                         <div class="terminal-token">${term.token}</div>
                     </div>
-                    <div class="terminal-actions">
-                        <button class="icon-btn" onclick="event.stopPropagation(); showRenameModal('${term.id}');" title="Rename">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                        </button>
-                        <button class="icon-btn danger" onclick="event.stopPropagation(); showDeleteModal('${term.id}');" title="Delete">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    <div class="terminal-actions" style="opacity: 1;">
+                        <button class="icon-btn" onclick="event.stopPropagation(); showTerminalMenu('${term.id}');" title="Actions">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 5v.01M12 12v.01M12 19v.01"/>
                             </svg>
                         </button>
                     </div>
@@ -1361,6 +1372,18 @@
             renderList();
             renderHome();
             closeSidebarIfMobile();
+        }
+
+        // ============== TERMINAL 3-DOT MENU (Edit / Delete) ==============
+        function showTerminalMenu(id) {
+            const term = terminals.find(t => t.id === id);
+            if (!term) return;
+            const choice = confirm(`"${term.name}"\n\nChoose action:\n\nOK = Edit / Rename\nCancel = Delete`);
+            if (choice) {
+                showRenameModal(id);
+            } else {
+                showDeleteModal(id);
+            }
         }
 
         // ============== ADD MODAL ==============
@@ -1647,6 +1670,58 @@
             toggleCustomTerminalSelector();
             
             alert(`Sub-user ${username} added with ${role} access!`);
+        }
+
+        // ============== WORKSPACE SETTINGS FRAME ==============
+        function openWorkspaceSettings() {
+            if (currentWorkspaceId === 'all' || !currentWorkspaceId) {
+                alert('Please select a workspace first.');
+                return;
+            }
+            const ws = workspaces.find(w => w.id === currentWorkspaceId);
+            if (!ws) return;
+
+            activeId = null;
+            const main = document.getElementById('main-content');
+            const wsName = encodeURIComponent(ws.name);
+
+            main.innerHTML = `
+                <div style="display: flex; flex-direction: column; height: 100%; width: 100%; background: #000;">
+                    <div class="top-bar">
+                        <div class="top-bar-left">
+                            <button class="menu-btn" onclick="toggleSidebar()">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                                </svg>
+                            </button>
+                            <button class="back-btn" onclick="goHome()">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                </svg>
+                                <span class="back-text">Back</span>
+                            </button>
+                            <div class="divider" style="display: none;"></div>
+                            <div class="page-title">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 01-2-2H7a2 2 0 01-2 2v16m14 0h-4m-6 0H5"/>
+                                </svg>
+                                <span>Settings: ${ws.name}</span>
+                            </div>
+                        </div>
+                        <div class="top-bar-right"></div>
+                    </div>
+                    <div class="iframe-container">
+                        <iframe src="/workspaces?name=${wsName}" allow="fullscreen" allowfullscreen></iframe>
+                    </div>
+                </div>`;
+            
+            const backText = main.querySelector('.back-text');
+            const divider = main.querySelector('.divider');
+            if (window.innerWidth >= 640) {
+                if (backText) backText.style.display = 'inline';
+                if (divider) divider.style.display = 'block';
+            }
+            closeSidebarIfMobile();
         }
 
         // ============== BACKEND INTEGRATION ==============
