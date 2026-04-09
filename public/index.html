@@ -321,40 +321,6 @@
             text-overflow: ellipsis;
         }
         
-        .credits-section {
-            text-align: right;
-            border-left: 1px solid rgba(59, 130, 246, 0.2);
-            padding-left: 16px;
-        }
-        
-        .credits-label {
-            font-size: 10px;
-            color: #34d399;
-            font-weight: 500;
-        }
-        
-        #credits-display {
-            font-size: 32px;
-            font-weight: 700;
-            color: #34d399;
-            line-height: 1;
-            margin: 4px 0;
-        }
-        
-        .refresh-btn {
-            font-size: 10px;
-            color: #6ee7b7;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 4px;
-        }
-        
-        .refresh-btn:hover { color: #34d399; }
-        
-        .refresh-btn svg { width: 12px; height: 12px; }
-        
         /* Footer */
         .sidebar-footer {
             padding: 12px;
@@ -816,7 +782,7 @@
                 </div>
             </div>
 
-            <!-- Workspaces Dropdown - Added exactly on top of search bar -->
+            <!-- Workspaces Dropdown + Create (exactly as requested) -->
             <div style="padding: 0 12px 8px 12px;">
                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; color: #60a5fa;">
@@ -824,13 +790,15 @@
                     </svg>
                     <span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #60a5fa; text-transform: uppercase;">WORKSPACES</span>
                 </div>
-                <select id="workspace-dropdown" class="form-input" style="font-size: 13px; padding: 9px 12px;">
-                    <option value="all">All Workspaces</option>
-                    <option value="personal">Personal</option>
-                    <option value="work">Work</option>
-                    <option value="dev">Development</option>
-                    <option value="prod">Production</option>
-                </select>
+                <select id="workspace-dropdown" class="form-input" style="font-size: 13px; padding: 9px 12px;"></select>
+                
+                <!-- Create button at the bottom of the dropdown section (as requested) -->
+                <button onclick="showCreateWorkspaceModal()" style="margin-top: 8px; width: 100%; padding: 9px 12px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; color: #60a5fa; font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    CREATE NEW WORKSPACE
+                </button>
             </div>
 
             <div class="search-box">
@@ -858,7 +826,7 @@
                     </div>
                 </div>
 
-                <!-- Account and Logout - Added in down section of user profile -->
+                <!-- Account and Logout (kept exactly as before) -->
                 <div style="margin-top: 12px; display: flex; gap: 8px; padding: 0 4px;">
                     <button onclick="showAccount()" style="flex: 1; padding: 9px 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; color: #60a5fa; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Account</button>
                     <button onclick="handleLogout()" style="flex: 1; padding: 9px 12px; background: transparent; border: 1px solid #f87171; border-radius: 6px; color: #f87171; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
@@ -888,7 +856,7 @@
         <div id="main-content"></div>
     </div>
 
-    <!-- Add Modal -->
+    <!-- Add Modal (extended with workspace selection) -->
     <div id="add-modal" class="modal-overlay" onclick="if(event.target.id === 'add-modal') hideAddModal()">
         <div class="modal" onclick="event.stopPropagation()">
             <div class="modal-header">
@@ -913,6 +881,11 @@
                     <span>From your KS Panel</span>
                 </div>
             </div>
+            <!-- Workspace selection added for category support -->
+            <div class="form-group">
+                <label class="form-label">Workspace</label>
+                <select id="modal-workspace" class="form-input"></select>
+            </div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="hideAddModal()">CANCEL</button>
                 <button class="btn btn-primary" onclick="handleAddTerminal()">
@@ -925,7 +898,7 @@
         </div>
     </div>
 
-    <!-- Rename Modal -->
+    <!-- Rename Modal (unchanged) -->
     <div id="rename-modal" class="modal-overlay" onclick="if(event.target.id === 'rename-modal') hideRenameModal()">
         <div class="modal" onclick="event.stopPropagation()">
             <div class="modal-header">
@@ -966,7 +939,7 @@
         </div>
     </div>
 
-    <!-- Delete Modal -->
+    <!-- Delete Modal (unchanged) -->
     <div id="delete-modal" class="modal-overlay" onclick="if(event.target.id === 'delete-modal') hideDeleteModal()">
         <div class="modal danger" onclick="event.stopPropagation()">
             <div class="modal-header">
@@ -1007,14 +980,114 @@
         </div>
     </div>
 
+    <!-- Create Workspace Modal -->
+    <div id="create-ws-modal" class="modal-overlay" onclick="if(event.target.id === 'create-ws-modal') hideCreateWorkspaceModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 01-2-2H7a2 2 0 01-2 2v16m14 0h-4m-6 0H5"/>
+                        </svg>
+                    </div>
+                    <div class="modal-title-text">
+                        <h2>Create Workspace</h2>
+                        <p>Terminals will be organized as categories here</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="hideCreateWorkspaceModal()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Workspace Name</label>
+                <input id="ws-name-input" type="text" placeholder="team-dev-ws" class="form-input">
+                <div class="form-hint">
+                    <span>Example: ${username}-prod-ws</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideCreateWorkspaceModal()">CANCEL</button>
+                <button class="btn btn-primary" onclick="confirmCreateWorkspace()">
+                    CREATE WORKSPACE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Powerful Sub-Users / Members Management Modal -->
+    <div id="manage-ws-modal" class="modal-overlay" onclick="if(event.target.id === 'manage-ws-modal') hideManageWorkspaceModal()">
+        <div class="modal" style="max-width: 440px; width: 100%;" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 01-5.356-1.857M17 20H7m5-2v-2c0-.656-.126-1.284-.356-1.852M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.284.356-1.852m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <div class="modal-title-text">
+                        <h2 id="manage-ws-name-display">Manage Workspace</h2>
+                        <p>Sub-users &amp; permissions • Full / View / Custom terminal access</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="hideManageWorkspaceModal()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Members List -->
+            <div style="margin-bottom: 20px;">
+                <div class="info-label" style="margin-bottom: 8px;">MEMBERS &amp; PERMISSIONS</div>
+                <div id="members-list" style="max-height: 260px; overflow-y: auto; background: #0f172a; border-radius: 6px; padding: 8px;"></div>
+            </div>
+
+            <!-- Add Sub-User Form (powerful permission system) -->
+            <div class="info-box">
+                <div class="info-label">ADD SUB-USER TO THIS WORKSPACE</div>
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input id="subuser-username" type="text" placeholder="@newuser" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Permission Level</label>
+                    <select id="subuser-role" class="form-input" onchange="toggleCustomTerminalSelector()">
+                        <option value="full">Full Workspace Access (all terminals)</option>
+                        <option value="view">View Only (read-only)</option>
+                        <option value="custom">Custom — specific terminals only</option>
+                    </select>
+                </div>
+
+                <!-- Custom terminals selector (shown only when custom is selected) -->
+                <div id="custom-terminals-section" style="display: none;">
+                    <label class="form-label" style="margin-bottom: 8px;">Allowed Terminals</label>
+                    <div id="custom-terminals-list" style="background: #1e293b; border-radius: 6px; padding: 10px; max-height: 180px; overflow-y: auto; font-size: 13px;"></div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideManageWorkspaceModal()">CLOSE</button>
+                <button class="btn btn-primary" onclick="addSubUserToWorkspace()">
+                    <span>ADD SUB-USER</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============== GLOBAL STATE ==============
         let terminals = [];
+        let workspaces = [];
         let activeId = null;
         let searchTerm = '';
         let pendingRenameId = null;
         let pendingDeleteId = null;
         let currentUser = null;
+        let currentWorkspaceId = 'all';
+        let currentManageWorkspaceId = null;
 
         // ============== LOCALSTORAGE ==============
         function loadTerminals() {
@@ -1024,6 +1097,15 @@
 
         function saveTerminals() {
             localStorage.setItem('ks_ssh_terminals', JSON.stringify(terminals));
+        }
+
+        function loadWorkspaces() {
+            const saved = localStorage.getItem('ks_ssh_workspaces');
+            if (saved) workspaces = JSON.parse(saved);
+        }
+
+        function saveWorkspaces() {
+            localStorage.setItem('ks_ssh_workspaces', JSON.stringify(workspaces));
         }
 
         // ============== MOBILE SIDEBAR ==============
@@ -1042,15 +1124,61 @@
             overlay.classList.remove('show');
         }
 
-        // ============== RENDER SIDEBAR LIST ==============
+        // ============== WORKSPACES MANAGEMENT ==============
+        function populateWorkspaceDropdown() {
+            const select = document.getElementById('workspace-dropdown');
+            select.innerHTML = '<option value="all">All Workspaces</option>';
+            workspaces.forEach(ws => {
+                const opt = document.createElement('option');
+                opt.value = ws.id;
+                opt.textContent = ws.name;
+                if (ws.id === currentWorkspaceId) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function createDefaultWorkspace() {
+            if (!currentUser || workspaces.length > 0) return;
+            const defaultWs = {
+                id: 'default-ws',
+                name: `${currentUser.username}-ws`,
+                created: Date.now(),
+                members: [{
+                    username: currentUser.username,
+                    role: 'full',
+                    allowedTerminals: []
+                }]
+            };
+            workspaces.push(defaultWs);
+            saveWorkspaces();
+        }
+
+        function migrateTerminalsToWorkspaces() {
+            let changed = false;
+            terminals.forEach(t => {
+                if (!t.workspaceId) {
+                    t.workspaceId = 'default-ws';
+                    changed = true;
+                }
+            });
+            if (changed) saveTerminals();
+        }
+
+        // ============== RENDER SIDEBAR LIST (with workspace filtering) ==============
         function renderList() {
             const container = document.getElementById('terminals-list');
             container.innerHTML = '';
 
-            const filtered = terminals.filter(t => 
-                t.name.toLowerCase().includes(searchTerm) ||
-                t.token.toLowerCase().includes(searchTerm)
+            let filtered = terminals.filter(t => 
+                (!searchTerm || 
+                 t.name.toLowerCase().includes(searchTerm) || 
+                 t.token.toLowerCase().includes(searchTerm))
             );
+
+            // Filter by current workspace (category support)
+            if (currentWorkspaceId !== 'all') {
+                filtered = filtered.filter(t => t.workspaceId === currentWorkspaceId);
+            }
 
             if (filtered.length === 0) {
                 container.innerHTML = `
@@ -1058,7 +1186,7 @@
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                         </svg>
-                        <p>No terminals</p>
+                        <p>No terminals in this workspace</p>
                     </div>`;
                 return;
             }
@@ -1195,7 +1323,6 @@
                     </div>
                 </div>`;
             
-            // Show mobile menu button on small screens
             const mobileBtn = main.querySelector('.mobile-menu');
             const backText = main.querySelector('.back-text');
             const divider = main.querySelector('.divider');
@@ -1239,6 +1366,7 @@
         function showAddModal() {
             document.getElementById('modal-name').value = '';
             document.getElementById('modal-token').value = '';
+            populateModalWorkspaceSelect();
             document.getElementById('add-modal').classList.add('show');
             setTimeout(() => document.getElementById('modal-name').focus(), 50);
         }
@@ -1247,9 +1375,25 @@
             document.getElementById('add-modal').classList.remove('show');
         }
 
+        function populateModalWorkspaceSelect() {
+            const select = document.getElementById('modal-workspace');
+            select.innerHTML = '';
+            workspaces.forEach(ws => {
+                const opt = document.createElement('option');
+                opt.value = ws.id;
+                opt.textContent = ws.name;
+                select.appendChild(opt);
+            });
+            // default to current workspace if possible
+            if (currentWorkspaceId !== 'all') {
+                select.value = currentWorkspaceId;
+            }
+        }
+
         function handleAddTerminal() {
             const name = document.getElementById('modal-name').value.trim();
             const token = document.getElementById('modal-token').value.trim();
+            const workspaceId = document.getElementById('modal-workspace').value;
             if (!token) {
                 alert('Token is required');
                 return;
@@ -1262,6 +1406,7 @@
                 id: Date.now().toString(),
                 name: name || `Terminal ${terminals.length + 1}`,
                 token: token,
+                workspaceId: workspaceId || 'default-ws',
                 added: Date.now()
             };
             terminals.unshift(newTerm);
@@ -1271,7 +1416,7 @@
             selectTerminal(newTerm.id);
         }
 
-        // ============== RENAME MODAL ==============
+        // ============== RENAME / DELETE (unchanged) ==============
         function showRenameModal(id) {
             const term = terminals.find(t => t.id === id);
             if (!term) return;
@@ -1305,7 +1450,6 @@
             hideRenameModal();
         }
 
-        // ============== DELETE MODAL ==============
         function showDeleteModal(id) {
             const term = terminals.find(t => t.id === id);
             if (!term) return;
@@ -1330,13 +1474,17 @@
         }
 
         function clearAllData() {
-            if (confirm('Delete ALL saved terminals? This cannot be undone.')) {
+            if (confirm('Delete ALL saved terminals and workspaces? This cannot be undone.')) {
                 localStorage.removeItem('ks_ssh_terminals');
+                localStorage.removeItem('ks_ssh_workspaces');
                 terminals = [];
+                workspaces = [];
                 activeId = null;
+                currentWorkspaceId = 'all';
                 localStorage.setItem('lastActiveId', 'home');
                 renderList();
                 renderHome();
+                populateWorkspaceDropdown();
             }
         }
 
@@ -1348,6 +1496,158 @@
             });
         }
 
+        // ============== CREATE WORKSPACE ==============
+        function showCreateWorkspaceModal() {
+            document.getElementById('ws-name-input').value = '';
+            document.getElementById('create-ws-modal').classList.add('show');
+        }
+
+        function hideCreateWorkspaceModal() {
+            document.getElementById('create-ws-modal').classList.remove('show');
+        }
+
+        function confirmCreateWorkspace() {
+            const name = document.getElementById('ws-name-input').value.trim();
+            if (!name) {
+                alert('Workspace name is required');
+                return;
+            }
+            const newWs = {
+                id: Date.now().toString(),
+                name: name,
+                created: Date.now(),
+                members: [{
+                    username: currentUser ? currentUser.username : 'owner',
+                    role: 'full',
+                    allowedTerminals: []
+                }]
+            };
+            workspaces.unshift(newWs);
+            saveWorkspaces();
+            populateWorkspaceDropdown();
+            hideCreateWorkspaceModal();
+            // Switch to the newly created workspace
+            currentWorkspaceId = newWs.id;
+            populateWorkspaceDropdown();
+            renderList();
+        }
+
+        // ============== POWERFUL SUB-USERS / MEMBERS SYSTEM ==============
+        function showManageWorkspaceModal() {
+            if (currentWorkspaceId === 'all') {
+                alert('Please select a specific workspace to manage sub-users');
+                return;
+            }
+            currentManageWorkspaceId = currentWorkspaceId;
+            const ws = workspaces.find(w => w.id === currentManageWorkspaceId);
+            if (!ws) return;
+            document.getElementById('manage-ws-name-display').textContent = `Manage ${ws.name}`;
+            renderMembersList();
+            toggleCustomTerminalSelector(); // initial hide
+            document.getElementById('manage-ws-modal').classList.add('show');
+        }
+
+        function hideManageWorkspaceModal() {
+            document.getElementById('manage-ws-modal').classList.remove('show');
+            currentManageWorkspaceId = null;
+        }
+
+        function renderMembersList() {
+            const container = document.getElementById('members-list');
+            const ws = workspaces.find(w => w.id === currentManageWorkspaceId);
+            if (!ws) return;
+            
+            let html = '';
+            ws.members.forEach((member, index) => {
+                const allowedCount = member.role === 'custom' ? member.allowedTerminals.length : 'ALL';
+                html += `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #1e293b; border-radius: 6px; margin-bottom: 6px;">
+                    <div>
+                        <span style="font-weight: 600;">${member.username}</span>
+                        <span style="font-size: 10px; margin-left: 8px; padding: 2px 6px; background: ${member.role === 'full' ? '#34d399' : member.role === 'view' ? '#64748b' : '#f59e0b'}; border-radius: 9999px; color: white;">${member.role.toUpperCase()}</span>
+                        ${member.role === 'custom' ? `<span style="font-size: 10px; color: #64748b; margin-left: 8px;">${allowedCount} terminals</span>` : ''}
+                    </div>
+                    <button onclick="removeSubUser(${index});" style="background: transparent; border: none; color: #f87171; font-size: 11px; cursor: pointer;">REMOVE</button>
+                </div>`;
+            });
+            if (ws.members.length === 0) html = '<p style="text-align:center; color:#64748b; padding:20px;">No sub-users yet</p>';
+            container.innerHTML = html;
+        }
+
+        function removeSubUser(index) {
+            const ws = workspaces.find(w => w.id === currentManageWorkspaceId);
+            if (!ws) return;
+            ws.members.splice(index, 1);
+            saveWorkspaces();
+            renderMembersList();
+        }
+
+        function toggleCustomTerminalSelector() {
+            const role = document.getElementById('subuser-role').value;
+            const section = document.getElementById('custom-terminals-section');
+            if (role === 'custom') {
+                section.style.display = 'block';
+                populateCustomTerminalsList();
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        function populateCustomTerminalsList() {
+            const container = document.getElementById('custom-terminals-list');
+            const wsId = currentManageWorkspaceId;
+            const wsTerminals = terminals.filter(t => t.workspaceId === wsId);
+            let html = '';
+            wsTerminals.forEach(term => {
+                html += `
+                <label style="display: block; padding: 6px 0; cursor: pointer;">
+                    <input type="checkbox" value="${term.id}" class="custom-terminal-cb" style="margin-right: 8px;"> 
+                    ${term.name} <span style="font-size:10px; color:#64748b;">(${term.token})</span>
+                </label>`;
+            });
+            if (wsTerminals.length === 0) html = '<p style="color:#64748b; text-align:center; padding:12px;">No terminals in this workspace yet</p>';
+            container.innerHTML = html;
+        }
+
+        function addSubUserToWorkspace() {
+            const username = document.getElementById('subuser-username').value.trim();
+            if (!username) {
+                alert('Username is required');
+                return;
+            }
+            const role = document.getElementById('subuser-role').value;
+            const ws = workspaces.find(w => w.id === currentManageWorkspaceId);
+            if (!ws) return;
+
+            let allowedTerminals = [];
+            if (role === 'custom') {
+                const checkboxes = document.querySelectorAll('.custom-terminal-cb:checked');
+                allowedTerminals = Array.from(checkboxes).map(cb => cb.value);
+            }
+
+            // Prevent duplicate
+            if (ws.members.some(m => m.username === username)) {
+                alert('This user is already a member');
+                return;
+            }
+
+            ws.members.push({
+                username: username,
+                role: role,
+                allowedTerminals: allowedTerminals
+            });
+
+            saveWorkspaces();
+            renderMembersList();
+            
+            // Clear form
+            document.getElementById('subuser-username').value = '';
+            document.getElementById('subuser-role').value = 'full';
+            toggleCustomTerminalSelector();
+            
+            alert(`Sub-user ${username} added with ${role} access!`);
+        }
+
         // ============== BACKEND INTEGRATION ==============
         async function loadUser() {
             try {
@@ -1356,34 +1656,25 @@
                 const data = await res.json();
                 currentUser = data.user;
                 document.getElementById('username-display').textContent = currentUser.username;
-                
-                // Credits display removed from profile - only header credits is shown
-                const creditsDisplay = document.getElementById('credits-display');
-                if (creditsDisplay) {
-                    creditsDisplay.textContent = currentUser.credits;
-                }
                 const headerCredits = document.getElementById('header-credits');
-                if (headerCredits) {
-                    headerCredits.textContent = currentUser.credits || 0;
-                }
+                if (headerCredits) headerCredits.textContent = currentUser.credits || 0;
             } catch (e) {
                 window.location.href = '/auth.html';
             }
         }
 
         async function refreshCredits() {
+            // kept for compatibility but not used in UI anymore
             const res = await fetch('/api/me');
             if (res.ok) {
                 const data = await res.json();
                 currentUser = data.user;
-                const creditsDisplay = document.getElementById('credits-display');
-                if (creditsDisplay) creditsDisplay.textContent = currentUser.credits;
                 const headerCredits = document.getElementById('header-credits');
                 if (headerCredits) headerCredits.textContent = currentUser.credits || 0;
             }
         }
 
-        // ============== NEW: Account & Logout functions ==============
+        // ============== ACCOUNT & LOGOUT (unchanged) ==============
         function showAccount() {
             alert('Account settings would open here.\n\n(Full account panel coming in future update)');
         }
@@ -1391,26 +1682,42 @@
         function handleLogout() {
             if (confirm('Logout from KS SSH?\n\nThis will clear your session and return to login.')) {
                 localStorage.removeItem('ks_ssh_terminals');
+                localStorage.removeItem('ks_ssh_workspaces');
                 localStorage.removeItem('lastActiveId');
                 window.location.href = '/auth.html';
             }
         }
 
+        // ============== WORKSPACE DROPDOWN HANDLER ==============
+        function setupWorkspaceDropdown() {
+            const select = document.getElementById('workspace-dropdown');
+            select.addEventListener('change', () => {
+                currentWorkspaceId = select.value;
+                renderList();
+            });
+        }
+
         // ============== INIT ==============
         function init() {
             loadTerminals();
-            
-            const savedActive = localStorage.getItem('lastActiveId');
-            if (savedActive && savedActive !== 'home' && terminals.some(t => t.id === savedActive)) {
-                activeId = savedActive;
-                selectTerminal(savedActive);
-            } else {
-                renderHome();
-            }
-            
-            renderList();
-            setupSearch();
-            loadUser();
+            loadWorkspaces();
+            loadUser().then(() => {
+                createDefaultWorkspace();
+                migrateTerminalsToWorkspaces();
+                populateWorkspaceDropdown();
+                setupWorkspaceDropdown();
+                
+                const savedActive = localStorage.getItem('lastActiveId');
+                if (savedActive && savedActive !== 'home' && terminals.some(t => t.id === savedActive)) {
+                    activeId = savedActive;
+                    selectTerminal(savedActive);
+                } else {
+                    renderHome();
+                }
+                
+                renderList();
+                setupSearch();
+            });
         }
         
         window.onload = init;
