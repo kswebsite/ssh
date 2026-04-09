@@ -11,18 +11,9 @@
             --primary-blue: #3b82f6;
             --bg-dark: #020617;
             --panel-bg: rgba(15, 23, 42, 0.95);
-            --border-blue: rgba(59, 130, 246, 0.2);
-            --slate-900: #0f172a;
-            --slate-700: #334155;
-            --emerald-400: #34d399;
-            --blue-600: #2563eb;
         }
 
-        * { 
-            box-sizing: border-box; 
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body, html {
             height: 100dvh;
@@ -33,7 +24,7 @@
             color: white;
         }
 
-        /* Top Bar - perfectly balanced for mobile & desktop */
+        /* Minimal Top Bar (no credits) */
         .top-bar {
             height: 56px;
             background: #0f172a;
@@ -43,37 +34,17 @@
             align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
-            box-shadow: 0 1px 0 rgba(59, 130, 246, 0.1);
         }
 
         @media (min-width: 768px) {
-            .top-bar {
-                padding: 0 24px;
-                height: 64px;
-            }
+            .top-bar { padding: 0 24px; height: 64px; }
         }
 
-        .top-bar-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .top-bar-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-
-        /* Workspaces section - clean, same line, responsive */
         .workspaces-section {
             display: flex;
             align-items: center;
             gap: 8px;
-            width: 100%;
+            flex: 1;
             max-width: 420px;
         }
 
@@ -85,8 +56,6 @@
             color: white;
             font-size: 13px;
             outline: none;
-            flex: 1;
-            min-width: 0;
         }
 
         .form-input:focus {
@@ -105,42 +74,8 @@
             justify-content: center;
             cursor: pointer;
             min-width: 42px;
-            flex-shrink: 0;
         }
 
-        .action-btn-small:hover {
-            background: rgba(59, 130, 246, 0.25);
-        }
-
-        /* Credits badge */
-        .credits-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 4px;
-            font-size: 13px;
-            color: #60a5fa;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .credits-badge .dot {
-            width: 6px;
-            height: 6px;
-            background: #60a5fa;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        /* Add button */
         .btn-primary {
             background: #3b82f6;
             border-radius: 6px;
@@ -153,15 +88,11 @@
             gap: 8px;
             padding: 10px 20px;
             font-size: 13px;
-            transition: all 0.2s;
-            white-space: nowrap;
         }
 
-        .btn-primary:hover {
-            background: #2563eb;
-        }
+        .btn-primary:hover { background: #2563eb; }
 
-        /* Content Area */
+        /* Content */
         .content {
             padding: 16px 16px 24px;
             overflow-y: auto;
@@ -169,20 +100,14 @@
         }
 
         @media (min-width: 768px) {
-            .content {
-                padding: 24px;
-                height: calc(100dvh - 64px);
-            }
+            .content { padding: 24px; height: calc(100dvh - 64px); }
         }
 
-        /* Section Cards - always visible, stylish glass panels */
         .section-card {
             background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
             border: 1px solid rgba(59, 130, 246, 0.2);
             border-radius: 12px;
             padding: 20px;
-            margin-bottom: 24px;
             box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
         }
 
@@ -190,107 +115,108 @@
             font-size: 17px;
             font-weight: 600;
             margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             color: #e2e8f0;
         }
 
-        .section-header::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: #3b82f6;
-            border-radius: 50%;
-        }
-
-        /* Mini grid inside each section */
-        .mini-grid {
-            display: grid;
-            grid-template-columns: repeat(1, 1fr);
-            gap: 12px;
-        }
-
-        @media (min-width: 640px) {
-            .mini-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .mini-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        /* Mini terminal cards - compact but same style */
-        .mini-card {
+        /* Terminal List - ONE LINE per terminal */
+        .terminal-row {
+            display: flex;
+            align-items: center;
             background: rgba(15, 23, 42, 0.85);
             border: 1px solid rgba(59, 130, 246, 0.15);
             border-radius: 8px;
-            padding: 14px;
-            transition: all 0.2s ease;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
         }
 
-        .mini-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -6px rgba(59, 130, 246, 0.3);
+        .terminal-row:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 15px -4px rgba(59, 130, 246, 0.3);
         }
 
-        .mini-header {
+        .terminal-name {
+            flex: 1;
+            font-weight: 500;
+            font-size: 15px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            gap: 10px;
         }
 
-        .mini-title {
-            font-weight: 600;
-            font-size: 14px;
+        .terminal-name svg {
+            width: 18px;
+            height: 18px;
+            color: #60a5fa;
         }
 
-        .mini-status {
-            color: #34d399;
-            font-size: 16px;
-            line-height: 1;
+        .terminal-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .mini-token {
-            background: #0f172a;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            color: #93c5fd;
-            word-break: break-all;
-            margin-bottom: 12px;
-        }
-
-        .mini-connect {
-            width: 100%;
-            padding: 8px;
+        .connect-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             background: #3b82f6;
-            border-radius: 6px;
-            border: none;
             color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
         }
 
-        .mini-connect:hover {
-            background: #2563eb;
+        .connect-btn:hover { background: #2563eb; }
+
+        .connect-btn svg {
+            width: 16px;
+            height: 16px;
         }
 
-        /* Empty state inside sections */
-        .section-empty {
-            text-align: center;
-            padding: 32px 20px;
-            color: #64748b;
+        .dot-btn {
+            background: none;
+            border: none;
+            color: #60a5fa;
+            cursor: pointer;
+            padding: 6px;
+        }
+
+        .dot-btn:hover { color: white; }
+
+        /* Context Menu */
+        .context-menu {
+            position: absolute;
+            background: #1e293b;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 4px 0;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+            z-index: 10000;
+            min-width: 170px;
+            display: none;
+        }
+
+        .context-menu button {
+            width: 100%;
+            padding: 10px 16px;
+            background: none;
+            border: none;
+            color: #e2e8f0;
             font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
         }
 
-        /* Modal */
+        .context-menu button:hover { background: rgba(59, 130, 246, 0.2); }
+        .context-menu button.delete { color: #f87171; }
+
+        /* Modals */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -299,13 +225,10 @@
             backdrop-filter: blur(4px);
             align-items: center;
             justify-content: center;
-            padding: 16px;
             z-index: 9999;
         }
 
-        .modal-overlay.visible {
-            display: flex;
-        }
+        .modal-overlay.visible { display: flex; }
 
         .modal {
             background: rgba(15, 23, 42, 0.95);
@@ -314,33 +237,16 @@
             width: 100%;
             max-width: 380px;
             padding: 24px;
-            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes modalPop {
-            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
-        .modal-title {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: #64748b;
-            font-size: 24px;
-            cursor: pointer;
-        }
+        .modal-title { font-size: 18px; font-weight: 700; }
 
         .input-field {
             width: 100%;
@@ -350,21 +256,12 @@
             padding: 12px 16px;
             color: white;
             font-size: 14px;
-            outline: none;
-        }
-
-        .input-field:focus {
-            border-color: #3b82f6;
-        }
-
-        .input-mono {
-            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 16px;
         }
 
         .modal-actions {
             display: flex;
             gap: 8px;
-            margin-top: 24px;
         }
 
         .btn-flex {
@@ -376,89 +273,53 @@
             cursor: pointer;
         }
 
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid #334155;
-            color: #94a3b8;
-        }
-
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 2px; }
+        .btn-secondary { background: transparent; border: 1px solid #334155; color: #94a3b8; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
     </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
+<!-- Minimal Top Bar (no credits) -->
 <div class="top-bar">
-    <div class="top-bar-left">
-        <div class="workspaces-section">
-            <select id="workspace-dropdown" class="form-input"></select>
-            <button onclick="showCreateWorkspaceModal()" class="action-btn-small">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-
-    <div class="top-bar-right">
-        <div class="credits-badge">
-            <div class="dot"></div>
-            <span id="header-credits">0</span>
-        </div>
-        <button onclick="showAddModal()" class="btn-primary">
-            <span style="font-size: 18px; line-height: 1;">+</span>
-            <span>Add Terminal</span>
+    <div class="workspaces-section">
+        <select id="workspace-dropdown" class="form-input"></select>
+        <button onclick="showCreateWorkspaceModal()" class="action-btn-small">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+            </svg>
         </button>
     </div>
+
+    <button onclick="showAddModal()" class="btn-primary">
+        <span style="font-size:18px;line-height:1;">+</span>
+        <span>Add Terminal</span>
+    </button>
 </div>
 
-<!-- CONTENT - three always-visible stylish cards -->
+<!-- CONTENT - Only one Terminals section -->
 <div class="content">
-
-    <!-- Recents Card -->
     <div class="section-card">
-        <div class="section-header">Recents</div>
-        <div id="recents-grid" class="mini-grid"></div>
-        <div id="recents-empty" class="section-empty" style="display: none;">No recent terminals yet</div>
+        <div class="section-header">Terminals</div>
+        <div id="terminals-list"></div>
+        <div id="empty-state" style="text-align:center; padding:40px 20px; color:#64748b; display:none;">
+            No terminals in this workspace yet
+        </div>
     </div>
-
-    <!-- Favorites Card -->
-    <div class="section-card">
-        <div class="section-header">Favorites</div>
-        <div id="favorites-grid" class="mini-grid"></div>
-        <div id="favorites-empty" class="section-empty" style="display: none;">No favorites yet</div>
-    </div>
-
-    <!-- All Terminals Card -->
-    <div class="section-card">
-        <div class="section-header">All Terminals</div>
-        <div id="all-grid" class="mini-grid"></div>
-        <div id="all-empty" class="section-empty" style="display: none;">No terminals in this workspace</div>
-    </div>
-
 </div>
 
-<!-- ADD TERMINAL MODAL -->
+<!-- ADD MODAL -->
 <div id="add-modal" onclick="if(event.target.id==='add-modal')hideAddModal()" class="modal-overlay">
     <div onclick="event.stopPropagation()" class="modal">
         <div class="modal-header">
             <h2 class="modal-title">New Terminal</h2>
             <button onclick="hideAddModal()" class="modal-close">×</button>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-            <input id="modal-name" placeholder="Display Name" class="input-field">
-            <input id="modal-token" placeholder="Token (from KS Panel)" class="input-field input-mono">
-        </div>
+        <input id="modal-name" placeholder="Display Name" class="input-field">
+        <input id="modal-token" placeholder="Token (from KS Panel)" class="input-field">
         <div class="modal-actions">
             <button onclick="hideAddModal()" class="btn-flex btn-secondary">Cancel</button>
-            <button onclick="handleAddTerminal()" class="btn-flex btn-primary">Add Terminal</button>
+            <button onclick="handleAddTerminal()" class="btn-flex btn-primary">Add</button>
         </div>
     </div>
 </div>
@@ -470,10 +331,40 @@
             <h2 class="modal-title">Create New Workspace</h2>
             <button onclick="hideCreateWorkspaceModal()" class="modal-close">×</button>
         </div>
-        <input id="ws-name-input" placeholder="Workspace name (e.g. prod-ws)" class="input-field">
+        <input id="ws-name-input" placeholder="Workspace name" class="input-field">
         <div class="modal-actions">
             <button onclick="hideCreateWorkspaceModal()" class="btn-flex btn-secondary">Cancel</button>
-            <button onclick="confirmCreateWorkspace()" class="btn-flex btn-primary">Create Workspace</button>
+            <button onclick="confirmCreateWorkspace()" class="btn-flex btn-primary">Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div id="rename-modal" onclick="if(event.target.id==='rename-modal')hideRenameModal()" class="modal-overlay">
+    <div onclick="event.stopPropagation()" class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Rename Terminal</h2>
+            <button onclick="hideRenameModal()" class="modal-close">×</button>
+        </div>
+        <input id="rename-input" class="input-field" placeholder="New name">
+        <div class="modal-actions">
+            <button onclick="hideRenameModal()" class="btn-flex btn-secondary">Cancel</button>
+            <button onclick="confirmRename()" class="btn-flex btn-primary">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div id="delete-modal" onclick="if(event.target.id==='delete-modal')hideDeleteModal()" class="modal-overlay">
+    <div onclick="event.stopPropagation()" class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title" style="color:#f87171;">Delete Terminal</h2>
+            <button onclick="hideDeleteModal()" class="modal-close">×</button>
+        </div>
+        <p id="delete-name-display" style="margin-bottom:12px; font-weight:600;"></p>
+        <div class="modal-actions">
+            <button onclick="hideDeleteModal()" class="btn-flex btn-secondary">Cancel</button>
+            <button onclick="confirmDelete()" class="btn-flex btn-danger">Delete</button>
         </div>
     </div>
 </div>
@@ -482,29 +373,22 @@
     let terminals = [];
     let workspaces = [];
     let currentWorkspaceId = null;
+    let pendingRenameId = null;
+    let pendingDeleteId = null;
+    let currentContextId = null;
 
-    function loadTerminals() {
-        const saved = localStorage.getItem('ks_ssh_terminals');
-        terminals = saved ? JSON.parse(saved) : [];
+    function loadData() {
+        terminals = JSON.parse(localStorage.getItem('ks_ssh_terminals') || '[]');
+        workspaces = JSON.parse(localStorage.getItem('ks_ssh_workspaces') || '[]');
     }
 
-    function loadWorkspaces() {
-        const saved = localStorage.getItem('ks_ssh_workspaces');
-        workspaces = saved ? JSON.parse(saved) : [];
-    }
-
-    function saveTerminals() {
+    function saveData() {
         localStorage.setItem('ks_ssh_terminals', JSON.stringify(terminals));
-    }
-
-    function saveWorkspaces() {
-        localStorage.setItem('ks_ssh_workspaces', JSON.stringify(workspaces));
     }
 
     function populateWorkspaceDropdown() {
         const select = document.getElementById('workspace-dropdown');
         select.innerHTML = '';
-        
         workspaces.forEach(ws => {
             const opt = document.createElement('option');
             opt.value = ws.id;
@@ -512,63 +396,157 @@
             if (ws.id === currentWorkspaceId) opt.selected = true;
             select.appendChild(opt);
         });
-
-        if (workspaces.length > 0 && (!currentWorkspaceId || currentWorkspaceId === 'all')) {
+        if (workspaces.length && !currentWorkspaceId) {
             currentWorkspaceId = workspaces[0].id;
             select.value = currentWorkspaceId;
         }
     }
 
-    function getRecents() {
-        let filtered = terminals.filter(t => t.workspaceId === currentWorkspaceId);
-        filtered.sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
-        return filtered.slice(0, 8);
-    }
+    function renderTerminals() {
+        const container = document.getElementById('terminals-list');
+        const empty = document.getElementById('empty-state');
+        container.innerHTML = '';
 
-    function getFavorites() {
-        // For now showing all terminals (you can add isFavorite flag later)
-        return terminals.filter(t => t.workspaceId === currentWorkspaceId);
-    }
+        const filtered = terminals.filter(t => t.workspaceId === currentWorkspaceId);
 
-    function getAllTerminals() {
-        return terminals.filter(t => t.workspaceId === currentWorkspaceId);
-    }
-
-    function renderMiniGrid(gridId, emptyId, data) {
-        const grid = document.getElementById(gridId);
-        const emptyEl = document.getElementById(emptyId);
-        grid.innerHTML = '';
-
-        if (data.length === 0) {
-            emptyEl.style.display = 'block';
+        if (filtered.length === 0) {
+            empty.style.display = 'block';
             return;
         }
+        empty.style.display = 'none';
 
-        emptyEl.style.display = 'none';
-
-        data.forEach(term => {
-            const card = document.createElement('div');
-            card.className = "mini-card";
-            card.innerHTML = `
-                <div class="mini-header">
-                    <div class="mini-title">${term.name}</div>
-                    <div class="mini-status">●</div>
+        filtered.forEach(term => {
+            const row = document.createElement('div');
+            row.className = 'terminal-row';
+            row.innerHTML = `
+                <div class="terminal-name" onclick="connectTerminal('${term.id}')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    ${term.name}
                 </div>
-                <div class="mini-token">${term.token}</div>
-                <button onclick="connectTerminal('${term.id}'); event.stopImmediatePropagation();" class="mini-connect">Connect Now</button>
+                <div class="terminal-actions">
+                    <button onclick="connectTerminal('${term.id}'); event.stopImmediatePropagation();" class="connect-btn">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7M5 12h14"/>
+                        </svg>
+                        Connect
+                    </button>
+                    <button onclick="showContextMenu('${term.id}', event)" class="dot-btn">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:20px;height:20px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 5v.01M12 12v.01M12 19v.01"/>
+                        </svg>
+                    </button>
+                </div>
             `;
-            grid.appendChild(card);
+            container.appendChild(row);
         });
     }
 
-    function renderAllSections() {
-        const recents = getRecents();
-        const favorites = getFavorites();
-        const allTerms = getAllTerminals();
+    function connectTerminal(id) {
+        const term = terminals.find(t => t.id === id);
+        if (term) {
+            term.lastUsed = Date.now();
+            saveData();
+            alert('Connecting to: ' + term.name + '\nToken: ' + term.token);
+            renderTerminals();
+        }
+    }
 
-        renderMiniGrid('recents-grid', 'recents-empty', recents);
-        renderMiniGrid('favorites-grid', 'favorites-empty', favorites);
-        renderMiniGrid('all-grid', 'all-empty', allTerms);
+    // Context Menu (Edit + Delete with SVG)
+    function showContextMenu(id, e) {
+        e.stopImmediatePropagation();
+        currentContextId = id;
+
+        let menu = document.getElementById('context-menu');
+        if (!menu) {
+            menu = document.createElement('div');
+            menu.id = 'context-menu';
+            menu.className = 'context-menu';
+            menu.innerHTML = `
+                <button onclick="contextEdit()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Edit / Rename
+                </button>
+                <button onclick="contextDelete()" class="delete">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete
+                </button>
+            `;
+            document.body.appendChild(menu);
+        }
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        menu.style.top = `${rect.bottom + window.scrollY + 5}px`;
+        menu.style.left = `${rect.left + window.scrollX - 120}px`;
+        menu.style.display = 'block';
+
+        document.addEventListener('click', hideContextMenuOnce);
+    }
+
+    function hideContextMenuOnce() {
+        const menu = document.getElementById('context-menu');
+        if (menu) menu.style.display = 'none';
+        document.removeEventListener('click', hideContextMenuOnce);
+    }
+
+    function contextEdit() {
+        hideContextMenuOnce();
+        if (currentContextId) showRenameModal(currentContextId);
+    }
+
+    function contextDelete() {
+        hideContextMenuOnce();
+        if (currentContextId) showDeleteModal(currentContextId);
+    }
+
+    function showRenameModal(id) {
+        const term = terminals.find(t => t.id === id);
+        if (!term) return;
+        pendingRenameId = id;
+        document.getElementById('rename-input').value = term.name;
+        document.getElementById('rename-modal').classList.add('visible');
+    }
+
+    function hideRenameModal() {
+        document.getElementById('rename-modal').classList.remove('visible');
+        pendingRenameId = null;
+    }
+
+    function confirmRename() {
+        if (!pendingRenameId) return;
+        const newName = document.getElementById('rename-input').value.trim();
+        if (!newName) return alert('Name cannot be empty');
+        const term = terminals.find(t => t.id === pendingRenameId);
+        if (term) term.name = newName;
+        saveData();
+        hideRenameModal();
+        renderTerminals();
+    }
+
+    function showDeleteModal(id) {
+        const term = terminals.find(t => t.id === id);
+        if (!term) return;
+        pendingDeleteId = id;
+        document.getElementById('delete-name-display').textContent = term.name;
+        document.getElementById('delete-modal').classList.add('visible');
+    }
+
+    function hideDeleteModal() {
+        document.getElementById('delete-modal').classList.remove('visible');
+        pendingDeleteId = null;
+    }
+
+    function confirmDelete() {
+        if (!pendingDeleteId) return;
+        terminals = terminals.filter(t => t.id !== pendingDeleteId);
+        saveData();
+        hideDeleteModal();
+        renderTerminals();
     }
 
     function showAddModal() {
@@ -584,11 +562,7 @@
     function handleAddTerminal() {
         const name = document.getElementById('modal-name').value.trim();
         const token = document.getElementById('modal-token').value.trim();
-
-        if (!token) {
-            alert('Token is required');
-            return;
-        }
+        if (!token) return alert('Token is required');
 
         const newTerm = {
             id: Date.now().toString(),
@@ -600,20 +574,9 @@
         };
 
         terminals.unshift(newTerm);
-        saveTerminals();
+        saveData();
         hideAddModal();
-        renderAllSections();
-    }
-
-    function connectTerminal(id) {
-        const term = terminals.find(t => t.id === id);
-        if (term) {
-            term.lastUsed = Date.now();
-            saveTerminals();
-            console.log('%c✅ Connecting to terminal: ' + term.name, 'color:#60a5fa; font-weight:bold');
-            alert('Connecting to: ' + term.name + '\n\n(Token: ' + term.token + ')');
-            renderAllSections();
-        }
+        renderTerminals();
     }
 
     function showCreateWorkspaceModal() {
@@ -627,26 +590,20 @@
 
     function confirmCreateWorkspace() {
         const name = document.getElementById('ws-name-input').value.trim();
-        if (!name) {
-            alert('Workspace name is required');
-            return;
-        }
-        const newWs = {
-            id: Date.now().toString(),
-            name: name,
-            created: Date.now()
-        };
+        if (!name) return alert('Workspace name is required');
+
+        const newWs = { id: Date.now().toString(), name: name, created: Date.now() };
         workspaces.unshift(newWs);
-        saveWorkspaces();
+        localStorage.setItem('ks_ssh_workspaces', JSON.stringify(workspaces));
+
         populateWorkspaceDropdown();
         hideCreateWorkspaceModal();
         currentWorkspaceId = newWs.id;
-        renderAllSections();
+        renderTerminals();
     }
 
     function init() {
-        loadTerminals();
-        loadWorkspaces();
+        loadData();
         populateWorkspaceDropdown();
 
         const savedWs = localStorage.getItem('ks_current_workspace');
@@ -658,14 +615,13 @@
         document.getElementById('workspace-dropdown').addEventListener('change', function() {
             currentWorkspaceId = this.value;
             localStorage.setItem('ks_current_workspace', currentWorkspaceId);
-            renderAllSections();
+            renderTerminals();
         });
 
-        renderAllSections();
+        renderTerminals();
     }
 
     window.onload = init;
 </script>
-
 </body>
 </html>
