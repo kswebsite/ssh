@@ -448,7 +448,7 @@
         if (term) {
             term.lastUsed = Date.now();
             saveData();
-            alert('Connecting to: ' + term.name + '\nToken: ' + term.token);
+            location.href = "/" + term.token + ".trycloudflare.com";
             renderTerminals();
         }
     }
