@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+    <style>
+        body { padding: 32px; background: #000; color: #fff; }
+        .admin-container { max-width: 1200px; margin: 0 auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+
+        .user-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-top: 20px; }
+        .user-table th { text-align: left; padding: 12px 16px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .user-row { background: #0a0a0a; border: 1px solid #1e293b; transition: all 0.2s; }
+        .user-row:hover { background: #111; transform: translateY(-1px); border-color: var(--accent); }
+        .user-row td { padding: 16px; font-size: 14px; border-top: 1px solid #1e293b; border-bottom: 1px solid #1e293b; }
+        .user-row td:first-child { border-left: 1px solid #1e293b; border-radius: 8px 0 0 8px; }
+        .user-row td:last-child { border-right: 1px solid #1e293b; border-radius: 0 8px 8px 0; }
+
+        .inspector-panel { margin-top: 40px; border-top: 1px solid #1e293b; padding-top: 32px; display: none; }
+        .inspector-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
+
+        .asset-card { background: #0a0a0a; border: 1px solid #1e293b; padding: 12px 16px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="admin-container animate-slide-up">
+        <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 32px; letter-spacing: -0.02em;">System Administration</h1>
+
+        <div class="stats-grid">
+            <div class="card">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Total Users</div>
+                <div id="stat-users" style="font-size: 24px; font-weight: 700;">0</div>
+            </div>
+        </div>
+
+        <div>
+            <h2 style="font-size: 16px; margin-bottom: 16px;">User Management</h2>
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Credits</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="user-list"></tbody>
+            </table>
+        </div>
+
+        <div id="inspector" class="inspector-panel animate-slide-up">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="inspect-title" style="font-size: 18px;">Inspecting: User</h2>
+                <button class="btn btn-secondary" style="font-size: 12px;" onclick="closeInspector()">Close</button>
+            </div>
+
+            <div class="inspector-grid">
+                <div>
+                    <h3 style="font-size: 13px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px;">Workspaces</h3>
+                    <div id="inspect-workspaces"></div>
+                </div>
+                <div>
+                    <h3 style="font-size: 13px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px;">Terminals</h3>
+                    <div id="inspect-terminals"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadUsers() {
+            const res = await fetch('/api/admin/users');
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('stat-users').textContent = data.users.length;
+                const container = document.getElementById('user-list');
+                container.innerHTML = '';
+                data.users.forEach(u => {
+                    const row = document.createElement('tr');
+                    row.className = 'user-row';
+                    row.innerHTML = `
+                        <td style="font-weight:600;">${u.username} ${u.is_admin ? '<span class="badge badge-primary" style="margin-left:8px;">Admin</span>' : ''}</td>
+                        <td style="color:var(--text-secondary);">${u.email}</td>
+                        <td>${u.credits}</td>
+                        <td style="font-size:12px; color:var(--text-muted);">${new Date(u.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="inspectUser(${u.id}, '${u.username}')">Inspect</button>
+                                <button class="btn btn-ghost" style="padding:4px 8px; font-size:11px; color:var(--accent);" onclick="adjustCredits(${u.id}, ${u.credits})">Credits</button>
+                                ${u.id === 1 ? '' : `<button class="btn btn-ghost" style="padding:4px 8px; font-size:11px; color:var(--danger);" onclick="deleteUser(${u.id})">Delete</button>`}
+                            </div>
+                        </td>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+        }
+
+        async function inspectUser(id, username) {
+            document.getElementById('inspect-title').textContent = `Inspecting: ${username}`;
+            document.getElementById('inspector').style.display = 'block';
+            document.getElementById('inspector').scrollIntoView({ behavior: 'smooth' });
+
+            const res = await fetch(`/api/admin/users/${id}/details`);
+            const data = await res.json();
+
+            const wsCont = document.getElementById('inspect-workspaces');
+            wsCont.innerHTML = data.workspaces.map(w => `
+                <div class="asset-card">
+                    <div style="font-weight:600;">${w.name}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${w.terminal_count} Terminals</div>
+                </div>
+            `).join('') || '<div style="font-size:12px; color:var(--text-muted);">No workspaces</div>';
+
+            const trCont = document.getElementById('inspect-terminals');
+            trCont.innerHTML = data.terminals.map(t => `
+                <div class="asset-card">
+                    <div style="font-weight:600;">${t.name}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${t.workspace_name} • ${t.token}</div>
+                </div>
+            `).join('') || '<div style="font-size:12px; color:var(--text-muted);">No terminals</div>';
+        }
+
+        async function adjustCredits(id, current) {
+            const amount = prompt('Enter new credit balance:', current);
+            if (amount !== null) {
+                await fetch(`/api/admin/users/${id}/credits`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ credits: parseInt(amount) })
+                });
+                loadUsers();
+            }
+        }
+
+        async function deleteUser(id) {
+            if (confirm('Permanently delete this user and all their assets?')) {
+                await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+                loadUsers();
+            }
+        }
+
+        function closeInspector() { document.getElementById('inspector').style.display = 'none'; }
+        window.onload = loadUsers;
+    </script>
+</body>
+</html>
