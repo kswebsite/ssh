@@ -27,14 +27,14 @@ jobs:
         run: |
           # Fetch all branches to ensure visibility
           git fetch origin
-          
+
           # Switch to main and ensure it's synced with origin
           git checkout main
           git reset --hard origin/main
-          
+
           # Merge the dashboard branch into main
           # Using 'theirs' to prioritize your dashboard files
           git merge origin/modern-blue-black-theme-9473776968317630257 --strategy-option theirs --allow-unrelated-histories
-          
+
           # Push the changes
           git push origin main

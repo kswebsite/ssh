@@ -30,6 +30,11 @@
         .term-token { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
 
         .empty-state { text-align: center; padding: 64px 20px; color: var(--text-muted); border: 1px dashed #1e293b; border-radius: 12px; }
+
+        .earn-section { margin-top: 40px; border-top: 1px solid #1e293b; padding-top: 40px; }
+        .video-card { background: #0a0a0a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; max-width: 560px; }
+        .video-player { aspect-ratio: 16/9; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+        .ad-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
     </style>
 </head>
 <body>
@@ -66,8 +71,51 @@
         <div id="terminals-list"></div>
     </div>
 
+    <div class="earn-section animate-slide-up" style="animation-delay: 0.3s;">
+        <div class="dashboard-grid" style="margin-top: 0;">
+            <!-- VIDEO EARN -->
+            <div class="video-card">
+                <div class="video-player" id="video-container">
+                    <iframe id="yt-player" width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    <div id="ad-overlay" class="ad-overlay">
+                        <div id="ad-placeholder" style="margin-bottom: 20px;">
+                            <!-- Adsterra Script Placement -->
+                            <div style="width: 300px; height: 250px; background: #111; display: flex; align-items: center; justify-content: center; border: 1px solid #333;">
+                                <p style="font-size: 11px; color: var(--text-muted);">ADVERTISEMENT</p>
+                            </div>
+                        </div>
+                        <p id="ad-timer" style="font-weight: 600; margin-bottom: 12px;">Wait 15s to claim reward...</p>
+                        <button id="claim-btn" class="btn btn-primary" disabled onclick="claimVideoReward()">Claim Credits</button>
+                    </div>
+                    <div id="cooldown-overlay" class="ad-overlay" style="display: none; background: rgba(0,0,0,0.9);">
+                        <p id="cooldown-msg" style="text-align: center; padding: 20px;">On cooldown...</p>
+                    </div>
+                </div>
+                <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 700;">Watch & Earn</h3>
+                        <p style="font-size: 12px; color: var(--text-muted);">Complete video + ad to earn credits</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="startEarning()">Start Watching</button>
+                </div>
+            </div>
+
+            <!-- COUPON REDEEM -->
+            <div class="card" style="display: flex; flex-direction: column; justify-content: center; gap: 16px;">
+                <h3 style="font-size: 16px; font-weight: 700;">Redeem Coupon</h3>
+                <p style="font-size: 12px; color: var(--text-muted);">Enter code for instant bonus</p>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="coupon-code" class="input" placeholder="CODE123" style="font-family: var(--font-mono);">
+                    <button class="btn btn-primary" onclick="redeemCoupon()">Redeem</button>
+                </div>
+                <p id="coupon-msg" style="font-size: 12px; display: none;"></p>
+            </div>
+        </div>
+    </div>
+
     <script>
         let allTerminals = [];
+        let earningStarted = false;
 
         async function fetchTerminals() {
             const res = await fetch('/api/terminals');
@@ -82,38 +130,77 @@
             const container = document.getElementById('terminals-list');
             const statTerminals = document.getElementById('stat-terminals');
             const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
-
             statTerminals.textContent = allTerminals.length;
             container.innerHTML = '';
-
             const filtered = allTerminals.filter(t => t.name.toLowerCase().includes(searchTerm) || t.token.toLowerCase().includes(searchTerm));
-
             if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <p style="font-size:13px;">${searchTerm ? 'No results found.' : 'No terminals found.'}</p>
-                    </div>`;
+                container.innerHTML = `<div class="empty-state"><p style="font-size:13px;">${searchTerm ? 'No results found.' : 'No terminals found.'}</p></div>`;
                 return;
             }
-
             filtered.forEach(term => {
                 const row = document.createElement('div');
                 row.className = 'terminal-row';
-                row.innerHTML = `
-                    <div class="term-meta">
-                        <div class="status-dot"></div>
-                        <div class="term-icon">
-                            <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        </div>
-                        <div>
-                            <div class="term-name">${term.name}</div>
-                            <div class="term-token">${term.token}</div>
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" style="height:32px; font-size:12px; padding: 0 12px;" onclick="connect('${term.id}')">Connect</button>
-                `;
+                row.innerHTML = `<div class="term-meta"><div class="status-dot"></div><div class="term-icon"><svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div><div><div class="term-name">${term.name}</div><div class="term-token">${term.token}</div></div></div><button class="btn btn-primary" style="height:32px; font-size:12px; padding: 0 12px;" onclick="connect('${term.id}')">Connect</button>`;
                 container.appendChild(row);
             });
+        }
+
+        async function redeemCoupon() {
+            const code = document.getElementById('coupon-code').value;
+            const msgEl = document.getElementById('coupon-msg');
+            const res = await fetch('/api/coupons/redeem', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ code })
+            });
+            const data = await res.json();
+            msgEl.style.display = 'block';
+            if (data.success) {
+                msgEl.style.color = '#10b981';
+                msgEl.textContent = `Success! Added ${data.reward} credits.`;
+                window.parent.refreshUser();
+            } else {
+                msgEl.style.color = '#ef4444';
+                msgEl.textContent = data.error;
+            }
+        }
+
+        function startEarning() {
+            if (earningStarted) return;
+            earningStarted = true;
+            document.getElementById('ad-overlay').style.display = 'flex';
+
+            let seconds = 15;
+            const timerEl = document.getElementById('ad-timer');
+            const claimBtn = document.getElementById('claim-btn');
+
+            const interval = setInterval(() => {
+                seconds--;
+                timerEl.textContent = `Wait ${seconds}s to claim reward...`;
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    timerEl.textContent = 'Reward ready!';
+                    claimBtn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        async function claimVideoReward() {
+            const res = await fetch('/api/earn/video', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Earned ${data.earned} credits!`);
+                document.getElementById('ad-overlay').style.display = 'none';
+                earningStarted = false;
+                window.parent.refreshUser();
+            } else {
+                alert(data.error);
+                if (data.error.includes('cooldown') || data.error.includes('limit')) {
+                    document.getElementById('ad-overlay').style.display = 'none';
+                    document.getElementById('cooldown-overlay').style.display = 'flex';
+                    document.getElementById('cooldown-msg').textContent = data.error;
+                }
+            }
         }
 
         function connect(id) { window.parent.selectTerminal(id); }
