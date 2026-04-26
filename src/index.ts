@@ -61,19 +61,28 @@ async function verifyPassword(password: string, storedHash: string): Promise<boo
   return computedHash === hashB64;
 }
 
-// ==================== AFK EARNING LOGIC (10 credits per hour, max 24h per claim) ====================
+// ==================== AFK EARNING LOGIC (dynamic via config) ====================
 async function claimAFKEarnings(db: D1Database, userId: number) {
   const userStmt = db.prepare("SELECT credits, last_active FROM users WHERE id = ?").bind(userId);
   const user = (await userStmt.first()) as { credits: number; last_active: string } | null;
   if (!user) return { earned: 0, newCredits: 0 };
+
+  const configArr = await db.prepare("SELECT * FROM config WHERE key LIKE 'afk_%'").all();
+  const config = configArr.results.reduce((acc: any, row: any) => {
+    acc[row.key] = row.value;
+    return acc;
+  }, {});
+
+  const rate = parseInt(config.afk_rate || "10");
+  const maxHours = parseInt(config.afk_max_hours || "24");
 
   const last = new Date(user.last_active);
   const now = new Date();
   const diffMs = Math.max(0, now.getTime() - last.getTime());
   const diffHours = diffMs / (1000 * 60 * 60);
 
-  let earned = Math.floor(diffHours * 10); // 10 credits/hour
-  earned = Math.min(earned, 240); // cap at 24 hours
+  let earned = Math.floor(diffHours * rate);
+  earned = Math.min(earned, rate * maxHours);
 
   const newCredits = user.credits + earned;
 
@@ -249,6 +258,90 @@ export default {
           is_admin: user.is_admin,
         },
       });
+    }
+
+    // USER: REDEEM COUPON
+    if (url.pathname === "/api/coupons/redeem" && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const { code } = (await request.json()) as any;
+      if (!code) return jsonResponse({ error: "Coupon code is required" }, 400);
+
+      const coupon = (await env.DB.prepare(
+        "SELECT * FROM coupons WHERE code = ? AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)"
+      )
+        .bind(code.toUpperCase())
+        .first()) as any;
+
+      if (!coupon) return jsonResponse({ error: "Invalid or expired coupon" }, 404);
+      if (coupon.current_uses >= coupon.max_uses) return jsonResponse({ error: "Coupon limit reached" }, 400);
+
+      // Check if user already used it
+      const alreadyUsed = await env.DB.prepare("SELECT 1 FROM coupon_usage WHERE coupon_id = ? AND user_id = ?")
+        .bind(coupon.id, user.id).first();
+      if (alreadyUsed) return jsonResponse({ error: "You already redeemed this coupon" }, 400);
+
+      try {
+        await env.DB.batch([
+          env.DB.prepare("UPDATE users SET credits = credits + ? WHERE id = ?").bind(coupon.reward, user.id),
+          env.DB.prepare("UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?").bind(coupon.id),
+          env.DB.prepare("INSERT INTO coupon_usage (coupon_id, user_id) VALUES (?, ?)").bind(coupon.id, user.id)
+        ]);
+        return jsonResponse({ success: true, reward: coupon.reward });
+      } catch (e) {
+        return jsonResponse({ error: "Redemption failed" }, 500);
+      }
+    }
+
+    // USER: EARN VIDEO
+    if (url.pathname === "/api/earn/video" && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const configArr = await env.DB.prepare("SELECT * FROM config WHERE key LIKE 'video_%'").all();
+      const config = configArr.results.reduce((acc: any, row: any) => {
+        acc[row.key] = row.value;
+        return acc;
+      }, {});
+
+      const reward = parseInt(config.video_reward || "5");
+      const cooldownHours = parseInt(config.video_cooldown_hours || "24");
+      const dailyMax = parseInt(config.video_daily_max || "50");
+
+      // Check stats
+      let stats = (await env.DB.prepare("SELECT * FROM user_stats WHERE user_id = ?").bind(user.id).first()) as any;
+      if (!stats) {
+        await env.DB.prepare("INSERT INTO user_stats (user_id) VALUES (?)").bind(user.id).run();
+        stats = { daily_video_earnings: 0, last_video_claim: null, last_reset: new Date().toISOString() };
+      }
+
+      const now = new Date();
+      const lastReset = new Date(stats.last_reset);
+      const isNewDay = now.getTime() - lastReset.getTime() > 24 * 60 * 60 * 1000;
+
+      let currentDaily = isNewDay ? 0 : stats.daily_video_earnings;
+      if (currentDaily + reward > dailyMax) return jsonResponse({ error: "Daily video earning limit reached" }, 400);
+
+      if (stats.last_video_claim) {
+        const lastClaim = new Date(stats.last_video_claim);
+        const hoursPassed = (now.getTime() - lastClaim.getTime()) / (1000 * 60 * 60);
+        if (hoursPassed < cooldownHours) {
+          const remaining = Math.ceil(cooldownHours - hoursPassed);
+          return jsonResponse({ error: `Video earning is on cooldown. Try again in ${remaining} hours.` }, 400);
+        }
+      }
+
+      await env.DB.batch([
+        env.DB.prepare("UPDATE users SET credits = credits + ? WHERE id = ?").bind(reward, user.id),
+        env.DB.prepare(
+          `INSERT OR REPLACE INTO user_stats (user_id, daily_video_earnings, last_video_claim, last_reset)
+           VALUES (?, ?, CURRENT_TIMESTAMP, ?)`
+        ).bind(user.id, currentDaily + reward, isNewDay ? now.toISOString() : stats.last_reset),
+        env.DB.prepare("INSERT INTO video_logs (user_id, earned) VALUES (?, ?)").bind(user.id, reward)
+      ]);
+
+      return jsonResponse({ success: true, earned: reward });
     }
 
     // UPDATE ACCOUNT
@@ -634,6 +727,71 @@ export default {
       if (Number(targetId) === user.id) return jsonResponse({ error: "Cannot delete yourself" }, 400);
 
       await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(targetId).run();
+      return jsonResponse({ success: true });
+    }
+
+    // ADMIN: COUPONS - LIST
+    if (url.pathname === "/api/admin/coupons" && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const coupons = await env.DB.prepare("SELECT * FROM coupons ORDER BY created_at DESC").all();
+      return jsonResponse({ success: true, coupons: coupons.results });
+    }
+
+    // ADMIN: COUPONS - CREATE
+    if (url.pathname === "/api/admin/coupons" && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const { code, reward, max_uses, expires_at } = (await request.json()) as any;
+      if (!code || !reward) return jsonResponse({ error: "Code and reward are required" }, 400);
+
+      const id = crypto.randomUUID();
+      await env.DB.prepare(
+        "INSERT INTO coupons (id, code, reward, max_uses, expires_at) VALUES (?, ?, ?, ?, ?)"
+      )
+        .bind(id, code.toUpperCase(), reward, max_uses || 1, expires_at || null)
+        .run();
+
+      return jsonResponse({ success: true });
+    }
+
+    // ADMIN: COUPONS - DELETE
+    if (url.pathname.startsWith("/api/admin/coupons/") && request.method === "DELETE") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const id = url.pathname.split("/").pop();
+      await env.DB.prepare("DELETE FROM coupons WHERE id = ?").bind(id).run();
+      return jsonResponse({ success: true });
+    }
+
+    // ADMIN: CONFIG - GET
+    if (url.pathname === "/api/admin/settings" && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const config = await env.DB.prepare("SELECT * FROM config").all();
+      const settings = config.results.reduce((acc: any, row: any) => {
+        acc[row.key] = row.value;
+        return acc;
+      }, {});
+
+      return jsonResponse({ success: true, settings });
+    }
+
+    // ADMIN: CONFIG - UPDATE
+    if (url.pathname === "/api/admin/settings" && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const settings = (await request.json()) as any;
+      const stmts = Object.entries(settings).map(([key, value]) =>
+        env.DB.prepare("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)").bind(key, String(value))
+      );
+
+      await env.DB.batch(stmts);
       return jsonResponse({ success: true });
     }
 

@@ -1,0 +1,40 @@
+name: Sync to Main Branch
+
+on:
+  push:
+    branches:
+      - modern-blue-black-theme-9473776968317630257
+  workflow_dispatch: # Now correctly aligned to allow manual runs
+
+jobs:
+  sync-branches:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge and Push to Main
+        run: |
+          # Fetch all branches to ensure visibility
+          git fetch origin
+
+          # Switch to main and ensure it's synced with origin
+          git checkout main
+          git reset --hard origin/main
+
+          # Merge the dashboard branch into main
+          # Using 'theirs' to prioritize your dashboard files
+          git merge origin/modern-blue-black-theme-9473776968317630257 --strategy-option theirs --allow-unrelated-histories
+
+          # Push the changes
+          git push origin main
