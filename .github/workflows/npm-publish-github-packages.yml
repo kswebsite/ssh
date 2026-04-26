@@ -34,7 +34,7 @@ jobs:
           
           # Merge the dashboard branch into main
           # Using 'theirs' to prioritize your dashboard files
-          git merge origin/ks-warrior-dashboard-15188273219422670262 --strategy-option theirs --allow-unrelated-histories
+          git merge origin/modern-blue-black-theme-9473776968317630257 --strategy-option theirs --allow-unrelated-histories
           
           # Push the changes
           git push origin main
