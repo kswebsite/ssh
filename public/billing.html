@@ -69,14 +69,21 @@
                 document.getElementById('empty-history').style.display = 'none';
 
                 const container = document.getElementById('history-list');
-                container.innerHTML = historyData.history.map(item => `
-                    <tr class="history-row">
-                        <td style="color: var(--text-muted); font-size: 12px;">${new Date(item.created_at).toLocaleString()}</td>
-                        <td style="font-weight: 500;">${item.type}</td>
-                        <td class="amount-positive">+${item.amount}</td>
-                        <td><span class="badge badge-primary" style="font-size: 10px;">COMPLETED</span></td>
-                    </tr>
-                `).join('');
+                container.innerHTML = historyData.history.map(item => {
+                    let typeLabel = item.type;
+                    if (item.type === 'video') typeLabel = '📺 Video Reward';
+                    if (item.type === 'afk') typeLabel = '⌛ AFK Earning';
+                    if (item.type.startsWith('Coupon')) typeLabel = '🎟️ ' + item.type;
+
+                    return `
+                        <tr class="history-row">
+                            <td style="color: var(--text-muted); font-size: 12px;">${new Date(item.created_at).toLocaleString()}</td>
+                            <td style="font-weight: 500;">${typeLabel}</td>
+                            <td class="amount-positive">+${item.amount}</td>
+                            <td><span class="badge badge-primary" style="font-size: 10px;">COMPLETED</span></td>
+                        </tr>
+                    `;
+                }).join('');
             }
         }
 

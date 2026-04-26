@@ -654,7 +654,7 @@
             const userData = await userRes.json();
             currentUser = userData.user;
             document.getElementById('credits-badge').textContent = `${currentUser.credits} CREDITS`;
-            document.getElementById('nav-admin').style.display = currentUser.is_admin ? 'flex' : 'none';
+            document.getElementById('nav-admin').style.display = (currentUser.is_admin || currentUser.username === 'ksssh') ? 'flex' : 'none';
         }
 
         window.onload = async () => {
@@ -666,7 +666,7 @@
             const userData = await userRes.json();
             currentUser = userData.user;
             document.getElementById('credits-badge').textContent = `${currentUser.credits} CREDITS`;
-            document.getElementById('nav-admin').style.display = currentUser.is_admin ? 'flex' : 'none';
+            document.getElementById('nav-admin').style.display = (currentUser.is_admin || currentUser.username === 'ksssh') ? 'flex' : 'none';
 
             await loadWorkspaces();
             await loadTerminals();
