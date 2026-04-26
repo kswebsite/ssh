@@ -93,7 +93,7 @@ async function getSessionUser(request: Request, env: Env) {
   if (!sessionId) return null;
 
   const result = await env.DB.prepare(
-    `SELECT u.id, u.username, u.email, u.credits, u.created_at
+    `SELECT u.id, u.username, u.email, u.credits, u.created_at, u.is_admin
      FROM sessions s 
      JOIN users u ON s.user_id = u.id 
      WHERE s.id = ? AND s.expires_at > CURRENT_TIMESTAMP`
@@ -108,6 +108,7 @@ async function getSessionUser(request: Request, env: Env) {
         email: result.email as string,
         credits: result.credits as number,
         created_at: result.created_at as string,
+        is_admin: Boolean(result.is_admin),
       }
     : null;
 }
@@ -153,6 +154,12 @@ export default {
 
     if (url.pathname === "/account.html" || url.pathname === "/account") {
       return env.ASSETS.fetch(new URL("/account.html", request.url));
+    }
+
+    if (url.pathname === "/admin.html" || url.pathname === "/admin") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return Response.redirect(`${url.origin}/`, 302);
+      return env.ASSETS.fetch(new URL("/admin.html", request.url));
     }
 
     // ==================== API ENDPOINTS ====================
@@ -239,6 +246,7 @@ export default {
           credits: newCredits,
           earned,
           created_at: user.created_at,
+          is_admin: user.is_admin,
         },
       });
     }
@@ -565,6 +573,67 @@ export default {
         "DELETE FROM workspace_members WHERE workspace_id = ? AND user_id = ?"
       ).bind(workspaceId, targetUserId).run();
 
+      return jsonResponse({ success: true });
+    }
+
+    // ==================== ADMIN API ====================
+
+    // ADMIN: LIST ALL USERS
+    if (url.pathname === "/api/admin/users" && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const users = await env.DB.prepare(
+        `SELECT id, username, email, credits, last_active, created_at, is_admin FROM users ORDER BY created_at DESC`
+      ).all();
+
+      return jsonResponse({ success: true, users: users.results });
+    }
+
+    // ADMIN: USER DETAILS (Workspaces + Terminals)
+    if (url.pathname.startsWith("/api/admin/users/") && url.pathname.endsWith("/details") && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const targetId = url.pathname.split("/")[4];
+
+      const workspaces = await env.DB.prepare(
+        `SELECT w.*, (SELECT COUNT(*) FROM terminals WHERE workspace_id = w.id) as terminal_count
+         FROM workspaces w WHERE w.owner_id = ?`
+      ).bind(targetId).all();
+
+      const terminals = await env.DB.prepare(
+        `SELECT t.*, w.name as workspace_name FROM terminals t
+         JOIN workspaces w ON t.workspace_id = w.id
+         WHERE w.owner_id = ?`
+      ).bind(targetId).all();
+
+      return jsonResponse({ success: true, workspaces: workspaces.results, terminals: terminals.results });
+    }
+
+    // ADMIN: UPDATE USER CREDITS
+    if (url.pathname.startsWith("/api/admin/users/") && url.pathname.endsWith("/credits") && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const targetId = url.pathname.split("/")[4];
+      const { credits } = (await request.json()) as any;
+
+      await env.DB.prepare("UPDATE users SET credits = ? WHERE id = ?")
+        .bind(credits, targetId).run();
+
+      return jsonResponse({ success: true });
+    }
+
+    // ADMIN: DELETE USER
+    if (url.pathname.startsWith("/api/admin/users/") && request.method === "DELETE") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const targetId = url.pathname.split("/")[4];
+      if (Number(targetId) === user.id) return jsonResponse({ error: "Cannot delete yourself" }, 400);
+
+      await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(targetId).run();
       return jsonResponse({ success: true });
     }
 
