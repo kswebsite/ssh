@@ -3,7 +3,7 @@ name: Sync to Main Branch
 on:
   push:
     branches:
-      - ks-warrior-dashboard-15188273219422670262
+      - modern-blue-black-theme-9473776968317630257
   workflow_dispatch: # Now correctly aligned to allow manual runs
 
 jobs:
