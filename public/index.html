@@ -100,11 +100,11 @@
 
             <div class="sidebar-scroll">
                 <div class="section-label">General</div>
-                <div class="nav-item active" onclick="goHome()">
+                <div class="nav-item active" id="nav-dashboard" onclick="navigateTo('dashboard')">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1v-5m-6 0a1 1 0 001-1v5"/></svg>
                     <span>Dashboard</span>
                 </div>
-                <div class="nav-item" onclick="showAccountModal()">
+                <div class="nav-item" id="nav-account" onclick="navigateTo('account')">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     <span>Account Settings</span>
                 </div>
@@ -177,29 +177,6 @@
             <div style="display: flex; gap: 10px;">
                 <button class="btn btn-secondary" style="flex: 1;" onclick="closeModals()">Cancel</button>
                 <button class="btn btn-primary" style="flex: 1;" onclick="handleAddTerminal()">Add</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Account Settings -->
-    <div id="account-modal" class="modal-overlay" onclick="if(event.target===this)closeModals()">
-        <div class="modal card">
-            <h3 style="margin-bottom: 20px;">Account Settings</h3>
-            <div style="margin-bottom: 16px;">
-                <label class="section-label" style="margin:0 0 8px;">Username</label>
-                <input id="acc-username" type="text" class="input">
-            </div>
-            <div style="margin-bottom: 16px;">
-                <label class="section-label" style="margin:0 0 8px;">New Password (Optional)</label>
-                <input id="acc-new-pw" type="password" class="input">
-            </div>
-            <div style="margin-bottom: 24px;">
-                <label class="section-label" style="margin:0 0 8px;">Current Password (Required)</label>
-                <input id="acc-curr-pw" type="password" class="input">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModals()">Cancel</button>
-                <button class="btn btn-primary" style="flex: 1;" onclick="handleUpdateAccount()">Save</button>
             </div>
         </div>
     </div>
@@ -386,6 +363,7 @@
         }
 
         function selectTerminal(id) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             activeId = id;
             const term = terminals.find(t => t.id === id);
             if (!term) return;
@@ -476,23 +454,6 @@
         }
 
         // API Handlers
-        async function handleUpdateAccount() {
-            const username = document.getElementById('acc-username').value;
-            const newPassword = document.getElementById('acc-new-pw').value;
-            const currentPassword = document.getElementById('acc-curr-pw').value;
-
-            const res = await fetch('/api/account/update', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ username, newPassword, currentPassword })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert('Account updated');
-                location.reload();
-            } else alert(data.error);
-        }
-
         async function handleAddTerminal() {
             const name = document.getElementById('modal-name').value;
             const token = document.getElementById('modal-token').value;
@@ -603,15 +564,35 @@
             }
         }
 
-        function goHome() {
-            document.getElementById('page-title').textContent = 'Dashboard';
-            document.getElementById('main-iframe').src = 'dashboard.html';
+        function navigateTo(page) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.terminal-item').forEach(el => el.classList.remove('active'));
+
+            if (page === 'dashboard') {
+                document.getElementById('nav-dashboard').classList.add('active');
+                document.getElementById('page-title').textContent = 'Dashboard';
+                document.getElementById('main-iframe').src = 'dashboard.html';
+            } else if (page === 'account') {
+                document.getElementById('nav-account').classList.add('active');
+                document.getElementById('page-title').textContent = 'Account Settings';
+                document.getElementById('main-iframe').src = 'account.html';
+            }
         }
+
+        function goHome() { navigateTo('dashboard'); }
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
         async function handleLogout() {
             await fetch('/api/logout', { method: 'POST' });
             location.href = '/auth.html';
+        }
+
+        async function refreshUser() {
+            const userRes = await fetch('/api/me');
+            if (!userRes.ok) return;
+            const userData = await userRes.json();
+            currentUser = userData.user;
+            document.getElementById('credits-badge').textContent = `${currentUser.credits} CREDITS`;
         }
 
         window.onload = async () => {
