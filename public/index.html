@@ -11,10 +11,15 @@
         .app { display: flex; height: 100vh; width: 100vw; }
         #sidebar {
             width: 260px; min-width: 260px; background: var(--bg-sidebar);
-            border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; transition: transform 0.3s ease;
+            border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         @media (max-width: 767px) {
-            #sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); }
+            #sidebar {
+                position: fixed; left: 0; top: 0; bottom: 0;
+                transform: translateX(-100%);
+                box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+            }
             #sidebar.open { transform: translateX(0); }
         }
         .sidebar-header { padding: 24px 20px; display: flex; align-items: center; gap: 12px; }
@@ -28,12 +33,12 @@
         .sidebar-scroll { flex: 1; overflow-y: auto; padding: 12px; }
         .section-label {
             font-size: 11px; font-weight: 600; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 0.05em; margin: 20px 8px 8px;
+            text-transform: uppercase; letter-spacing: 0.05em; margin: 16px 8px 6px;
         }
         .nav-item {
-            display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+            display: flex; align-items: center; gap: 12px; padding: 8px 12px;
             border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer;
-            transition: all 0.2s; margin-bottom: 2px; font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 2px; font-size: 14px;
         }
         .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); }
         .nav-item.active {
@@ -89,10 +94,11 @@
         .context-menu button.delete { color: var(--danger); }
 
         /* Custom Dropdown Overrides */
-        .workspace-selector-container { padding: 0 8px 12px; position: relative; }
+        .workspace-selector-container { padding: 0 8px 8px; position: relative; }
     </style>
 </head>
 <body>
+    <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="toggleSidebar()"></div>
     <div class="app">
         <aside id="sidebar">
             <div class="sidebar-header">
@@ -615,7 +621,12 @@
 
         function goHome() { navigateTo('dashboard'); }
 
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            sidebar.classList.toggle('open');
+            backdrop.classList.toggle('show');
+        }
         async function handleLogout() {
             await fetch('/api/logout', { method: 'POST' });
             location.href = '/auth.html';
