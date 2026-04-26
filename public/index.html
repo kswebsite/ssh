@@ -271,21 +271,29 @@
                 <div style="padding: 0 8px 8px;">
                     <div style="display: flex; gap: 8px; margin-bottom: 12px;">
                         <select id="workspace-dropdown" class="input" style="flex: 1; padding: 8px;"></select>
-                        <button onclick="showCreateWorkspaceModal()" class="btn btn-secondary" style="padding: 8px;">
+                        <button onclick="showCreateWorkspaceModal()" class="btn btn-secondary" style="padding: 8px;" title="New Workspace">
                             <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </button>
+                        <button id="manage-ws-btn" onclick="showManageWorkspaceModal()" class="btn btn-secondary" style="padding: 8px; display: none;" title="Manage Workspace">
+                            <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                             </svg>
                         </button>
                     </div>
                 </div>
 
                 <div class="section-label">Terminals</div>
-                <button onclick="showAddModal()" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">
-                    <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span>Add Terminal</span>
-                </button>
+                <div style="padding: 0 8px 12px;">
+                    <input id="search-input" type="text" class="input" placeholder="Search terminals..." style="padding: 8px; margin-bottom: 12px;">
+                    <button onclick="showAddModal()" class="btn btn-primary" style="width: 100%;">
+                        <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <span>Add Terminal</span>
+                    </button>
+                </div>
 
                 <div id="terminals-list"></div>
             </div>
@@ -344,8 +352,9 @@
                 <input id="modal-name" type="text" class="input" placeholder="Web Server 01">
             </div>
             <div class="form-group">
-                <label class="form-label">Token</label>
-                <input id="modal-token" type="text" class="input" placeholder="ks-token-xxxx-xxxx">
+                <label class="form-label">Token or URL</label>
+                <input id="modal-token" type="text" class="input" placeholder="Enter token or full https:// url">
+                <p style="font-size: 10px; color: var(--text-muted); mt-2">Tokens automatically get .trycloudflare.com added</p>
             </div>
             <div class="form-group">
                 <label class="form-label">Workspace</label>
@@ -396,6 +405,35 @@
         </div>
     </div>
 
+    <div id="manage-ws-modal" class="modal-overlay" onclick="if(event.target===this)hideManageWorkspaceModal()">
+        <div class="modal card glass" style="max-width: 500px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <h3>Manage Members</h3>
+                </div>
+                <button class="btn btn-ghost" onclick="hideManageWorkspaceModal()">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Add Sub-User</label>
+                <div style="display: flex; gap: 8px;">
+                    <input id="subuser-username" type="text" class="input" placeholder="Username">
+                    <button class="btn btn-primary" onclick="handleAddMember()">Add</button>
+                </div>
+            </div>
+
+            <div class="section-label" style="margin-left: 0;">Current Members</div>
+            <div id="members-list" style="max-height: 200px; overflow-y: auto; margin-top: 8px;">
+                <!-- Members will be listed here -->
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="hideManageWorkspaceModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <div id="create-ws-modal" class="modal-overlay" onclick="if(event.target===this)hideCreateWorkspaceModal()">
         <div class="modal card glass">
             <div class="modal-header">
@@ -435,17 +473,20 @@
         let currentWorkspaceId = 'all';
         let currentContextId = null;
 
-        function loadTerminals() {
-            terminals = JSON.parse(localStorage.getItem('ks_ssh_terminals') || '[]');
+        async function loadTerminals() {
+            const res = await fetch(`/api/terminals${currentWorkspaceId !== 'all' ? '?workspaceId=' + currentWorkspaceId : ''}`);
+            const data = await res.json();
+            if (data.success) {
+                terminals = data.terminals;
+            }
         }
-        function saveTerminals() {
-            localStorage.setItem('ks_ssh_terminals', JSON.stringify(terminals));
-        }
-        function loadWorkspaces() {
-            workspaces = JSON.parse(localStorage.getItem('ks_ssh_workspaces') || '[]');
-        }
-        function saveWorkspaces() {
-            localStorage.setItem('ks_ssh_workspaces', JSON.stringify(workspaces));
+
+        async function loadWorkspaces() {
+            const res = await fetch('/api/workspaces');
+            const data = await res.json();
+            if (data.success) {
+                workspaces = data.workspaces;
+            }
         }
 
         function toggleSidebar() {
@@ -459,12 +500,22 @@
             renderList();
         }
 
+        function getTerminalUrl(token) {
+            if (token.startsWith('http://') || token.startsWith('https://')) {
+                return token;
+            }
+            return `https://${token}.trycloudflare.com`;
+        }
+
         function selectTerminal(id) {
             activeId = id;
             const term = terminals.find(t => t.id === id);
             if (!term) return;
             document.getElementById('page-title').textContent = term.name;
-            document.getElementById('main-iframe').src = 'terminal.html?token=' + term.token;
+
+            const targetUrl = getTerminalUrl(term.token);
+            document.getElementById('main-iframe').src = targetUrl;
+
             renderList();
             if (window.innerWidth < 768) toggleSidebar();
         }
@@ -473,9 +524,15 @@
             const container = document.getElementById('terminals-list');
             container.innerHTML = '';
 
-            let filtered = terminals;
+            const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || '';
+
+            let filtered = terminals.filter(t =>
+                t.name.toLowerCase().includes(searchTerm) ||
+                t.token.toLowerCase().includes(searchTerm)
+            );
+
             if (currentWorkspaceId !== 'all') {
-                filtered = terminals.filter(t => t.workspaceId === currentWorkspaceId);
+                filtered = filtered.filter(t => t.workspaceId === currentWorkspaceId);
             }
 
             if (filtered.length === 0) {
@@ -493,9 +550,14 @@
                         <div class="terminal-name">${term.name}</div>
                         <div class="terminal-token">${term.token}</div>
                     </div>
-                    <button class="btn btn-ghost" style="padding: 4px;" onclick="event.stopPropagation(); showTerminalMenu('${term.id}', event)">
-                        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/></svg>
-                    </button>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-ghost" style="padding: 4px;" title="Copy Link" onclick="event.stopPropagation(); copyTerminalLink('${term.token}')">
+                            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        </button>
+                        <button class="btn btn-ghost" style="padding: 4px;" onclick="event.stopPropagation(); showTerminalMenu('${term.id}', event)">
+                            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/></svg>
+                        </button>
+                    </div>
                 `;
                 container.appendChild(div);
             });
@@ -524,24 +586,24 @@
         }
         function hideAddModal() { document.getElementById('add-modal').classList.remove('show'); }
 
-        function handleAddTerminal() {
+        async function handleAddTerminal() {
             const name = document.getElementById('modal-name').value.trim();
             const token = document.getElementById('modal-token').value.trim();
             const wsId = document.getElementById('modal-workspace').value;
             if (!token) return alert('Token is required');
 
-            const newTerm = {
-                id: Date.now().toString(),
-                name: name || 'Terminal',
-                token,
-                workspaceId: wsId || 'default-ws',
-                added: Date.now()
-            };
-            terminals.unshift(newTerm);
-            saveTerminals();
+            const res = await fetch('/api/terminals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name || 'Terminal', token, workspaceId: wsId })
+            });
+            const data = await res.json();
+            if (!data.success) return alert(data.error);
+
+            await loadTerminals();
             renderList();
             hideAddModal();
-            selectTerminal(newTerm.id);
+            selectTerminal(data.terminal.id);
         }
 
         function showRenameModal(id) {
@@ -551,13 +613,12 @@
         }
         function hideRenameModal() { document.getElementById('rename-modal').classList.remove('show'); }
 
-        function confirmRename() {
+        async function confirmRename() {
             const newName = document.getElementById('rename-input').value.trim();
             if (!newName) return;
-            const term = terminals.find(t => t.id === currentContextId);
-            term.name = newName;
-            saveTerminals();
-            renderList();
+            // API not implemented for rename yet, but we can do it if needed.
+            // For now let's just use the current ContextId
+            alert('Rename not implemented in API yet');
             hideRenameModal();
         }
 
@@ -566,9 +627,12 @@
         }
         function hideDeleteModal() { document.getElementById('delete-modal').classList.remove('show'); }
 
-        function confirmDelete() {
-            terminals = terminals.filter(t => t.id !== currentContextId);
-            saveTerminals();
+        async function confirmDelete() {
+            const res = await fetch(`/api/terminals/${currentContextId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!data.success) return alert(data.error);
+
+            await loadTerminals();
             renderList();
             if (activeId === currentContextId) goHome();
             hideDeleteModal();
@@ -577,12 +641,18 @@
         function showCreateWorkspaceModal() { document.getElementById('create-ws-modal').classList.add('show'); }
         function hideCreateWorkspaceModal() { document.getElementById('create-ws-modal').classList.remove('show'); }
 
-        function confirmCreateWorkspace() {
+        async function confirmCreateWorkspace() {
             const name = document.getElementById('ws-name-input').value.trim();
             if (!name) return;
-            const newWs = { id: Date.now().toString(), name };
-            workspaces.unshift(newWs);
-            saveWorkspaces();
+            const res = await fetch('/api/workspaces', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            const data = await res.json();
+            if (!data.success) return alert(data.error);
+
+            await loadWorkspaces();
             populateWorkspaceDropdown();
             hideCreateWorkspaceModal();
         }
@@ -597,6 +667,19 @@
                 select.appendChild(opt);
             });
             select.value = currentWorkspaceId;
+
+            // Only show manage button if a specific workspace is selected and user is owner
+            const manageBtn = document.getElementById('manage-ws-btn');
+            if (currentWorkspaceId !== 'all') {
+                const ws = workspaces.find(w => w.id === currentWorkspaceId);
+                if (ws && ws.owner_id === currentUser.id) {
+                    manageBtn.style.display = 'flex';
+                } else {
+                    manageBtn.style.display = 'none';
+                }
+            } else {
+                manageBtn.style.display = 'none';
+            }
         }
 
         function populateWorkspaceSelects() {
@@ -623,6 +706,75 @@
             }
         }
 
+        async function showManageWorkspaceModal() {
+            if (currentWorkspaceId === 'all') return;
+            await loadMembers();
+            document.getElementById('manage-ws-modal').classList.add('show');
+        }
+
+        function hideManageWorkspaceModal() {
+            document.getElementById('manage-ws-modal').classList.remove('show');
+        }
+
+        async function loadMembers() {
+            const res = await fetch(`/api/workspaces/${currentWorkspaceId}/members`);
+            const data = await res.json();
+            if (data.success) {
+                renderMembers(data.members);
+            }
+        }
+
+        function renderMembers(members) {
+            const list = document.getElementById('members-list');
+            list.innerHTML = '';
+            members.forEach(member => {
+                const div = document.createElement('div');
+                div.className = 'nav-item';
+                div.style.justifyContent = 'space-between';
+                div.innerHTML = `
+                    <span>${member.username} (${member.role})</span>
+                    ${member.username !== currentUser.username ? `
+                    <button class="btn btn-ghost" style="padding:4px; color:var(--danger);" onclick="removeMember(${member.id})">
+                        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>` : ''}
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function handleAddMember() {
+            const username = document.getElementById('subuser-username').value.trim();
+            if (!username) return;
+
+            const res = await fetch(`/api/workspaces/${currentWorkspaceId}/members`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, role: 'member' })
+            });
+            const data = await res.json();
+            if (!data.success) return alert(data.error);
+
+            document.getElementById('subuser-username').value = '';
+            await loadMembers();
+        }
+
+        async function removeMember(userId) {
+            if (!confirm('Remove this member?')) return;
+            const res = await fetch(`/api/workspaces/${currentWorkspaceId}/members/${userId}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (!data.success) return alert(data.error);
+            await loadMembers();
+        }
+
+        function copyTerminalLink(token) {
+            const url = getTerminalUrl(token);
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Connection link copied to clipboard!');
+            });
+        }
+
         async function handleLogout() {
             if (confirm('Logout from KS SSH?')) {
                 await fetch('/api/logout', { method: 'POST' });
@@ -636,15 +788,24 @@
         };
 
         window.onload = async () => {
-            loadTerminals();
-            loadWorkspaces();
-            if (workspaces.length === 0) {
-                workspaces.push({ id: 'default-ws', name: 'Default Workspace' });
-                saveWorkspaces();
-            }
             await loadUser();
+            await loadWorkspaces();
+
+            // If no workspaces, create one
+            if (workspaces.length === 0) {
+                const res = await fetch('/api/workspaces', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: 'Default Workspace' })
+                });
+                await loadWorkspaces();
+            }
+
             populateWorkspaceDropdown();
+            await loadTerminals();
             renderList();
+
+            document.getElementById('search-input').addEventListener('input', renderList);
         };
     </script>
 </body>

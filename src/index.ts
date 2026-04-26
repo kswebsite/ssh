@@ -138,12 +138,16 @@ export default {
       return env.ASSETS.fetch(new URL("/index.html", request.url));
     }
 
-    if (url.pathname === "/auth.html") {
+    if (url.pathname === "/auth.html" || url.pathname === "/auth") {
       const user = await getSessionUser(request, env);
       if (user) {
         return Response.redirect(`${url.origin}/`, 302);
       }
-      return env.ASSETS.fetch(request);
+      return env.ASSETS.fetch(new URL("/auth.html", request.url));
+    }
+
+    if (url.pathname === "/dashboard.html" || url.pathname === "/dashboard") {
+      return env.ASSETS.fetch(new URL("/dashboard.html", request.url));
     }
 
     // ==================== API ENDPOINTS ====================
@@ -249,6 +253,192 @@ export default {
         "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict"
       );
       return response;
+    }
+
+    // WORKSPACES - GET
+    if (url.pathname === "/api/workspaces" && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const workspaces = await env.DB.prepare(
+        `SELECT w.* FROM workspaces w
+         LEFT JOIN workspace_members wm ON w.id = wm.workspace_id
+         WHERE w.owner_id = ? OR wm.user_id = ?
+         GROUP BY w.id`
+      )
+        .bind(user.id, user.id)
+        .all();
+
+      return jsonResponse({ success: true, workspaces: workspaces.results });
+    }
+
+    // WORKSPACES - POST
+    if (url.pathname === "/api/workspaces" && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const { name } = (await request.json()) as any;
+      if (!name) return jsonResponse({ error: "Name is required" }, 400);
+
+      const id = crypto.randomUUID();
+
+      // Use a transaction or multiple statements
+      await env.DB.batch([
+        env.DB.prepare("INSERT INTO workspaces (id, name, owner_id) VALUES (?, ?, ?)").bind(id, name, user.id),
+        env.DB.prepare("INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)").bind(id, user.id, 'owner')
+      ]);
+
+      return jsonResponse({ success: true, workspace: { id, name } });
+    }
+
+    // TERMINALS - GET
+    if (url.pathname === "/api/terminals" && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const workspaceId = url.searchParams.get("workspaceId");
+
+      let query = `
+        SELECT t.* FROM terminals t
+        JOIN workspaces w ON t.workspace_id = w.id
+        LEFT JOIN workspace_members wm ON w.id = wm.workspace_id
+        WHERE (w.owner_id = ? OR wm.user_id = ?)
+      `;
+      let params: any[] = [user.id, user.id];
+
+      if (workspaceId) {
+        query += " AND t.workspace_id = ?";
+        params.push(workspaceId);
+      }
+
+      const terminals = await env.DB.prepare(query).bind(...params).all();
+      return jsonResponse({ success: true, terminals: terminals.results });
+    }
+
+    // TERMINALS - POST
+    if (url.pathname === "/api/terminals" && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const { name, token, workspaceId } = (await request.json()) as any;
+      if (!token || !workspaceId) return jsonResponse({ error: "Token and workspaceId are required" }, 400);
+
+      // Verify access to workspace
+      const ws = await env.DB.prepare(
+        "SELECT id FROM workspaces WHERE id = ? AND owner_id = ?"
+      ).bind(workspaceId, user.id).first();
+
+      // For now only owners can add terminals
+      if (!ws) return jsonResponse({ error: "Unauthorized to add to this workspace" }, 403);
+
+      const id = crypto.randomUUID();
+      await env.DB.prepare(
+        "INSERT INTO terminals (id, name, token, workspace_id) VALUES (?, ?, ?, ?)"
+      )
+        .bind(id, name || "Terminal", token, workspaceId)
+        .run();
+
+      return jsonResponse({ success: true, terminal: { id, name, token, workspaceId } });
+    }
+
+    // TERMINALS - DELETE
+    if (url.pathname.startsWith("/api/terminals/") && request.method === "DELETE") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const id = url.pathname.split("/").pop();
+
+      // Verify ownership
+      const term = await env.DB.prepare(
+        `SELECT t.id FROM terminals t
+         JOIN workspaces w ON t.workspace_id = w.id
+         WHERE t.id = ? AND w.owner_id = ?`
+      ).bind(id, user.id).first();
+
+      if (!term) return jsonResponse({ error: "Not found or unauthorized" }, 404);
+
+      await env.DB.prepare("DELETE FROM terminals WHERE id = ?").bind(id).run();
+      return jsonResponse({ success: true });
+    }
+
+    // MEMBERS - GET
+    if (url.pathname.startsWith("/api/workspaces/") && url.pathname.endsWith("/members") && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const workspaceId = url.pathname.split("/")[3];
+
+      // Verify access
+      const ws = await env.DB.prepare(
+        "SELECT id FROM workspaces WHERE id = ? AND owner_id = ?"
+      ).bind(workspaceId, user.id).first();
+
+      if (!ws) return jsonResponse({ error: "Unauthorized" }, 403);
+
+      const members = await env.DB.prepare(
+        `SELECT u.id, u.username, wm.role FROM users u
+         JOIN workspace_members wm ON u.id = wm.user_id
+         WHERE wm.workspace_id = ?`
+      ).bind(workspaceId).all();
+
+      return jsonResponse({ success: true, members: members.results });
+    }
+
+    // MEMBERS - POST (Add by username)
+    if (url.pathname.startsWith("/api/workspaces/") && url.pathname.endsWith("/members") && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const workspaceId = url.pathname.split("/")[3];
+      const { username, role } = (await request.json()) as any;
+
+      // Verify ownership
+      const ws = await env.DB.prepare(
+        "SELECT id FROM workspaces WHERE id = ? AND owner_id = ?"
+      ).bind(workspaceId, user.id).first();
+
+      if (!ws) return jsonResponse({ error: "Unauthorized" }, 403);
+
+      // Find user to add
+      const targetUser = await env.DB.prepare(
+        "SELECT id FROM users WHERE username = ?"
+      ).bind(username.toLowerCase()).first();
+
+      if (!targetUser) return jsonResponse({ error: "User not found" }, 404);
+
+      try {
+        await env.DB.prepare(
+          "INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)"
+        ).bind(workspaceId, targetUser.id, role || 'member').run();
+
+        return jsonResponse({ success: true });
+      } catch (e: any) {
+        if (e.message?.includes("UNIQUE")) return jsonResponse({ error: "User already a member" }, 400);
+        throw e;
+      }
+    }
+
+    // MEMBERS - DELETE
+    if (url.pathname.startsWith("/api/workspaces/") && url.pathname.includes("/members/") && request.method === "DELETE") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const parts = url.pathname.split("/");
+      const workspaceId = parts[3];
+      const targetUserId = parts[5];
+
+      // Verify ownership
+      const ws = await env.DB.prepare(
+        "SELECT id FROM workspaces WHERE id = ? AND owner_id = ?"
+      ).bind(workspaceId, user.id).first();
+
+      if (!ws) return jsonResponse({ error: "Unauthorized" }, 403);
+
+      await env.DB.prepare(
+        "DELETE FROM workspace_members WHERE workspace_id = ? AND user_id = ?"
+      ).bind(workspaceId, targetUserId).run();
+
+      return jsonResponse({ success: true });
     }
 
     // Fallback: serve from assets
