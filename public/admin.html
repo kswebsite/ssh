@@ -22,14 +22,9 @@
         .user-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
         .user-table th { text-align: left; padding: 12px 16px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
         .user-row { background: #0a0a0a; border: 1px solid #1e293b; transition: all 0.2s; }
-        .user-row:hover { background: #111; transform: translateY(-1px); border-color: var(--accent); }
         .user-row td { padding: 16px; font-size: 14px; border-top: 1px solid #1e293b; border-bottom: 1px solid #1e293b; }
         .user-row td:first-child { border-left: 1px solid #1e293b; border-radius: 8px 0 0 8px; }
         .user-row td:last-child { border-right: 1px solid #1e293b; border-radius: 0 8px 8px 0; }
-
-        .inspector-panel { margin-top: 40px; border-top: 1px solid #1e293b; padding-top: 32px; display: none; }
-        .inspector-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 24px; }
-        .asset-card { background: #0a0a0a; border: 1px solid #1e293b; padding: 12px 16px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; }
 
         .config-form { max-width: 600px; display: flex; flex-direction: column; gap: 20px; }
         .config-group { display: flex; flex-direction: column; gap: 8px; }
@@ -41,234 +36,149 @@
         <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 32px; letter-spacing: -0.02em;">System Administration</h1>
 
         <div class="admin-tabs">
-            <div class="admin-tab active" onclick="switchTab('users')">Users</div>
-            <div class="admin-tab" onclick="switchTab('coupons')">Coupons</div>
-            <div class="admin-tab" onclick="switchTab('settings')">Global Settings</div>
+            <div class="admin-tab active" onclick="switchTab('users', event)">Users</div>
+            <div class="admin-tab" onclick="switchTab('coupons', event)">Coupons</div>
+            <div class="admin-tab" onclick="switchTab('videos', event)">Videos</div>
+            <div class="admin-tab" onclick="switchTab('settings', event)">Settings</div>
         </div>
 
-        <!-- USERS TAB -->
         <div id="tab-users" class="tab-content active">
-            <div class="stats-grid">
-                <div class="card">
-                    <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Total Users</div>
-                    <div id="stat-users" style="font-size: 24px; font-weight: 700;">0</div>
-                </div>
-            </div>
-
-            <table class="user-table">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Credits</th>
-                        <th>Joined</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="user-list"></tbody>
-            </table>
-
-            <div id="inspector" class="inspector-panel">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2 id="inspect-title" style="font-size: 18px;">Inspecting: User</h2>
-                    <button class="btn btn-secondary" style="font-size: 12px;" onclick="closeInspector()">Close</button>
-                </div>
-                <div class="inspector-grid">
-                    <div>
-                        <h3 style="font-size: 13px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px;">Workspaces</h3>
-                        <div id="inspect-workspaces"></div>
-                    </div>
-                    <div>
-                        <h3 style="font-size: 13px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 16px;">Terminals</h3>
-                        <div id="inspect-terminals"></div>
-                    </div>
-                </div>
-            </div>
+            <div id="stat-users-container" class="stats-grid"><div class="card"><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Total Users</div><div id="stat-users" style="font-size:24px;font-weight:700;">0</div></div></div>
+            <table class="user-table"><thead><tr><th>User</th><th>Credits</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="user-list"></tbody></table>
         </div>
 
-        <!-- COUPONS TAB -->
         <div id="tab-coupons" class="tab-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h2 style="font-size: 18px;">Manage Coupons</h2>
-                <button class="btn btn-primary" onclick="showCreateCoupon()">Create Coupon</button>
-            </div>
-            <table class="user-table">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Reward</th>
-                        <th>Uses</th>
-                        <th>Expires</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="coupon-list"></tbody>
-            </table>
+            <div style="display:flex;justify-content:space-between;margin-bottom:24px;"><h2>Coupons</h2><button class="btn btn-primary" onclick="showCreateCoupon()">+ New Coupon</button></div>
+            <table class="user-table"><thead><tr><th>Code</th><th>Reward</th><th>Usage</th><th>Actions</th></tr></thead><tbody id="coupon-list"></tbody></table>
         </div>
 
-        <!-- SETTINGS TAB -->
+        <div id="tab-videos" class="tab-content">
+            <div style="display:flex;justify-content:space-between;margin-bottom:24px;"><h2>Video Rewards</h2><button class="btn btn-primary" onclick="showCreateVideo()">+ Add Video</button></div>
+            <table class="user-table"><thead><tr><th>Title</th><th>Reward</th><th>Duration</th><th>YouTube ID</th><th>Actions</th></tr></thead><tbody id="video-list"></tbody></table>
+        </div>
+
         <div id="tab-settings" class="tab-content">
-            <h2 style="font-size: 18px; margin-bottom: 24px;">System Configuration</h2>
-            <div class="card config-form">
-                <div class="config-group">
-                    <label class="config-label">AFK Earning Rate (Credits/Hour)</label>
-                    <input type="number" id="cfg-afk_rate" class="input">
-                </div>
-                <div class="config-group">
-                    <label class="config-label">AFK Max Hours per Claim</label>
-                    <input type="number" id="cfg-afk_max_hours" class="input">
-                </div>
-                <div class="config-group">
-                    <label class="config-label">Video Reward Amount</label>
-                    <input type="number" id="cfg-video_reward" class="input">
-                </div>
-                <div class="config-group">
-                    <label class="config-label">Video Cooldown (Hours)</label>
-                    <input type="number" id="cfg-video_cooldown_hours" class="input">
-                </div>
-                <div class="config-group">
-                    <label class="config-label">Video Daily Max Earnings</label>
-                    <input type="number" id="cfg-video_daily_max" class="input">
-                </div>
+            <h2>System Config</h2>
+            <div class="card config-form" id="settings-form">
+                <div class="config-group"><label class="config-label">AFK Rate (Cr/Hr)</label><input id="cfg-afk_rate" class="input" type="number"></div>
+                <div class="config-group"><label class="config-label">AFK Max Hours</label><input id="cfg-afk_max_hours" class="input" type="number"></div>
+                <div class="config-group"><label class="config-label">Daily Video Max</label><input id="cfg-video_daily_max" class="input" type="number"></div>
+                <div class="config-group"><label class="config-label">Video Cooldown (Hrs)</label><input id="cfg-video_cooldown_hours" class="input" type="number"></div>
                 <button class="btn btn-primary" onclick="saveSettings()">Save Configuration</button>
             </div>
         </div>
     </div>
 
     <script>
-        function switchTab(tab) {
+        function switchTab(tab, e) {
             document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            event.target.classList.add('active');
+            e.target.classList.add('active');
             document.getElementById(`tab-${tab}`).classList.add('active');
             if(tab === 'users') loadUsers();
             if(tab === 'coupons') loadCoupons();
+            if(tab === 'videos') loadVideos();
             if(tab === 'settings') loadSettings();
         }
 
         async function loadUsers() {
-            if (window.self === window.top) { window.location.href = '/'; return; }
             const res = await fetch('/api/admin/users');
-            if (res.status === 401 || res.status === 403) { window.location.href = '/'; return; }
             const data = await res.json();
             if (data.success) {
                 document.getElementById('stat-users').textContent = data.users.length;
-                const container = document.getElementById('user-list');
-                container.innerHTML = data.users.map(u => `
-                    <tr class="user-row">
-                        <td style="font-weight:600;">${u.username} ${u.is_admin ? '<span class="badge badge-primary" style="margin-left:8px;">Admin</span>' : ''}</td>
-                        <td style="color:var(--text-secondary);">${u.email}</td>
-                        <td>${u.credits}</td>
-                        <td style="font-size:12px; color:var(--text-muted);">${new Date(u.created_at).toLocaleDateString()}</td>
-                        <td>
-                            <div style="display:flex; gap:8px;">
-                                <button class="btn btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="inspectUser(${u.id}, '${u.username}')">Inspect</button>
-                                <button class="btn btn-ghost" style="padding:4px 8px; font-size:11px; color:var(--accent);" onclick="adjustCredits(${u.id}, ${u.credits})">Credits</button>
-                                ${u.id === 1 ? '' : `<button class="btn btn-ghost" style="padding:4px 8px; font-size:11px; color:var(--danger);" onclick="deleteUser(${u.id})">Delete</button>`}
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
+                document.getElementById('user-list').innerHTML = data.users.map(u => `<tr class="user-row"><td><b>${u.username}</b><br><small>${u.email}</small></td><td>${u.credits}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td><button class="btn btn-ghost" onclick="adjustCredits(${u.id}, ${u.credits})">Credits</button></td></tr>`).join('');
             }
         }
 
         async function loadCoupons() {
             const res = await fetch('/api/admin/coupons');
             const data = await res.json();
-            if (data.success) {
-                const container = document.getElementById('coupon-list');
-                container.innerHTML = data.coupons.map(c => `
-                    <tr class="user-row">
-                        <td style="font-weight:600; font-family:var(--font-mono);">${c.code}</td>
-                        <td>${c.reward} Credits</td>
-                        <td>${c.current_uses} / ${c.max_uses}</td>
-                        <td>${c.expires_at ? new Date(c.expires_at).toLocaleDateString() : 'Never'}</td>
-                        <td>
-                            <button class="btn btn-ghost" style="color:var(--danger); font-size:11px;" onclick="deleteCoupon('${c.id}')">Delete</button>
-                        </td>
-                    </tr>
-                `).join('');
+            document.getElementById('coupon-list').innerHTML = data.coupons.map(c => `<tr class="user-row"><td><code>${c.code}</code></td><td>${c.reward}</td><td>${c.current_uses}/${c.max_uses}</td><td><button class="btn btn-ghost" style="color:var(--danger);" onclick="deleteCoupon('${c.id}')">Delete</button></td></tr>`).join('');
+        }
+
+        async function loadVideos() {
+            const res = await fetch('/api/admin/videos');
+            const data = await res.json();
+            document.getElementById('video-list').innerHTML = data.videos.map(v => `
+                <tr class="user-row">
+                    <td><b>${v.title}</b></td>
+                    <td>${v.reward} Credits</td>
+                    <td>${v.duration_seconds}s</td>
+                    <td><code>${v.video_id}</code></td>
+                    <td><button class="btn btn-ghost" style="color:var(--danger);" onclick="deleteVideo('${v.id}')">Delete</button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function showCreateVideo() {
+            const title = prompt('Video Title:');
+            const video_id = prompt('YouTube Video ID:');
+            const reward = prompt('Reward amount:');
+            const duration = prompt('Duration in seconds:', '30');
+            if(!title || !video_id || !reward) return;
+
+            await fetch('/api/admin/videos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ title, video_id, reward: parseInt(reward), duration_seconds: parseInt(duration) })
+            });
+            loadVideos();
+        }
+
+        async function deleteVideo(id) {
+            if(confirm('Delete video?')) {
+                await fetch(`/api/admin/videos/${id}`, { method: 'DELETE' });
+                loadVideos();
             }
         }
 
         async function showCreateCoupon() {
-            const code = prompt('Enter coupon code (e.g. WELCOME2025):');
-            if(!code) return;
-            const reward = prompt('Enter reward amount:');
-            const max_uses = prompt('Enter max uses:', '100');
-            const expires = prompt('Enter expiry date (YYYY-MM-DD) or leave empty:', '');
-
+            const code = prompt('Code:');
+            const reward = prompt('Reward:');
+            const max = prompt('Max Uses:', '100');
+            if(!code || !reward) return;
             await fetch('/api/admin/coupons', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ code, reward: parseInt(reward), max_uses: parseInt(max_uses), expires_at: expires || null })
+                body: JSON.stringify({ code, reward: parseInt(reward), max_uses: parseInt(max) })
             });
             loadCoupons();
         }
 
         async function deleteCoupon(id) {
-            if(confirm('Delete coupon?')) {
-                await fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' });
-                loadCoupons();
-            }
+            if(confirm('Delete coupon?')) { await fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' }); loadCoupons(); }
         }
 
         async function loadSettings() {
             const res = await fetch('/api/admin/settings');
             const data = await res.json();
-            if(data.success) {
-                Object.entries(data.settings).forEach(([k, v]) => {
-                    const el = document.getElementById(`cfg-${k}`);
-                    if(el) el.value = v;
-                });
-            }
+            Object.entries(data.settings).forEach(([k, v]) => {
+                const el = document.getElementById(`cfg-${k}`);
+                if(el) el.value = v;
+            });
         }
 
         async function saveSettings() {
-            const settings = {
-                afk_rate: document.getElementById('cfg-afk_rate').value,
-                afk_max_hours: document.getElementById('cfg-afk_max_hours').value,
-                video_reward: document.getElementById('cfg-video_reward').value,
-                video_cooldown_hours: document.getElementById('cfg-video_cooldown_hours').value,
-                video_daily_max: document.getElementById('cfg-video_daily_max').value,
-            };
+            const settings = {};
+            ['afk_rate', 'afk_max_hours', 'video_daily_max', 'video_cooldown_hours'].forEach(k => {
+                settings[k] = document.getElementById(`cfg-${k}`).value;
+            });
             await fetch('/api/admin/settings', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(settings)
             });
-            alert('Settings saved!');
+            alert('Saved!');
         }
 
-        async function inspectUser(id, username) {
-            document.getElementById('inspect-title').textContent = `Inspecting: ${username}`;
-            document.getElementById('inspector').style.display = 'block';
-            document.getElementById('inspector').scrollIntoView({ behavior: 'smooth' });
-            const res = await fetch(`/api/admin/users/${id}/details`);
-            const data = await res.json();
-            document.getElementById('inspect-workspaces').innerHTML = data.workspaces.map(w => `<div class="asset-card"><b>${w.name}</b><br>${w.terminal_count} Terminals</div>`).join('') || 'None';
-            document.getElementById('inspect-terminals').innerHTML = data.terminals.map(t => `<div class="asset-card"><b>${t.name}</b><br>${t.workspace_name} • ${t.token}</div>`).join('') || 'None';
-        }
-
-        async function adjustCredits(id, current) {
-            const amount = prompt('Enter new credit balance:', current);
-            if (amount !== null) {
-                await fetch(`/api/admin/users/${id}/credits`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ credits: parseInt(amount) })
-                });
+        async function adjustCredits(id, curr) {
+            const val = prompt('New Balance:', curr);
+            if(val !== null) {
+                await fetch(`/api/admin/users/${id}/credits`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ credits: parseInt(val) }) });
                 loadUsers();
             }
         }
 
-        async function deleteUser(id) {
-            if (confirm('Permanently delete this user?')) {
-                await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
-                loadUsers();
-            }
-        }
-
-        function closeInspector() { document.getElementById('inspector').style.display = 'none'; }
         window.onload = loadUsers;
     </script>
 </body>

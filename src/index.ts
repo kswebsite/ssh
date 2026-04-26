@@ -294,10 +294,26 @@ export default {
       }
     }
 
+    // USER: LIST VIDEOS
+    if (url.pathname === "/api/videos" && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const videos = await env.DB.prepare("SELECT * FROM videos WHERE is_active = 1").all();
+      return jsonResponse({ success: true, videos: videos.results });
+    }
+
     // USER: EARN VIDEO
     if (url.pathname === "/api/earn/video" && request.method === "POST") {
       const user = await getSessionUser(request, env);
       if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const { videoId } = (await request.json()) as any;
+      if (!videoId) return jsonResponse({ error: "Video ID is required" }, 400);
+
+      // Fetch video details
+      const video = (await env.DB.prepare("SELECT * FROM videos WHERE id = ? AND is_active = 1").bind(videoId).first()) as any;
+      if (!video) return jsonResponse({ error: "Video not found or inactive" }, 404);
 
       const configArr = await env.DB.prepare("SELECT * FROM config WHERE key LIKE 'video_%'").all();
       const config = configArr.results.reduce((acc: any, row: any) => {
@@ -305,7 +321,7 @@ export default {
         return acc;
       }, {});
 
-      const reward = parseInt(config.video_reward || "5");
+      const reward = video.reward;
       const cooldownHours = parseInt(config.video_cooldown_hours || "24");
       const dailyMax = parseInt(config.video_daily_max || "50");
 
@@ -671,6 +687,43 @@ export default {
       }
 
       await env.DB.batch(stmts);
+      return jsonResponse({ success: true });
+    }
+
+    // ADMIN: VIDEOS - LIST
+    if (url.pathname === "/api/admin/videos" && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const videos = await env.DB.prepare("SELECT * FROM videos ORDER BY created_at DESC").all();
+      return jsonResponse({ success: true, videos: videos.results });
+    }
+
+    // ADMIN: VIDEOS - CREATE
+    if (url.pathname === "/api/admin/videos" && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const { title, video_id, reward, duration_seconds } = (await request.json()) as any;
+      if (!title || !video_id || !reward || !duration_seconds) return jsonResponse({ error: "All fields required" }, 400);
+
+      const id = crypto.randomUUID();
+      await env.DB.prepare(
+        "INSERT INTO videos (id, title, video_id, reward, duration_seconds) VALUES (?, ?, ?, ?, ?)"
+      )
+        .bind(id, title, video_id, reward, duration_seconds)
+        .run();
+
+      return jsonResponse({ success: true });
+    }
+
+    // ADMIN: VIDEOS - DELETE
+    if (url.pathname.startsWith("/api/admin/videos/") && request.method === "DELETE") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const id = url.pathname.split("/").pop();
+      await env.DB.prepare("DELETE FROM videos WHERE id = ?").bind(id).run();
       return jsonResponse({ success: true });
     }
 

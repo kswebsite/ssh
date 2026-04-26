@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earn Credits</title>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+    <style>
+        body { padding: 32px; background: #000; color: #fff; }
+        .earn-container { max-width: 1200px; margin: 0 auto; }
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; margin-top: 32px; }
+
+        .video-item {
+            background: #0a0a0a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
+        }
+        .video-item:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .video-thumb { aspect-ratio: 16/9; background: #111; position: relative; }
+        .video-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .video-badge { position: absolute; top: 12px; right: 12px; background: var(--accent); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+
+        .video-info { padding: 16px; }
+        .video-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: #fff; }
+        .video-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-muted); }
+
+        .player-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .player-content { width: 100%; max-width: 900px; background: #0a0a0a; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; }
+        .player-iframe { aspect-ratio: 16/9; width: 100%; }
+        .player-controls { padding: 24px; display: flex; justify-content: space-between; align-items: center; }
+
+        .ad-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="earn-container animate-slide-up">
+        <h1 style="font-size: 24px; font-weight: 700; letter-spacing: -0.02em;">Earn Credits</h1>
+        <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">Watch videos to earn credits for your terminals</p>
+
+        <div id="video-list" class="video-grid">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <div id="player-modal" class="player-modal">
+        <div class="player-content">
+            <div style="position: relative;">
+                <div id="yt-container"></div>
+                <div id="ad-overlay" class="ad-overlay">
+                    <div style="width: 300px; height: 250px; background: #111; display: flex; align-items: center; justify-content: center; border: 1px solid #333; margin-bottom: 20px;">
+                        <p style="font-size: 11px; color: var(--text-muted);">ADVERTISEMENT</p>
+                    </div>
+                    <h3 id="ad-timer" style="margin-bottom: 8px;">Waiting for ad...</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Reward will be ready after the timer ends.</p>
+                    <button id="claim-btn" class="btn btn-primary" disabled onclick="claimReward()">Claim Reward</button>
+                </div>
+            </div>
+            <div class="player-controls">
+                <div>
+                    <h2 id="current-video-title" style="font-size: 18px; font-weight: 700;">Video Title</h2>
+                    <p id="current-video-reward" style="font-size: 13px; color: var(--accent); font-weight: 600;">+0 Credits</p>
+                </div>
+                <button class="btn btn-secondary" onclick="closePlayer()">Close Player</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        let videos = [];
+        let player = null;
+        let currentVideo = null;
+        let timerInterval = null;
+
+        async function loadVideos() {
+            const res = await fetch('/api/videos');
+            const data = await res.json();
+            if (data.success) {
+                videos = data.videos;
+                renderVideos();
+            }
+        }
+
+        function renderVideos() {
+            const container = document.getElementById('video-list');
+            container.innerHTML = videos.map(v => `
+                <div class="video-item" onclick="openPlayer('${v.id}')">
+                    <div class="video-thumb">
+                        <img src="https://img.youtube.com/vi/${v.video_id}/mqdefault.jpg" alt="${v.title}">
+                        <div class="video-badge">+${v.reward} Credits</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">${v.title}</div>
+                        <div class="video-meta">
+                            <span>${Math.floor(v.duration_seconds / 60)}:${(v.duration_seconds % 60).toString().padStart(2, '0')}</span>
+                            <span>•</span>
+                            <span>YouTube</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openPlayer(id) {
+            currentVideo = videos.find(v => v.id === id);
+            document.getElementById('current-video-title').textContent = currentVideo.title;
+            document.getElementById('current-video-reward').textContent = `+${currentVideo.reward} Credits`;
+            document.getElementById('player-modal').style.display = 'flex';
+
+            if (player) {
+                player.loadVideoById(currentVideo.video_id);
+            } else {
+                player = new YT.Player('yt-container', {
+                    height: '100%',
+                    width: '100%',
+                    videoId: currentVideo.video_id,
+                    playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0 },
+                    events: { 'onStateChange': onPlayerStateChange }
+                });
+            }
+        }
+
+        function onPlayerStateChange(event) {
+            // When video starts or is playing, show ad overlay after some time or immediately
+            // For this demo, let's trigger the "Ad" halfway through or after 5 seconds
+            if (event.data == YT.PlayerState.PLAYING) {
+                startAdTimer();
+            }
+        }
+
+        function startAdTimer() {
+            const overlay = document.getElementById('ad-overlay');
+            const timerEl = document.getElementById('ad-timer');
+            const claimBtn = document.getElementById('claim-btn');
+
+            overlay.style.display = 'flex';
+            let seconds = Math.min(15, currentVideo.duration_seconds);
+            claimBtn.disabled = true;
+
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                seconds--;
+                timerEl.textContent = `Reward ready in ${seconds}s...`;
+                if (seconds <= 0) {
+                    clearInterval(timerInterval);
+                    timerEl.textContent = "Reward Ready!";
+                    claimBtn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        async function claimReward() {
+            const res = await fetch('/api/earn/video', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videoId: currentVideo.id })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Successfully claimed ${data.earned} credits!`);
+                closePlayer();
+                window.parent.refreshUser();
+            } else {
+                alert(data.error);
+            }
+        }
+
+        function closePlayer() {
+            if (player) player.stopVideo();
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('player-modal').style.display = 'none';
+            document.getElementById('ad-overlay').style.display = 'none';
+        }
+
+        window.onload = loadVideos;
+    </script>
+</body>
+</html>
