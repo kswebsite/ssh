@@ -73,7 +73,17 @@
 
     <script>
         async function loadUsers() {
+            if (window.self === window.top) {
+                window.location.href = '/';
+                return;
+            }
+
             const res = await fetch('/api/admin/users');
+            if (res.status === 401 || res.status === 403) {
+                window.location.href = '/';
+                return;
+            }
+
             const data = await res.json();
             if (data.success) {
                 document.getElementById('stat-users').textContent = data.users.length;
