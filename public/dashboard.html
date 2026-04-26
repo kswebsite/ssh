@@ -33,11 +33,11 @@
     </style>
 </head>
 <body>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+    <div class="animate-slide-up" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <h1 style="font-size: 20px; font-weight: 700; letter-spacing: -0.02em;">Overview</h1>
     </div>
 
-    <div class="dashboard-grid">
+    <div class="dashboard-grid animate-slide-up" style="animation-delay: 0.1s;">
         <div class="card stat-card">
             <div class="stat-icon">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 21h6l-.75-4M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
@@ -58,7 +58,7 @@
         </div>
     </div>
 
-    <div style="margin-top: 40px;">
+    <div class="animate-slide-up" style="margin-top: 40px; animation-delay: 0.2s;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 style="font-size: 14px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Terminals</h2>
             <input type="text" id="dashboard-search" class="input" placeholder="Quick search..." style="max-width: 180px; height: 32px; font-size: 12px;">
@@ -101,6 +101,7 @@
                 row.className = 'terminal-row';
                 row.innerHTML = `
                     <div class="term-meta">
+                        <div class="status-dot"></div>
                         <div class="term-icon">
                             <svg style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         </div>
