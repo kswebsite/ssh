@@ -4,608 +4,200 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KS SSH — Web Terminal</title>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         body, html {
             height: 100dvh;
             width: 100%;
             overflow: hidden;
-            background: #020617;
-            font-family: 'Inter', sans-serif;
-            color: white;
         }
         
-        /* Layout */
         .app {
             display: flex;
             height: 100vh;
             width: 100vw;
-            position: relative;
         }
         
         /* Sidebar */
         #sidebar {
-            width: 225px;
-            min-width: 225px;
-            background: #0f172a;
-            border-right: 1px solid rgba(59, 130, 246, 0.2);
+            width: 260px;
+            min-width: 260px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
             z-index: 50;
-            transform: translateX(-100%);
             transition: transform 0.3s ease;
         }
         
-        #sidebar.open { transform: translateX(0); }
-        
-        @media (min-width: 768px) {
-            #sidebar { position: static; transform: translateX(0); }
+        @media (max-width: 767px) {
+            #sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+            }
+            #sidebar.open { transform: translateX(0); }
         }
         
-        /* Header */
         .sidebar-header {
-            padding: 16px;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             gap: 12px;
-            background: rgba(15, 23, 42, 0.5);
         }
         
         .logo {
-            width: 32px;
-            height: 32px;
-            background: #3b82f6;
-            border-radius: 6px;
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 0 15px var(--accent-glow);
         }
         
-        .logo svg { width: 20px; height: 20px; }
+        .logo svg { width: 24px; height: 24px; color: white; }
         
-        .brand h1 {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
+        .brand h1 { font-size: 18px; font-weight: 700; }
+        .brand p { font-size: 10px; color: var(--accent); font-weight: 700; letter-spacing: 1px; }
         
-        .brand p {
-            font-size: 10px;
-            color: #60a5fa;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-        
-        .status {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 8px;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 4px;
-        }
-        
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            background: #60a5fa;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-        
-        .status span {
-            font-size: 9px;
-            color: #60a5fa;
-            font-weight: 700;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-        
-        /* Search */
-        .search-box {
-            padding: 12px;
-            position: relative;
-        }
-        
-        .search-box input {
-            width: 100%;
-            background: #0f172a;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 6px;
-            padding: 8px 8px 8px 28px;
-            color: #e2e8f0;
-            font-size: 12px;
-            outline: none;
-        }
-        
-        .search-box input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-        
-        .search-box svg {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 14px;
-            height: 14px;
-            color: #3b82f6;
-        }
-        
-        /* Add Button */
-        .add-btn {
-            margin: 0 12px 12px;
-            padding: 10px;
-            background: #3b82f6;
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: background 0.2s;
-        }
-        
-        .add-btn:hover { background: #2563eb; }
-        
-        .add-btn svg { width: 14px; height: 14px; }
-        
-        /* Terminal List */
-        .terminals-list {
+        .sidebar-scroll {
             flex: 1;
             overflow-y: auto;
-            padding: 4px;
+            padding: 12px;
         }
+        
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 16px 8px 8px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+        
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border-left: 3px solid var(--accent);
+        }
+        
+        .nav-item svg { width: 18px; height: 18px; }
         
         .terminal-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 10px 12px;
-            margin: 0 4px 4px;
-            border-radius: 6px;
+            border-radius: var(--radius-md);
             cursor: pointer;
             transition: all 0.2s;
+            margin-bottom: 4px;
         }
         
-        .terminal-item:hover { background: rgba(59, 130, 246, 0.1); }
+        .terminal-item:hover { background: rgba(59, 130, 246, 0.05); }
+        .terminal-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
         
-        .terminal-item.active {
-            background: rgba(59, 130, 246, 0.15);
-            border-left: 2px solid #3b82f6;
-        }
+        .terminal-info { flex: 1; min-width: 0; }
+        .terminal-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .terminal-token { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
         
-        .terminal-info {
-            flex: 1;
-            min-width: 0;
-            margin-right: 8px;
-        }
-        
-        .terminal-name {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 2px;
-        }
-        
-        .terminal-name svg {
-            width: 14px;
-            height: 14px;
-            color: #64748b;
-            flex-shrink: 0;
-        }
-        
-        .terminal-item.active .terminal-name svg { color: #60a5fa; }
-        
-        .terminal-name span {
-            font-size: 12px;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .terminal-token {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 9px;
-            color: #64748b;
-            padding-left: 22px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .terminal-actions {
-            display: flex;
-            gap: 2px;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        
-        .terminal-item:hover .terminal-actions,
-        .terminal-item.active .terminal-actions { opacity: 1; }
-        
-        .icon-btn {
-            padding: 6px;
-            border-radius: 4px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: #60a5fa;
-            transition: all 0.2s;
-        }
-        
-        .icon-btn:hover { background: rgba(59, 130, 246, 0.2); }
-        
-        .icon-btn svg { width: 18px; height: 18px; }
-        
-        .empty-state {
-            padding: 32px;
-            text-align: center;
-            color: #475569;
-        }
-        
-        .empty-state svg {
-            width: 32px;
-            height: 32px;
-            margin-bottom: 8px;
-            opacity: 0.5;
-        }
-        
-        .empty-state p { font-size: 12px; }
-        
-        /* User Profile */
-        .user-profile {
-            padding: 12px;
-            border-top: 1px solid rgba(59, 130, 246, 0.2);
-        }
-        
-        .profile-card {
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 12px;
+        .sidebar-footer {
             padding: 16px;
+            border-top: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.5);
+        }
+        
+        .user-card {
             display: flex;
             align-items: center;
             gap: 12px;
+            margin-bottom: 16px;
         }
         
         .avatar {
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, #60a5fa, #34d399);
-            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), #10b981);
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 18px;
         }
         
-        .user-info {
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .user-info p:first-child {
-            font-size: 10px;
-            color: #64748b;
-            letter-spacing: 1px;
-        }
-        
-        #username-display {
-            font-size: 14px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        /* Footer */
-        .sidebar-footer {
-            padding: 12px;
-            border-top: 1px solid rgba(59, 130, 246, 0.2);
-            background: rgba(15, 23, 42, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 9px;
-            color: #64748b;
-        }
-        
-        .secure-badge {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .secure-badge svg {
-            width: 12px;
-            height: 12px;
-            color: #22c55e;
-        }
-        
-        .reset-btn {
-            background: transparent;
-            border: none;
-            color: #64748b;
-            font-size: 9px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            transition: color 0.2s;
-        }
-        
-        .reset-btn:hover { color: #f87171; }
-        
-        .reset-btn svg { width: 12px; height: 12px; }
-        
-        /* Overlay */
-        #sidebar-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            z-index: 40;
-            display: none;
-        }
-        
-        #sidebar-overlay.show { display: block; }
+        .user-details p:first-child { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+        .user-details p:last-child { font-size: 14px; font-weight: 600; }
         
         /* Main Content */
         #main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #000;
-            margin-left: 0;
+            background: var(--bg-deep);
         }
         
-        @media (min-width: 768px) {
-            #main-content { margin-left: 0; }
-        }
-        
-        /* Top Bar */
         .top-bar {
-            height: 48px;
-            background: #0f172a;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-            padding: 0 12px;
+            height: 64px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-shrink: 0;
         }
         
-        @media (min-width: 768px) {
-            .top-bar { height: 56px; padding: 0 16px; }
-        }
+        .top-bar-left { display: flex; align-items: center; gap: 16px; }
         
-        .top-bar-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .menu-btn {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            background: transparent;
-            border: none;
-            color: #60a5fa;
-            cursor: pointer;
-        }
-        
-        .menu-btn:hover { background: #1e293b; }
-        
-        .menu-btn svg { width: 16px; height: 16px; }
-        
-        @media (min-width: 768px) {
-            .menu-btn { display: none; }
-        }
-        
-        .back-btn {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: #94a3b8;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .back-btn:hover { color: white; }
-        
-        .back-btn svg { width: 16px; height: 16px; }
-        
-        .divider {
-            width: 1px;
-            height: 16px;
-            background: rgba(59, 130, 246, 0.3);
-            margin: 0 8px;
-        }
-        
-        .page-title {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            min-width: 0;
-        }
-        
-        .page-title svg {
-            width: 14px;
-            height: 14px;
-            color: #3b82f6;
-            flex-shrink: 0;
-        }
-        
-        .page-title span {
-            font-size: 14px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .top-bar-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        
-        .action-btn {
-            padding: 6px 10px;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 6px;
-            color: #60a5fa;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-        
-        .action-btn:hover { background: rgba(59, 130, 246, 0.2); }
-        
-        .action-btn.danger {
-            color: #f87171;
-            border-color: rgba(248, 113, 113, 0.3);
-            background: transparent;
-        }
-        
-        .action-btn.danger:hover { background: rgba(248, 113, 113, 0.1); }
-        
-        .action-btn svg { width: 14px; height: 14px; }
-        
-        .token-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            padding: 4px 8px;
-            background: #0f172a;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 4px;
-            color: rgba(96, 165, 250, 0.8);
-        }
-        
-        @media (max-width: 767px) {
-            .action-btn span { display: none; }
-            .action-btn { padding: 6px; }
-            .token-badge { display: none; }
-        }
-        
-        @media (max-width: 639px) {
-            .action-btn:not(.mobile-menu) { display: none; }
-        }
-        
-        /* Iframe Container */
-        .iframe-container {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            background: #000;
-        }
-        
-        .iframe-container iframe {
-            width: 100%;
-            height: 100%;
-            border: 0;
-            display: block;
-        }
-
-        /* Context Menu for 3-dot */
-        .context-menu {
-            position: absolute;
-            background: #1e293b;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 8px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            padding: 4px 0;
-            z-index: 10000;
-            min-width: 180px;
-            display: none;
-        }
-        .context-menu button {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            width: 100%;
-            padding: 10px 16px;
-            background: transparent;
-            border: none;
-            color: #e2e8f0;
-            font-size: 13px;
-            cursor: pointer;
-            text-align: left;
-        }
-        .context-menu button:hover {
-            background: rgba(59, 130, 246, 0.15);
-        }
-        .context-menu button.delete {
-            color: #f87171;
-        }
-        .context-menu button.delete:hover {
-            background: rgba(248, 113, 113, 0.1);
-        }
+        .iframe-container { flex: 1; background: #000; position: relative; }
+        iframe { width: 100%; height: 100%; border: 0; }
         
         /* Modals */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
             display: none;
             align-items: center;
             justify-content: center;
-            padding: 16px;
+            padding: 20px;
         }
         
         .modal-overlay.show { display: flex; }
         
         .modal {
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 8px;
             width: 100%;
-            max-width: 360px;
-            padding: 24px;
-            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-width: 440px;
+            animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
-        .modal.danger { border-color: rgba(248, 113, 113, 0.2); }
-        
-        @keyframes modalPop {
-            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
         
         .modal-header {
@@ -615,189 +207,45 @@
             margin-bottom: 24px;
         }
         
-        .modal-title {
+        .modal-title { display: flex; align-items: center; gap: 12px; }
+        .modal-title svg { width: 24px; height: 24px; color: var(--accent); }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; }
+
+        /* Context Menu */
+        .context-menu {
+            position: absolute;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            padding: 6px;
+            z-index: 10000;
+            min-width: 180px;
+            display: none;
+        }
+        .context-menu button {
             display: flex;
             align-items: center;
-            gap: 12px;
-        }
-        
-        .modal-icon {
-            width: 32px;
-            height: 32px;
-            background: rgba(59, 130, 246, 0.2);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-icon.danger { background: rgba(248, 113, 113, 0.2); }
-        
-        .modal-icon svg { width: 16px; height: 16px; color: #60a5fa; }
-        .modal-icon.danger svg { color: #f87171; }
-        
-        .modal-title-text h2 {
-            font-size: 18px;
-            font-weight: 700;
-        }
-        
-        .modal-title-text p {
-            font-size: 12px;
-            color: #94a3b8;
-        }
-        
-        .modal-title-text p.danger { color: #f87171; }
-        
-        .modal-close {
-            background: transparent;
-            border: none;
-            color: #64748b;
-            cursor: pointer;
-            padding: 4px;
-        }
-        
-        .modal-close:hover { color: white; }
-        
-        .modal-close svg { width: 20px; height: 20px; }
-        
-        .form-group {
-            margin-bottom: 16px;
-        }
-        
-        .form-label {
-            display: block;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #60a5fa;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-        
-        .form-input {
+            gap: 10px;
             width: 100%;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 6px;
-            padding: 10px 12px;
-            color: white;
-            font-size: 14px;
-            outline: none;
-            font-family: inherit;
-        }
-        
-        .form-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-        
-        .form-input.mono { font-family: 'JetBrains Mono', monospace; color: #93c5fd; }
-        
-        .form-hint {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 10px;
-            color: #64748b;
-            margin-top: 8px;
-        }
-        
-        .form-hint svg { width: 12px; height: 12px; color: #3b82f6; }
-        
-        .info-box {
-            background: #0f172a;
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 16px;
-        }
-        
-        .info-box.danger {
-            background: rgba(248, 113, 113, 0.1);
-            border-color: rgba(248, 113, 113, 0.3);
-        }
-        
-        .info-label {
-            font-size: 10px;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        
-        .info-box.danger .info-label { color: rgba(248, 113, 113, 0.8); }
-        
-        .info-value {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .info-token {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            color: #64748b;
-        }
-        
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 24px;
-        }
-        
-        .btn {
-            flex: 1;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        
-        .btn-secondary {
+            padding: 8px 12px;
             background: transparent;
-            border: 1px solid #334155;
-            color: #94a3b8;
+            border: none;
+            color: var(--text-primary);
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
         }
-        
-        .btn-secondary:hover {
-            background: #1e293b;
-            color: white;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-primary:hover { background: #2563eb; }
-        
-        .btn-danger {
-            background: #dc2626;
-            color: white;
-        }
-        
-        .btn-danger:hover { background: #b91c1c; }
-        
-        .btn svg { width: 16px; height: 16px; }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 2px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.6); }
+        .context-menu button:hover { background: rgba(255, 255, 255, 0.05); }
+        .context-menu button.delete { color: var(--danger); }
+        .context-menu button.delete:hover { background: rgba(248, 113, 113, 0.1); }
     </style>
 </head>
 <body>
     <div class="app">
-        <!-- Sidebar -->
-        <div id="sidebar">
+        <aside id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -806,711 +254,287 @@
                 </div>
                 <div class="brand">
                     <h1>KS SSH</h1>
-                    <p>KS WARRIOR</p>
-                </div>
-                <div class="status">
-                    <div class="status-dot"></div>
-                    <span id="header-credits">0</span>
+                    <p>WEB TERMINAL</p>
                 </div>
             </div>
 
-            <!-- Workspaces Dropdown + Create + Settings (in one line) -->
-            <div style="padding: 0 12px 8px 12px;">
-                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; color: #60a5fa;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1v-5m-6 0a1 1 0 001-1v5" />
+            <div class="sidebar-scroll">
+                <div class="section-label">General</div>
+                <div class="nav-item active" onclick="goHome()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1v-5m-6 0a1 1 0 001-1v5"/>
                     </svg>
-                    <span style="font-size: 11px; font-weight: 600; letter-spacing: 1px; color: #60a5fa; text-transform: uppercase;">WORKSPACES</span>
+                    <span>Dashboard</span>
                 </div>
-                
-                <!-- Dropdown + [ + ] Create + Settings (SVG only) in ONE LINE -->
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <select id="workspace-dropdown" class="form-input" style="flex: 1; font-size: 13px; padding: 9px 12px;"></select>
-                    
-                    <!-- Create Workspace Button (using SVG) -->
-                    <button onclick="showCreateWorkspaceModal()" 
-                            style="padding: 9px 14px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; color: #60a5fa; display: flex; align-items: center; justify-content: center; cursor: pointer; min-width: 42px; flex-shrink: 0;">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                    </button>
-                    
-                    <!-- Settings Button (SVG only) -->
-                    <button onclick="openWorkspaceSettings()" 
-                            style="padding: 9px 14px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; color: #60a5fa; display: flex; align-items: center; justify-content: center; cursor: pointer; min-width: 42px; flex-shrink: 0;">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 00.817 1.194 1.724 1.724 0 01.817 1.194c-.94 1.543.827 3.31 2.37 2.37 1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 01-2.573 1.066 1.724 1.724 0 01-.817 1.194c-.94 1.543.827 3.31 2.37 2.37 1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 01-2.573 1.066 1.724 1.724 0 01-.817 1.194c-.94 1.543.827 3.31 2.37 2.37zM15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
 
-            <div class="search-box">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-                <input id="search-input" type="text" placeholder="Search...">
-            </div>
-
-            <button class="add-btn" onclick="showAddModal()">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                <span>ADD TERMINAL</span>
-            </button>
-
-            <div class="terminals-list" id="terminals-list"></div>
-
-            <div class="user-profile">
-                <div class="profile-card">
-                    <div class="avatar">👤</div>
-                    <div class="user-info">
-                        <p>LOGGED IN AS</p>
-                        <p id="username-display">@loading...</p>
+                <div class="section-label">Workspaces</div>
+                <div style="padding: 0 8px 8px;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <select id="workspace-dropdown" class="input" style="flex: 1; padding: 8px;"></select>
+                        <button onclick="showCreateWorkspaceModal()" class="btn btn-secondary" style="padding: 8px;">
+                            <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Account and Logout (kept exactly as before) -->
-                <div style="margin-top: 12px; display: flex; gap: 8px; padding: 0 4px;">
-                    <button onclick="showAccount()" style="flex: 1; padding: 9px 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; color: #60a5fa; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Account</button>
-                    <button onclick="handleLogout()" style="flex: 1; padding: 9px 12px; background: transparent; border: 1px solid #f87171; border-radius: 6px; color: #f87171; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;">Logout</button>
-                </div>
+                <div class="section-label">Terminals</div>
+                <button onclick="showAddModal()" class="btn btn-primary" style="width: 100%; margin-bottom: 12px;">
+                    <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span>Add Terminal</span>
+                </button>
+
+                <div id="terminals-list"></div>
             </div>
 
             <div class="sidebar-footer">
-                <div class="secure-badge">
-                    <svg fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    <span>Secure</span>
+                <div class="user-card">
+                    <div class="avatar">👤</div>
+                    <div class="user-details">
+                        <p>Signed in as</p>
+                        <p id="username-display">Loading...</p>
+                    </div>
                 </div>
-                <button class="reset-btn" onclick="clearAllData()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    RESET
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="handleLogout()" class="btn btn-danger" style="flex: 1;">
+                        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        Logout
+                    </button>
+                </div>
             </div>
-        </div>
+        </aside>
 
-        <!-- Overlay -->
-        <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-        <!-- Main Content -->
-        <div id="main-content"></div>
+        <main id="main-content">
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    <button class="btn btn-ghost" onclick="toggleSidebar()" style="padding: 8px; @media(min-width:768px){display:none;}">
+                        <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <h2 id="page-title" style="font-size: 18px; font-weight: 600;">Dashboard</h2>
+                </div>
+                <div class="top-bar-right">
+                    <div id="credits-badge" class="badge badge-primary">0 CREDITS</div>
+                </div>
+            </div>
+            <div class="iframe-container" id="content-area">
+                <iframe src="dashboard.html" id="main-iframe"></iframe>
+            </div>
+        </main>
     </div>
 
-    <!-- Add Modal (extended with workspace selection) -->
-    <div id="add-modal" class="modal-overlay" onclick="if(event.target.id === 'add-modal') hideAddModal()">
-        <div class="modal" onclick="event.stopPropagation()">
+    <!-- MODALS -->
+    <div id="add-modal" class="modal-overlay" onclick="if(event.target===this)hideAddModal()">
+        <div class="modal card glass">
             <div class="modal-header">
-                <h2>Add New Terminal</h2>
-                <button class="modal-close" onclick="hideAddModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                <div class="modal-title">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <h3>Add Terminal</h3>
+                </div>
+                <button class="btn btn-ghost" onclick="hideAddModal()">✕</button>
             </div>
             <div class="form-group">
                 <label class="form-label">Display Name</label>
-                <input id="modal-name" type="text" placeholder="My Server" class="form-input">
+                <input id="modal-name" type="text" class="input" placeholder="Web Server 01">
             </div>
             <div class="form-group">
                 <label class="form-label">Token</label>
-                <input id="modal-token" type="text" placeholder="abc123-def456" class="form-input mono">
-                <div class="form-hint">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span>From your KS Panel</span>
-                </div>
+                <input id="modal-token" type="text" class="input" placeholder="ks-token-xxxx-xxxx">
             </div>
-            <!-- Workspace selection added for category support -->
             <div class="form-group">
                 <label class="form-label">Workspace</label>
-                <select id="modal-workspace" class="form-input"></select>
+                <select id="modal-workspace" class="input"></select>
             </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="hideAddModal()">CANCEL</button>
-                <button class="btn btn-primary" onclick="handleAddTerminal()">
-                    <span>ADD</span>
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                    </svg>
-                </button>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="hideAddModal()">Cancel</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="handleAddTerminal()">Add Terminal</button>
             </div>
         </div>
     </div>
 
-    <!-- Rename Modal (unchanged) -->
-    <div id="rename-modal" class="modal-overlay" onclick="if(event.target.id === 'rename-modal') hideRenameModal()">
-        <div class="modal" onclick="event.stopPropagation()">
+    <!-- More modals (Rename, Delete, etc.) follow similar pattern -->
+    <div id="rename-modal" class="modal-overlay" onclick="if(event.target===this)hideRenameModal()">
+        <div class="modal card glass">
             <div class="modal-header">
                 <div class="modal-title">
-                    <div class="modal-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
-                    </div>
-                    <div class="modal-title-text">
-                        <h2>Rename Terminal</h2>
-                        <p id="rename-current-name">Current: ...</p>
-                    </div>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <h3>Rename Terminal</h3>
                 </div>
-                <button class="modal-close" onclick="hideRenameModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                <button class="btn btn-ghost" onclick="hideRenameModal()">✕</button>
             </div>
             <div class="form-group">
                 <label class="form-label">New Name</label>
-                <input id="rename-input" type="text" placeholder="Enter new name..." class="form-input">
+                <input id="rename-input" type="text" class="input">
             </div>
-            <div class="info-box">
-                <div class="info-label">Token (unchanged)</div>
-                <div class="info-token" id="rename-token-display"></div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="hideRenameModal()">CANCEL</button>
-                <button class="btn btn-primary" onclick="confirmRename()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    <span>SAVE</span>
-                </button>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="hideRenameModal()">Cancel</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="confirmRename()">Save Changes</button>
             </div>
         </div>
     </div>
 
-    <!-- Delete Modal (unchanged) -->
-    <div id="delete-modal" class="modal-overlay" onclick="if(event.target.id === 'delete-modal') hideDeleteModal()">
-        <div class="modal danger" onclick="event.stopPropagation()">
+    <div id="delete-modal" class="modal-overlay" onclick="if(event.target===this)hideDeleteModal()">
+        <div class="modal card glass" style="border-color: rgba(248, 113, 113, 0.3);">
             <div class="modal-header">
                 <div class="modal-title">
-                    <div class="modal-icon danger">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
-                    </div>
-                    <div class="modal-title-text">
-                        <h2>Delete Terminal</h2>
-                        <p class="danger">This action cannot be undone</p>
-                    </div>
+                    <svg style="color: var(--danger);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <h3 style="color: var(--danger);">Delete Terminal</h3>
                 </div>
-                <button class="modal-close" onclick="hideDeleteModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                <button class="btn btn-ghost" onclick="hideDeleteModal()">✕</button>
             </div>
-            <div class="info-box danger">
-                <div class="info-label">Terminal to delete</div>
-                <div class="info-value" id="delete-name-display"></div>
-                <div class="info-token" id="delete-token-display"></div>
-            </div>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
-                Are you sure you want to delete this terminal? All saved data will be permanently removed from your local storage.
-            </p>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="hideDeleteModal()">CANCEL</button>
-                <button class="btn btn-danger" onclick="confirmDelete()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    <span>DELETE</span>
-                </button>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">Are you sure you want to delete this terminal? This action cannot be undone.</p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="hideDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" style="flex: 1;" onclick="confirmDelete()">Delete Forever</button>
             </div>
         </div>
     </div>
 
-    <!-- Create Workspace Modal -->
-    <div id="create-ws-modal" class="modal-overlay" onclick="if(event.target.id === 'create-ws-modal') hideCreateWorkspaceModal()">
-        <div class="modal" onclick="event.stopPropagation()">
+    <div id="create-ws-modal" class="modal-overlay" onclick="if(event.target===this)hideCreateWorkspaceModal()">
+        <div class="modal card glass">
             <div class="modal-header">
                 <div class="modal-title">
-                    <div class="modal-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 01-2-2H7a2 2 0 01-2 2v16m14 0h-4m-6 0H5"/>
-                        </svg>
-                    </div>
-                    <div class="modal-title-text">
-                        <h2>Create Workspace</h2>
-                        <p>Terminals will be organized as categories here</p>
-                    </div>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 01-2-2H7a2 2 0 01-2 2v16m14 0h-4m-6 0H5"/></svg>
+                    <h3>Create Workspace</h3>
                 </div>
-                <button class="modal-close" onclick="hideCreateWorkspaceModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                <button class="btn btn-ghost" onclick="hideCreateWorkspaceModal()">✕</button>
             </div>
             <div class="form-group">
                 <label class="form-label">Workspace Name</label>
-                <input id="ws-name-input" type="text" placeholder="team-dev-ws" class="form-input">
-                <div class="form-hint">
-                    <span>Example: ${username}-prod-ws</span>
-                </div>
+                <input id="ws-name-input" type="text" class="input" placeholder="Development">
             </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="hideCreateWorkspaceModal()">CANCEL</button>
-                <button class="btn btn-primary" onclick="confirmCreateWorkspace()">
-                    CREATE WORKSPACE
-                </button>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="hideCreateWorkspaceModal()">Cancel</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="confirmCreateWorkspace()">Create Workspace</button>
             </div>
         </div>
     </div>
 
-    <!-- Powerful Sub-Users / Members Management Modal -->
-    <div id="manage-ws-modal" class="modal-overlay" onclick="if(event.target.id === 'manage-ws-modal') hideManageWorkspaceModal()">
-        <div class="modal" style="max-width: 440px; width: 100%;" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <div class="modal-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 01-5.356-1.857M17 20H7m5-2v-2c0-.656-.126-1.284-.356-1.852M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.284.356-1.852m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                    </div>
-                    <div class="modal-title-text">
-                        <h2 id="manage-ws-name-display">Manage Workspace</h2>
-                        <p>Sub-users &amp; permissions • Full / View / Custom terminal access</p>
-                    </div>
-                </div>
-                <button class="modal-close" onclick="hideManageWorkspaceModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Members List -->
-            <div style="margin-bottom: 20px;">
-                <div class="info-label" style="margin-bottom: 8px;">MEMBERS &amp; PERMISSIONS</div>
-                <div id="members-list" style="max-height: 260px; overflow-y: auto; background: #0f172a; border-radius: 6px; padding: 8px;"></div>
-            </div>
-
-            <!-- Add Sub-User Form (powerful permission system) -->
-            <div class="info-box">
-                <div class="info-label">ADD SUB-USER TO THIS WORKSPACE</div>
-                <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input id="subuser-username" type="text" placeholder="@newuser" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Permission Level</label>
-                    <select id="subuser-role" class="form-input" onchange="toggleCustomTerminalSelector()">
-                        <option value="full">Full Workspace Access (all terminals)</option>
-                        <option value="view">View Only (read-only)</option>
-                        <option value="custom">Custom — specific terminals only</option>
-                    </select>
-                </div>
-
-                <!-- Custom terminals selector (shown only when custom is selected) -->
-                <div id="custom-terminals-section" style="display: none;">
-                    <label class="form-label" style="margin-bottom: 8px;">Allowed Terminals</label>
-                    <div id="custom-terminals-list" style="background: #1e293b; border-radius: 6px; padding: 10px; max-height: 180px; overflow-y: auto; font-size: 13px;"></div>
-                </div>
-            </div>
-
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="hideManageWorkspaceModal()">CLOSE</button>
-                <button class="btn btn-primary" onclick="addSubUserToWorkspace()">
-                    <span>ADD SUB-USER</span>
-                </button>
-            </div>
-        </div>
+    <div id="context-menu" class="context-menu">
+        <button onclick="contextEdit()">
+            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            Rename
+        </button>
+        <button onclick="contextDelete()" class="delete">
+            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Delete
+        </button>
     </div>
 
     <script>
-        // ============== GLOBAL STATE ==============
         let terminals = [];
         let workspaces = [];
         let activeId = null;
-        let searchTerm = '';
-        let pendingRenameId = null;
-        let pendingDeleteId = null;
         let currentUser = null;
         let currentWorkspaceId = 'all';
-        let currentManageWorkspaceId = null;
         let currentContextId = null;
 
-        // ============== LOCALSTORAGE ==============
         function loadTerminals() {
-            const saved = localStorage.getItem('ks_ssh_terminals');
-            if (saved) terminals = JSON.parse(saved);
+            terminals = JSON.parse(localStorage.getItem('ks_ssh_terminals') || '[]');
         }
-
         function saveTerminals() {
             localStorage.setItem('ks_ssh_terminals', JSON.stringify(terminals));
         }
-
         function loadWorkspaces() {
-            const saved = localStorage.getItem('ks_ssh_workspaces');
-            if (saved) workspaces = JSON.parse(saved);
+            workspaces = JSON.parse(localStorage.getItem('ks_ssh_workspaces') || '[]');
         }
-
         function saveWorkspaces() {
             localStorage.setItem('ks_ssh_workspaces', JSON.stringify(workspaces));
         }
 
-        // ============== MOBILE SIDEBAR ==============
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('show');
-        }
-
-        function closeSidebarIfMobile() {
-            if (window.innerWidth >= 768) return;
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.remove('open');
-            overlay.classList.remove('show');
-        }
-
-        // ============== WORKSPACES MANAGEMENT ==============
-        function populateWorkspaceDropdown() {
-            const select = document.getElementById('workspace-dropdown');
-            select.innerHTML = '';
-            workspaces.forEach(ws => {
-                const opt = document.createElement('option');
-                opt.value = ws.id;
-                opt.textContent = ws.name;
-                if (ws.id === currentWorkspaceId) opt.selected = true;
-                select.appendChild(opt);
-            });
-            // ensure a workspace is always selected (no "All Workspaces")
-            if (workspaces.length > 0 && (currentWorkspaceId === 'all' || !currentWorkspaceId)) {
-                currentWorkspaceId = workspaces[0].id;
-                select.value = currentWorkspaceId;
-            }
-        }
-
-        function createDefaultWorkspace() {
-            if (!currentUser || workspaces.length > 0) return;
-            const defaultWs = {
-                id: 'default-ws',
-                name: `${currentUser.username}-ws`,
-                created: Date.now(),
-                members: [{
-                    username: currentUser.username,
-                    role: 'full',
-                    allowedTerminals: []
-                }]
-            };
-            workspaces.push(defaultWs);
-            saveWorkspaces();
-        }
-
-        function migrateTerminalsToWorkspaces() {
-            let changed = false;
-            terminals.forEach(t => {
-                if (!t.workspaceId) {
-                    t.workspaceId = 'default-ws';
-                    changed = true;
-                }
-            });
-            if (changed) saveTerminals();
-        }
-
-        // ============== RENDER SIDEBAR LIST (with workspace filtering) ==============
-        function renderList() {
-            const container = document.getElementById('terminals-list');
-            container.innerHTML = '';
-
-            let filtered = terminals.filter(t => 
-                (!searchTerm || 
-                 t.name.toLowerCase().includes(searchTerm) || 
-                 t.token.toLowerCase().includes(searchTerm))
-            );
-
-            // Filter by current workspace (category support)
-            if (currentWorkspaceId !== 'all') {
-                filtered = filtered.filter(t => t.workspaceId === currentWorkspaceId);
-            }
-
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                        </svg>
-                        <p>No terminals in this workspace</p>
-                    </div>`;
-                return;
-            }
-
-            filtered.forEach(term => {
-                const isActive = term.id === activeId;
-                const div = document.createElement('div');
-                div.className = 'terminal-item ' + (isActive ? 'active' : '');
-                
-                div.innerHTML = `
-                    <div class="terminal-info" onclick="selectTerminal('${term.id}')">
-                        <div class="terminal-name">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <span>${term.name}</span>
-                        </div>
-                        <div class="terminal-token">${term.token}</div>
-                    </div>
-                    <div class="terminal-actions" style="opacity: 1;">
-                        <button class="icon-btn" onclick="event.stopPropagation(); showTerminalMenu('${term.id}', event);" title="Actions">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 5v.01M12 12v.01M12 19v.01"/>
-                            </svg>
-                        </button>
-                    </div>
-                `;
-                
-                container.appendChild(div);
-            });
-        }
-
-        // ============== RENDER HOME ==============
-        function renderHome() {
-            const main = document.getElementById('main-content');
-            main.innerHTML = `
-                <div style="display: flex; flex-direction: column; height: 100%; width: 100%; background: #000;">
-                    <div class="top-bar">
-                        <div class="top-bar-left">
-                            <button class="menu-btn" onclick="toggleSidebar()">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                                </svg>
-                            </button>
-                            <div class="page-title">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1v-5m-6 0a1 1 0 001-1v5" />
-                                </svg>
-                                <span>Dashboard</span>
-                            </div>
-                        </div>
-                        <div class="top-bar-right">
-                            <div class="token-badge" style="display: none;">KS DASHBOARD</div>
-                        </div>
-                    </div>
-                    <div class="iframe-container">
-                        <iframe src="dashboard.html" allow="fullscreen" allowfullscreen></iframe>
-                    </div>
-                </div>`;
-            
-            closeSidebarIfMobile();
-        }
-
-        // ============== TERMINAL FRAME (custom subpage - ssh.ksw.workers.dev removed) ==============
-        function selectTerminal(id) {
-            activeId = id;
-            const term = terminals.find(t => t.id === id);
-            if (!term) return;
-
-            term.lastUsed = Date.now();
-            saveTerminals();
-            renderList();
-            localStorage.setItem('lastActiveId', id);
-
-            const main = document.getElementById('main-content');
-            
-            main.innerHTML = `
-                <div style="display: flex; flex-direction: column; height: 100%; width: 100%; background: #000;">
-                    <div class="top-bar">
-                        <div class="top-bar-left">
-                            <button class="menu-btn" onclick="toggleSidebar()">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                                </svg>
-                            </button>
-                            <button class="back-btn" onclick="goHome()">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                                </svg>
-                                <span class="back-text">Back</span>
-                            </button>
-                            <div class="divider" style="display: none;"></div>
-                            <div class="page-title">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                                <span>${term.name}</span>
-                            </div>
-                        </div>
-                        <div class="top-bar-right">
-                            <button class="action-btn" onclick="showRenameModal('${id}')">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                                <span>RENAME</span>
-                            </button>
-                            <button class="action-btn danger" onclick="showDeleteModal('${id}')">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                                <span>DELETE</span>
-                            </button>
-                            <button class="action-btn" onclick="toggleFullscreen()">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                                </svg>
-                                <span>FULLSCREEN</span>
-                            </button>
-                            <button class="action-btn mobile-menu" onclick="showMobileMenu('${id}')" style="display: none;">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
-                                </svg>
-                            </button>
-                            <div class="token-badge">${term.token}</div>
-                        </div>
-                    </div>
-                    <div class="iframe-container">
-                        <iframe src="terminal.html?token=${term.token}" allow="fullscreen" allowfullscreen></iframe>
-                    </div>
-                </div>`;
-            
-            const mobileBtn = main.querySelector('.mobile-menu');
-            const backText = main.querySelector('.back-text');
-            const divider = main.querySelector('.divider');
-            
-            if (window.innerWidth < 640) {
-                if (mobileBtn) mobileBtn.style.display = 'flex';
-            }
-            if (window.innerWidth >= 640) {
-                if (backText) backText.style.display = 'inline';
-                if (divider) divider.style.display = 'block';
-            }
-            
-            closeSidebarIfMobile();
-        }
-
-        function showMobileMenu(id) {
-            const term = terminals.find(t => t.id === id);
-            const choice = confirm(`"${term.name}"\\n\\nOK = Delete\\nCancel = Rename`);
-            if (choice) showDeleteModal(id); else showRenameModal(id);
-        }
-
-        function toggleFullscreen() {
-            const container = document.querySelector('.iframe-container');
-            if (!container) return;
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                container.requestFullscreen().catch(() => {});
-            }
+            document.getElementById('sidebar').classList.toggle('open');
         }
 
         function goHome() {
             activeId = null;
-            localStorage.setItem('lastActiveId', 'home');
+            document.getElementById('page-title').textContent = 'Dashboard';
+            document.getElementById('main-iframe').src = 'dashboard.html';
             renderList();
-            renderHome();
-            closeSidebarIfMobile();
         }
 
-        // ============== NEW 3-DOT CONTEXT MENU WITH SVG ICONS (Edit + Delete) ==============
-        function createContextMenu() {
-            const menu = document.createElement('div');
-            menu.id = 'context-menu';
-            menu.className = 'context-menu';
-            menu.innerHTML = `
-                <button onclick="contextEdit()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                    <span>Edit / Rename</span>
-                </button>
-                <button onclick="contextDelete()" class="delete">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    <span>Delete Terminal</span>
-                </button>
-            `;
-            document.body.appendChild(menu);
+        function selectTerminal(id) {
+            activeId = id;
+            const term = terminals.find(t => t.id === id);
+            if (!term) return;
+            document.getElementById('page-title').textContent = term.name;
+            document.getElementById('main-iframe').src = 'terminal.html?token=' + term.token;
+            renderList();
+            if (window.innerWidth < 768) toggleSidebar();
+        }
 
-            // Hide menu when clicking anywhere else
-            document.addEventListener('click', function(e) {
-                if (menu && !menu.contains(e.target)) {
-                    menu.style.display = 'none';
-                }
+        function renderList() {
+            const container = document.getElementById('terminals-list');
+            container.innerHTML = '';
+
+            let filtered = terminals;
+            if (currentWorkspaceId !== 'all') {
+                filtered = terminals.filter(t => t.workspaceId === currentWorkspaceId);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 12px;">No terminals here</div>';
+                return;
+            }
+
+            filtered.forEach(term => {
+                const active = term.id === activeId ? 'active' : '';
+                const div = document.createElement('div');
+                div.className = `terminal-item ${active}`;
+                div.onclick = () => selectTerminal(term.id);
+                div.innerHTML = `
+                    <div class="terminal-info">
+                        <div class="terminal-name">${term.name}</div>
+                        <div class="terminal-token">${term.token}</div>
+                    </div>
+                    <button class="btn btn-ghost" style="padding: 4px;" onclick="event.stopPropagation(); showTerminalMenu('${term.id}', event)">
+                        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/></svg>
+                    </button>
+                `;
+                container.appendChild(div);
             });
-
-            return menu;
         }
 
         function showTerminalMenu(id, event) {
-            event.stopImmediatePropagation();
             currentContextId = id;
-
-            let menu = document.getElementById('context-menu');
-            if (!menu) menu = createContextMenu();
-
-            // Position menu near the clicked 3-dot button
-            const rect = event.currentTarget.getBoundingClientRect();
-            menu.style.top = `${rect.bottom + window.scrollY + 8}px`;
-            menu.style.left = `${rect.left + window.scrollX - 10}px`;
+            const menu = document.getElementById('context-menu');
             menu.style.display = 'block';
+            menu.style.top = event.clientY + 'px';
+            menu.style.left = (event.clientX - 180) + 'px';
+
+            const hide = () => {
+                menu.style.display = 'none';
+                document.removeEventListener('click', hide);
+            };
+            setTimeout(() => document.addEventListener('click', hide), 10);
         }
 
-        function contextEdit() {
-            const menu = document.getElementById('context-menu');
-            if (menu) menu.style.display = 'none';
-            if (currentContextId) showRenameModal(currentContextId);
-            currentContextId = null;
-        }
+        function contextEdit() { showRenameModal(currentContextId); }
+        function contextDelete() { showDeleteModal(currentContextId); }
 
-        function contextDelete() {
-            const menu = document.getElementById('context-menu');
-            if (menu) menu.style.display = 'none';
-            if (currentContextId) showDeleteModal(currentContextId);
-            currentContextId = null;
-        }
-
-        // ============== ADD MODAL ==============
         function showAddModal() {
-            document.getElementById('modal-name').value = '';
-            document.getElementById('modal-token').value = '';
-            populateModalWorkspaceSelect();
+            populateWorkspaceSelects();
             document.getElementById('add-modal').classList.add('show');
-            setTimeout(() => document.getElementById('modal-name').focus(), 50);
         }
-
-        function hideAddModal() {
-            document.getElementById('add-modal').classList.remove('show');
-        }
-
-        function populateModalWorkspaceSelect() {
-            const select = document.getElementById('modal-workspace');
-            select.innerHTML = '';
-            workspaces.forEach(ws => {
-                const opt = document.createElement('option');
-                opt.value = ws.id;
-                opt.textContent = ws.name;
-                select.appendChild(opt);
-            });
-            // default to current workspace if possible
-            if (currentWorkspaceId !== 'all') {
-                select.value = currentWorkspaceId;
-            }
-        }
+        function hideAddModal() { document.getElementById('add-modal').classList.remove('show'); }
 
         function handleAddTerminal() {
             const name = document.getElementById('modal-name').value.trim();
             const token = document.getElementById('modal-token').value.trim();
-            const workspaceId = document.getElementById('modal-workspace').value;
-            if (!token) {
-                alert('Token is required');
-                return;
-            }
-            if (terminals.some(t => t.token === token)) {
-                alert('This token is already saved!');
-                return;
-            }
+            const wsId = document.getElementById('modal-workspace').value;
+            if (!token) return alert('Token is required');
+
             const newTerm = {
                 id: Date.now().toString(),
-                name: name || `Terminal ${terminals.length + 1}`,
-                token: token,
-                workspaceId: workspaceId || 'default-ws',
+                name: name || 'Terminal',
+                token,
+                workspaceId: wsId || 'default-ws',
                 added: Date.now()
             };
             terminals.unshift(newTerm);
@@ -1520,363 +544,108 @@
             selectTerminal(newTerm.id);
         }
 
-        // ============== RENAME / DELETE (unchanged) ==============
         function showRenameModal(id) {
             const term = terminals.find(t => t.id === id);
-            if (!term) return;
-            pendingRenameId = id;
-            document.getElementById('rename-current-name').textContent = 'Current: ' + term.name;
-            document.getElementById('rename-token-display').textContent = term.token;
             document.getElementById('rename-input').value = term.name;
             document.getElementById('rename-modal').classList.add('show');
-            setTimeout(() => document.getElementById('rename-input').focus(), 50);
         }
-
-        function hideRenameModal() {
-            document.getElementById('rename-modal').classList.remove('show');
-            pendingRenameId = null;
-        }
+        function hideRenameModal() { document.getElementById('rename-modal').classList.remove('show'); }
 
         function confirmRename() {
-            if (!pendingRenameId) return;
             const newName = document.getElementById('rename-input').value.trim();
-            if (!newName) {
-                alert('Please enter a name');
-                return;
-            }
-            const term = terminals.find(t => t.id === pendingRenameId);
-            if (term) {
-                term.name = newName;
-                saveTerminals();
-                renderList();
-                if (activeId === pendingRenameId) selectTerminal(pendingRenameId);
-            }
+            if (!newName) return;
+            const term = terminals.find(t => t.id === currentContextId);
+            term.name = newName;
+            saveTerminals();
+            renderList();
             hideRenameModal();
         }
 
         function showDeleteModal(id) {
-            const term = terminals.find(t => t.id === id);
-            if (!term) return;
-            pendingDeleteId = id;
-            document.getElementById('delete-name-display').textContent = term.name;
-            document.getElementById('delete-token-display').textContent = term.token;
             document.getElementById('delete-modal').classList.add('show');
         }
-
-        function hideDeleteModal() {
-            document.getElementById('delete-modal').classList.remove('show');
-            pendingDeleteId = null;
-        }
+        function hideDeleteModal() { document.getElementById('delete-modal').classList.remove('show'); }
 
         function confirmDelete() {
-            if (!pendingDeleteId) return;
-            terminals = terminals.filter(t => t.id !== pendingDeleteId);
+            terminals = terminals.filter(t => t.id !== currentContextId);
             saveTerminals();
             renderList();
-            if (activeId === pendingDeleteId) goHome();
+            if (activeId === currentContextId) goHome();
             hideDeleteModal();
         }
 
-        function clearAllData() {
-            if (confirm('Delete ALL saved terminals and workspaces? This cannot be undone.')) {
-                localStorage.removeItem('ks_ssh_terminals');
-                localStorage.removeItem('ks_ssh_workspaces');
-                terminals = [];
-                workspaces = [];
-                activeId = null;
-                currentWorkspaceId = 'all';
-                localStorage.setItem('lastActiveId', 'home');
-                renderList();
-                renderHome();
-                populateWorkspaceDropdown();
-            }
-        }
-
-        function setupSearch() {
-            const input = document.getElementById('search-input');
-            input.addEventListener('input', () => {
-                searchTerm = input.value.toLowerCase().trim();
-                renderList();
-            });
-        }
-
-        // ============== CREATE WORKSPACE ==============
-        function showCreateWorkspaceModal() {
-            document.getElementById('ws-name-input').value = '';
-            document.getElementById('create-ws-modal').classList.add('show');
-        }
-
-        function hideCreateWorkspaceModal() {
-            document.getElementById('create-ws-modal').classList.remove('show');
-        }
+        function showCreateWorkspaceModal() { document.getElementById('create-ws-modal').classList.add('show'); }
+        function hideCreateWorkspaceModal() { document.getElementById('create-ws-modal').classList.remove('show'); }
 
         function confirmCreateWorkspace() {
             const name = document.getElementById('ws-name-input').value.trim();
-            if (!name) {
-                alert('Workspace name is required');
-                return;
-            }
-            const newWs = {
-                id: Date.now().toString(),
-                name: name,
-                created: Date.now(),
-                members: [{
-                    username: currentUser ? currentUser.username : 'owner',
-                    role: 'full',
-                    allowedTerminals: []
-                }]
-            };
+            if (!name) return;
+            const newWs = { id: Date.now().toString(), name };
             workspaces.unshift(newWs);
             saveWorkspaces();
             populateWorkspaceDropdown();
             hideCreateWorkspaceModal();
-            // Switch to the newly created workspace
-            currentWorkspaceId = newWs.id;
-            populateWorkspaceDropdown();
-            renderList();
         }
 
-        // ============== POWERFUL SUB-USERS / MEMBERS SYSTEM ==============
-        function showManageWorkspaceModal() {
-            if (currentWorkspaceId === 'all') {
-                alert('Please select a specific workspace to manage sub-users');
-                return;
-            }
-            currentManageWorkspaceId = currentWorkspaceId;
-            const ws = workspaces.find(w => w.id === currentManageWorkspaceId);
-            if (!ws) return;
-            document.getElementById('manage-ws-name-display').textContent = `Manage ${ws.name}`;
-            renderMembersList();
-            toggleCustomTerminalSelector(); // initial hide
-            document.getElementById('manage-ws-modal').classList.add('show');
-        }
-
-        function hideManageWorkspaceModal() {
-            document.getElementById('manage-ws-modal').classList.remove('show');
-            currentManageWorkspaceId = null;
-        }
-
-        function renderMembersList() {
-            const container = document.getElementById('members-list');
-            const ws = workspaces.find(w => w.id === currentManageWorkspaceId);
-            if (!ws) return;
-            
-            let html = '';
-            ws.members.forEach((member, index) => {
-                const allowedCount = member.role === 'custom' ? member.allowedTerminals.length : 'ALL';
-                html += `
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #1e293b; border-radius: 6px; margin-bottom: 6px;">
-                    <div>
-                        <span style="font-weight: 600;">${member.username}</span>
-                        <span style="font-size: 10px; margin-left: 8px; padding: 2px 6px; background: ${member.role === 'full' ? '#34d399' : member.role === 'view' ? '#64748b' : '#f59e0b'}; border-radius: 9999px; color: white;">${member.role.toUpperCase()}</span>
-                        ${member.role === 'custom' ? `<span style="font-size: 10px; color: #64748b; margin-left: 8px;">${allowedCount} terminals</span>` : ''}
-                    </div>
-                    <button onclick="removeSubUser(${index});" style="background: transparent; border: none; color: #f87171; font-size: 11px; cursor: pointer;">REMOVE</button>
-                </div>`;
+        function populateWorkspaceDropdown() {
+            const select = document.getElementById('workspace-dropdown');
+            select.innerHTML = '<option value="all">All Workspaces</option>';
+            workspaces.forEach(ws => {
+                const opt = document.createElement('option');
+                opt.value = ws.id;
+                opt.textContent = ws.name;
+                select.appendChild(opt);
             });
-            if (ws.members.length === 0) html = '<p style="text-align:center; color:#64748b; padding:20px;">No sub-users yet</p>';
-            container.innerHTML = html;
+            select.value = currentWorkspaceId;
         }
 
-        function removeSubUser(index) {
-            const ws = workspaces.find(w => w.id === currentManageWorkspaceId);
-            if (!ws) return;
-            ws.members.splice(index, 1);
-            saveWorkspaces();
-            renderMembersList();
-        }
-
-        function toggleCustomTerminalSelector() {
-            const role = document.getElementById('subuser-role').value;
-            const section = document.getElementById('custom-terminals-section');
-            if (role === 'custom') {
-                section.style.display = 'block';
-                populateCustomTerminalsList();
-            } else {
-                section.style.display = 'none';
-            }
-        }
-
-        function populateCustomTerminalsList() {
-            const container = document.getElementById('custom-terminals-list');
-            const wsId = currentManageWorkspaceId;
-            const wsTerminals = terminals.filter(t => t.workspaceId === wsId);
-            let html = '';
-            wsTerminals.forEach(term => {
-                html += `
-                <label style="display: block; padding: 6px 0; cursor: pointer;">
-                    <input type="checkbox" value="${term.id}" class="custom-terminal-cb" style="margin-right: 8px;"> 
-                    ${term.name} <span style="font-size:10px; color:#64748b;">(${term.token})</span>
-                </label>`;
+        function populateWorkspaceSelects() {
+            const select = document.getElementById('modal-workspace');
+            select.innerHTML = '';
+            workspaces.forEach(ws => {
+                const opt = document.createElement('option');
+                opt.value = ws.id;
+                opt.textContent = ws.name;
+                select.appendChild(opt);
             });
-            if (wsTerminals.length === 0) html = '<p style="color:#64748b; text-align:center; padding:12px;">No terminals in this workspace yet</p>';
-            container.innerHTML = html;
         }
 
-        function addSubUserToWorkspace() {
-            const username = document.getElementById('subuser-username').value.trim();
-            if (!username) {
-                alert('Username is required');
-                return;
-            }
-            const role = document.getElementById('subuser-role').value;
-            const ws = workspaces.find(w => w.id === currentManageWorkspaceId);
-            if (!ws) return;
-
-            let allowedTerminals = [];
-            if (role === 'custom') {
-                const checkboxes = document.querySelectorAll('.custom-terminal-cb:checked');
-                allowedTerminals = Array.from(checkboxes).map(cb => cb.value);
-            }
-
-            // Prevent duplicate
-            if (ws.members.some(m => m.username === username)) {
-                alert('This user is already a member');
-                return;
-            }
-
-            ws.members.push({
-                username: username,
-                role: role,
-                allowedTerminals: allowedTerminals
-            });
-
-            saveWorkspaces();
-            renderMembersList();
-            
-            // Clear form
-            document.getElementById('subuser-username').value = '';
-            document.getElementById('subuser-role').value = 'full';
-            toggleCustomTerminalSelector();
-            
-            alert(`Sub-user ${username} added with ${role} access!`);
-        }
-
-        // ============== WORKSPACE SETTINGS FRAME ==============
-        function openWorkspaceSettings() {
-            if (currentWorkspaceId === 'all' || !currentWorkspaceId) {
-                alert('Please select a workspace first.');
-                return;
-            }
-            const ws = workspaces.find(w => w.id === currentWorkspaceId);
-            if (!ws) return;
-
-            activeId = null;
-            const main = document.getElementById('main-content');
-            const wsName = encodeURIComponent(ws.name);
-
-            main.innerHTML = `
-                <div style="display: flex; flex-direction: column; height: 100%; width: 100%; background: #000;">
-                    <div class="top-bar">
-                        <div class="top-bar-left">
-                            <button class="menu-btn" onclick="toggleSidebar()">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                                </svg>
-                            </button>
-                            <button class="back-btn" onclick="goHome()">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                                </svg>
-                                <span class="back-text">Back</span>
-                            </button>
-                            <div class="divider" style="display: none;"></div>
-                            <div class="page-title">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 01-2-2H7a2 2 0 01-2 2v16m14 0h-4m-6 0H5"/>
-                                </svg>
-                                <span>Settings: ${ws.name}</span>
-                            </div>
-                        </div>
-                        <div class="top-bar-right"></div>
-                    </div>
-                    <div class="iframe-container">
-                        <iframe src="/workspaces?name=${wsName}" allow="fullscreen" allowfullscreen></iframe>
-                    </div>
-                </div>`;
-            
-            const backText = main.querySelector('.back-text');
-            const divider = main.querySelector('.divider');
-            if (window.innerWidth >= 640) {
-                if (backText) backText.style.display = 'inline';
-                if (divider) divider.style.display = 'block';
-            }
-            closeSidebarIfMobile();
-        }
-
-        // ============== BACKEND INTEGRATION ==============
         async function loadUser() {
             try {
                 const res = await fetch('/api/me');
-                if (!res.ok) throw new Error('Unauthorized');
+                if (!res.ok) throw new Error();
                 const data = await res.json();
                 currentUser = data.user;
                 document.getElementById('username-display').textContent = currentUser.username;
-                const headerCredits = document.getElementById('header-credits');
-                if (headerCredits) headerCredits.textContent = currentUser.credits || 0;
+                document.getElementById('credits-badge').textContent = `${currentUser.credits} CREDITS`;
             } catch (e) {
                 window.location.href = '/auth.html';
             }
         }
 
-        async function refreshCredits() {
-            // kept for compatibility but not used in UI anymore
-            const res = await fetch('/api/me');
-            if (res.ok) {
-                const data = await res.json();
-                currentUser = data.user;
-                const headerCredits = document.getElementById('header-credits');
-                if (headerCredits) headerCredits.textContent = currentUser.credits || 0;
-            }
-        }
-
-        // ============== ACCOUNT & LOGOUT (unchanged) ==============
-        function showAccount() {
-            alert('Account settings would open here.\n\n(Full account panel coming in future update)');
-        }
-
-        function handleLogout() {
-            if (confirm('Logout from KS SSH?\n\nThis will clear your session and return to login.')) {
-                localStorage.removeItem('ks_ssh_terminals');
-                localStorage.removeItem('ks_ssh_workspaces');
-                localStorage.removeItem('lastActiveId');
+        async function handleLogout() {
+            if (confirm('Logout from KS SSH?')) {
+                await fetch('/api/logout', { method: 'POST' });
                 window.location.href = '/auth.html';
             }
         }
 
-        // ============== WORKSPACE DROPDOWN HANDLER ==============
-        function setupWorkspaceDropdown() {
-            const select = document.getElementById('workspace-dropdown');
-            select.addEventListener('change', () => {
-                currentWorkspaceId = select.value;
-                renderList();
-            });
-        }
+        document.getElementById('workspace-dropdown').onchange = (e) => {
+            currentWorkspaceId = e.target.value;
+            renderList();
+        };
 
-        // ============== INIT ==============
-        function init() {
+        window.onload = async () => {
             loadTerminals();
             loadWorkspaces();
-            loadUser().then(() => {
-                createDefaultWorkspace();
-                migrateTerminalsToWorkspaces();
-                populateWorkspaceDropdown();
-                setupWorkspaceDropdown();
-                
-                const savedActive = localStorage.getItem('lastActiveId');
-                if (savedActive && savedActive !== 'home' && terminals.some(t => t.id === savedActive)) {
-                    activeId = savedActive;
-                    selectTerminal(savedActive);
-                } else {
-                    renderHome();
-                }
-                
-                renderList();
-                setupSearch();
-            });
-        }
-        
-        window.onload = init;
+            if (workspaces.length === 0) {
+                workspaces.push({ id: 'default-ws', name: 'Default Workspace' });
+                saveWorkspaces();
+            }
+            await loadUser();
+            populateWorkspaceDropdown();
+            renderList();
+        };
     </script>
 </body>
 </html>
