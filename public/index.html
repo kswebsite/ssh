@@ -7,240 +7,85 @@
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
     <style>
-        body, html {
-            height: 100dvh;
-            width: 100%;
-            overflow: hidden;
-        }
-        
-        .app {
-            display: flex;
-            height: 100vh;
-            width: 100vw;
-        }
-        
-        /* Sidebar */
+        body, html { height: 100dvh; width: 100%; overflow: hidden; background: #000; }
+        .app { display: flex; height: 100vh; width: 100vw; }
         #sidebar {
-            width: 260px;
-            min-width: 260px;
-            background: var(--bg-surface);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            z-index: 50;
-            transition: transform 0.3s ease;
+            width: 260px; min-width: 260px; background: var(--bg-sidebar);
+            border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50; transition: transform 0.3s ease;
         }
-        
         @media (max-width: 767px) {
-            #sidebar {
-                position: fixed;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                transform: translateX(-100%);
-            }
+            #sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); }
             #sidebar.open { transform: translateX(0); }
         }
-        
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
+        .sidebar-header { padding: 24px 20px; display: flex; align-items: center; gap: 12px; }
         .logo {
-            width: 40px;
-            height: 40px;
-            background: var(--accent);
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 15px var(--accent-glow);
+            width: 32px; height: 32px; background: var(--accent); border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
         }
+        .logo svg { width: 20px; height: 20px; color: white; }
+        .brand h1 { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
         
-        .logo svg { width: 24px; height: 24px; color: white; }
-        
-        .brand h1 { font-size: 18px; font-weight: 700; }
-        .brand p { font-size: 10px; color: var(--accent); font-weight: 700; letter-spacing: 1px; }
-        
-        .sidebar-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-        }
-        
+        .sidebar-scroll { flex: 1; overflow-y: auto; padding: 12px; }
         .section-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin: 16px 8px 8px;
+            font-size: 11px; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.05em; margin: 20px 8px 8px;
         }
-        
         .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: var(--radius-md);
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 4px;
+            display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+            border-radius: var(--radius-sm); color: var(--text-secondary); cursor: pointer;
+            transition: all 0.2s; margin-bottom: 2px; font-size: 14px;
         }
-        
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-primary);
-        }
-        
-        .nav-item.active {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--accent);
-            border-left: 3px solid var(--accent);
-        }
-        
-        .nav-item svg { width: 18px; height: 18px; }
+        .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); }
+        .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
+        .nav-item svg { width: 18px; height: 18px; opacity: 0.7; }
         
         .terminal-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 12px;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 4px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; margin-bottom: 2px;
         }
-        
-        .terminal-item:hover { background: rgba(59, 130, 246, 0.05); }
+        .terminal-item:hover { background: rgba(255, 255, 255, 0.03); }
         .terminal-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
-        
         .terminal-info { flex: 1; min-width: 0; }
         .terminal-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .terminal-token { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
         
-        .sidebar-footer {
-            padding: 16px;
-            border-top: 1px solid var(--border);
-            background: rgba(15, 23, 42, 0.5);
-        }
-        
-        .user-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        
-        .avatar {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--accent), #10b981);
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        
-        .user-details p:first-child { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
-        .user-details p:last-child { font-size: 14px; font-weight: 600; }
-        
-        /* Main Content */
-        #main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-deep);
-        }
-        
+        #main-content { flex: 1; display: flex; flex-direction: column; background: #000; }
         .top-bar {
-            height: 64px;
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-            padding: 0 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            height: 64px; background: #000; border-bottom: 1px solid var(--border);
+            padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
         }
-        
-        .top-bar-left { display: flex; align-items: center; gap: 16px; }
-        
         .iframe-container { flex: 1; background: #000; position: relative; }
         iframe { width: 100%; height: 100%; border: 0; }
         
-        /* Modals */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(4px);
+            z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px;
         }
-        
         .modal-overlay.show { display: flex; }
+        .modal { width: 100%; max-width: 440px; animation: modalIn 0.2s ease-out; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         
-        .modal {
-            width: 100%;
-            max-width: 440px;
-            animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        .permission-grid {
+            display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 150px; overflow-y: auto;
+            border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-top: 8px;
         }
+        .permission-item { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 4px; }
         
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-        
-        .modal-title { display: flex; align-items: center; gap: 12px; }
-        .modal-title svg { width: 24px; height: 24px; color: var(--accent); }
-        
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; }
-
-        /* Context Menu */
         .context-menu {
-            position: absolute;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-lg);
-            padding: 6px;
-            z-index: 10000;
-            min-width: 180px;
-            display: none;
+            position: absolute; background: var(--bg-elevated); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding: 4px; z-index: 10000;
+            min-width: 160px; display: none;
         }
         .context-menu button {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 8px 12px;
-            background: transparent;
-            border: none;
-            color: var(--text-primary);
-            font-size: 13px;
-            cursor: pointer;
-            border-radius: var(--radius-sm);
+            display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px;
+            background: transparent; border: none; color: var(--text-primary); font-size: 13px;
+            cursor: pointer; border-radius: 4px; text-align: left;
         }
         .context-menu button:hover { background: rgba(255, 255, 255, 0.05); }
         .context-menu button.delete { color: var(--danger); }
-        .context-menu button.delete:hover { background: rgba(248, 113, 113, 0.1); }
+
+        /* Custom Dropdown Overrides */
+        .workspace-selector-container { padding: 0 8px 12px; position: relative; }
     </style>
 </head>
 <body>
@@ -248,49 +93,40 @@
         <aside id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 </div>
-                <div class="brand">
-                    <h1>KS SSH</h1>
-                    <p>WEB TERMINAL</p>
-                </div>
+                <div class="brand"><h1>KS SSH</h1></div>
             </div>
 
             <div class="sidebar-scroll">
                 <div class="section-label">General</div>
                 <div class="nav-item active" onclick="goHome()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1v-5m-6 0a1 1 0 001-1v5"/>
-                    </svg>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1v-5m10-10l2 2m-2-2v10a1 1 0 01-1 1v-5m-6 0a1 1 0 001-1v5"/></svg>
                     <span>Dashboard</span>
+                </div>
+                <div class="nav-item" onclick="showAccountModal()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <span>Account Settings</span>
                 </div>
 
                 <div class="section-label">Workspaces</div>
-                <div style="padding: 0 8px 8px;">
-                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                        <select id="workspace-dropdown" class="input" style="flex: 1; padding: 8px;"></select>
-                        <button onclick="showCreateWorkspaceModal()" class="btn btn-secondary" style="padding: 8px;" title="New Workspace">
-                            <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                        </button>
-                        <button id="manage-ws-btn" onclick="showManageWorkspaceModal()" class="btn btn-secondary" style="padding: 8px; display: none;" title="Manage Workspace">
-                            <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
-                        </button>
+                <div class="workspace-selector-container">
+                    <div class="custom-dropdown" id="ws-dropdown">
+                        <div class="dropdown-toggle" onclick="toggleWorkspaceDropdown()">
+                            <span id="selected-ws-name">All Workspaces</span>
+                            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="dropdown-menu" id="ws-dropdown-menu">
+                            <!-- Items populated by JS -->
+                        </div>
                     </div>
                 </div>
 
                 <div class="section-label">Terminals</div>
                 <div style="padding: 0 8px 12px;">
-                    <input id="search-input" type="text" class="input" placeholder="Search terminals..." style="padding: 8px; margin-bottom: 12px;">
-                    <button onclick="showAddModal()" class="btn btn-primary" style="width: 100%;">
-                        <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
+                    <input id="search-input" type="text" class="input" placeholder="Search..." style="margin-bottom: 8px; height: 36px; font-size: 13px;">
+                    <button onclick="showAddModal()" class="btn btn-primary" style="width: 100%; height: 36px; font-size: 13px;">
+                        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         <span>Add Terminal</span>
                     </button>
                 </div>
@@ -298,170 +134,129 @@
                 <div id="terminals-list"></div>
             </div>
 
-            <div class="sidebar-footer">
-                <div class="user-card">
-                    <div class="avatar">👤</div>
-                    <div class="user-details">
-                        <p>Signed in as</p>
-                        <p id="username-display">Loading...</p>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button onclick="handleLogout()" class="btn btn-danger" style="flex: 1;">
-                        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                        Logout
-                    </button>
-                </div>
+            <div style="padding: 16px; border-top: 1px solid var(--border);">
+                <button onclick="handleLogout()" class="btn btn-secondary" style="width: 100%; font-size: 12px; color: var(--text-muted);">
+                    Logout
+                </button>
             </div>
         </aside>
 
         <main id="main-content">
             <div class="top-bar">
-                <div class="top-bar-left">
+                <div style="display: flex; align-items: center; gap: 16px;">
                     <button class="btn btn-ghost" onclick="toggleSidebar()" style="padding: 8px; @media(min-width:768px){display:none;}">
-                        <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
+                        <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
-                    <h2 id="page-title" style="font-size: 18px; font-weight: 600;">Dashboard</h2>
+                    <h2 id="page-title" style="font-size: 16px; font-weight: 600;">Dashboard</h2>
                 </div>
-                <div class="top-bar-right">
-                    <div id="credits-badge" class="badge badge-primary">0 CREDITS</div>
-                </div>
+                <div id="credits-badge" class="badge badge-primary">0 CREDITS</div>
             </div>
-            <div class="iframe-container" id="content-area">
+            <div class="iframe-container">
                 <iframe src="dashboard.html" id="main-iframe"></iframe>
             </div>
         </main>
     </div>
 
     <!-- MODALS -->
-    <div id="add-modal" class="modal-overlay" onclick="if(event.target===this)hideAddModal()">
-        <div class="modal card glass">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <h3>Add Terminal</h3>
-                </div>
-                <button class="btn btn-ghost" onclick="hideAddModal()">✕</button>
+    <!-- Add Terminal -->
+    <div id="add-modal" class="modal-overlay" onclick="if(event.target===this)closeModals()">
+        <div class="modal card">
+            <h3 style="margin-bottom: 20px;">Add Terminal</h3>
+            <div style="margin-bottom: 16px;">
+                <label class="section-label" style="margin:0 0 8px;">Name</label>
+                <input id="modal-name" type="text" class="input" placeholder="Server name">
             </div>
-            <div class="form-group">
-                <label class="form-label">Display Name</label>
-                <input id="modal-name" type="text" class="input" placeholder="Web Server 01">
+            <div style="margin-bottom: 16px;">
+                <label class="section-label" style="margin:0 0 8px;">Token / URL</label>
+                <input id="modal-token" type="text" class="input" placeholder="token or https://...">
             </div>
-            <div class="form-group">
-                <label class="form-label">Token or URL</label>
-                <input id="modal-token" type="text" class="input" placeholder="Enter token or full https:// url">
-                <p style="font-size: 10px; color: var(--text-muted); mt-2">Tokens automatically get .trycloudflare.com added</p>
+            <div style="margin-bottom: 24px;">
+                <label class="section-label" style="margin:0 0 8px;">Workspace</label>
+                <select id="modal-workspace" class="input" style="background:#000;"></select>
             </div>
-            <div class="form-group">
-                <label class="form-label">Workspace</label>
-                <select id="modal-workspace" class="input"></select>
-            </div>
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button class="btn btn-secondary" style="flex: 1;" onclick="hideAddModal()">Cancel</button>
-                <button class="btn btn-primary" style="flex: 1;" onclick="handleAddTerminal()">Add Terminal</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModals()">Cancel</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="handleAddTerminal()">Add</button>
             </div>
         </div>
     </div>
 
-    <!-- More modals (Rename, Delete, etc.) follow similar pattern -->
-    <div id="rename-modal" class="modal-overlay" onclick="if(event.target===this)hideRenameModal()">
-        <div class="modal card glass">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    <h3>Rename Terminal</h3>
-                </div>
-                <button class="btn btn-ghost" onclick="hideRenameModal()">✕</button>
+    <!-- Account Settings -->
+    <div id="account-modal" class="modal-overlay" onclick="if(event.target===this)closeModals()">
+        <div class="modal card">
+            <h3 style="margin-bottom: 20px;">Account Settings</h3>
+            <div style="margin-bottom: 16px;">
+                <label class="section-label" style="margin:0 0 8px;">Username</label>
+                <input id="acc-username" type="text" class="input">
             </div>
-            <div class="form-group">
-                <label class="form-label">New Name</label>
-                <input id="rename-input" type="text" class="input">
+            <div style="margin-bottom: 16px;">
+                <label class="section-label" style="margin:0 0 8px;">New Password (Optional)</label>
+                <input id="acc-new-pw" type="password" class="input">
             </div>
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button class="btn btn-secondary" style="flex: 1;" onclick="hideRenameModal()">Cancel</button>
-                <button class="btn btn-primary" style="flex: 1;" onclick="confirmRename()">Save Changes</button>
+            <div style="margin-bottom: 24px;">
+                <label class="section-label" style="margin:0 0 8px;">Current Password (Required)</label>
+                <input id="acc-curr-pw" type="password" class="input">
             </div>
-        </div>
-    </div>
-
-    <div id="delete-modal" class="modal-overlay" onclick="if(event.target===this)hideDeleteModal()">
-        <div class="modal card glass" style="border-color: rgba(248, 113, 113, 0.3);">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <svg style="color: var(--danger);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    <h3 style="color: var(--danger);">Delete Terminal</h3>
-                </div>
-                <button class="btn btn-ghost" onclick="hideDeleteModal()">✕</button>
-            </div>
-            <p style="color: var(--text-secondary); margin-bottom: 24px;">Are you sure you want to delete this terminal? This action cannot be undone.</p>
-            <div style="display: flex; gap: 12px;">
-                <button class="btn btn-secondary" style="flex: 1;" onclick="hideDeleteModal()">Cancel</button>
-                <button class="btn btn-danger" style="flex: 1;" onclick="confirmDelete()">Delete Forever</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModals()">Cancel</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="handleUpdateAccount()">Save</button>
             </div>
         </div>
     </div>
 
-    <div id="manage-ws-modal" class="modal-overlay" onclick="if(event.target===this)hideManageWorkspaceModal()">
-        <div class="modal card glass" style="max-width: 500px;">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                    <h3>Manage Members</h3>
-                </div>
-                <button class="btn btn-ghost" onclick="hideManageWorkspaceModal()">✕</button>
+    <!-- Workspace Settings -->
+    <div id="ws-settings-modal" class="modal-overlay" onclick="if(event.target===this)closeModals()">
+        <div class="modal card" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>Workspace Settings</h3>
+                <button class="btn btn-danger" style="padding: 6px 12px; font-size: 11px;" onclick="handleDeleteWorkspace()">Delete Workspace</button>
             </div>
-
-            <div class="form-group">
-                <label class="form-label">Add Sub-User</label>
+            <div style="margin-bottom: 20px;">
+                <label class="section-label" style="margin:0 0 8px;">Workspace Name</label>
                 <div style="display: flex; gap: 8px;">
-                    <input id="subuser-username" type="text" class="input" placeholder="Username">
+                    <input id="ws-settings-name" type="text" class="input">
+                    <button class="btn btn-primary" onclick="handleRenameWorkspace()">Rename</button>
+                </div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label class="section-label" style="margin:0 0 8px;">Add Member</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input id="new-member-username" type="text" class="input" placeholder="Username">
+                    <select id="new-member-access" class="input" style="width: 120px; background:#000;" onchange="toggleMemberTermList('new')">
+                        <option value="all">Full Access</option>
+                        <option value="selected">Restricted</option>
+                    </select>
                     <button class="btn btn-primary" onclick="handleAddMember()">Add</button>
                 </div>
+                <div id="new-member-term-list" class="permission-grid" style="display: none;"></div>
             </div>
-
-            <div class="section-label" style="margin-left: 0;">Current Members</div>
-            <div id="members-list" style="max-height: 200px; overflow-y: auto; margin-top: 8px;">
-                <!-- Members will be listed here -->
-            </div>
-
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button class="btn btn-secondary" style="flex: 1;" onclick="hideManageWorkspaceModal()">Close</button>
+            <div class="section-label">Members</div>
+            <div id="ws-members-list" style="margin-top: 8px;"></div>
+            <div style="margin-top: 24px;">
+                <button class="btn btn-secondary" style="width: 100%;" onclick="closeModals()">Done</button>
             </div>
         </div>
     </div>
 
-    <div id="create-ws-modal" class="modal-overlay" onclick="if(event.target===this)hideCreateWorkspaceModal()">
-        <div class="modal card glass">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 01-2-2H7a2 2 0 01-2 2v16m14 0h-4m-6 0H5"/></svg>
-                    <h3>Create Workspace</h3>
-                </div>
-                <button class="btn btn-ghost" onclick="hideCreateWorkspaceModal()">✕</button>
+    <!-- Create Workspace -->
+    <div id="create-ws-modal" class="modal-overlay" onclick="if(event.target===this)closeModals()">
+        <div class="modal card">
+            <h3 style="margin-bottom: 20px;">Create Workspace</h3>
+            <div style="margin-bottom: 24px;">
+                <label class="section-label" style="margin:0 0 8px;">Name</label>
+                <input id="new-ws-name" type="text" class="input" placeholder="e.g. Production">
             </div>
-            <div class="form-group">
-                <label class="form-label">Workspace Name</label>
-                <input id="ws-name-input" type="text" class="input" placeholder="Development">
-            </div>
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button class="btn btn-secondary" style="flex: 1;" onclick="hideCreateWorkspaceModal()">Cancel</button>
-                <button class="btn btn-primary" style="flex: 1;" onclick="confirmCreateWorkspace()">Create Workspace</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModals()">Cancel</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="confirmCreateWorkspace()">Create</button>
             </div>
         </div>
     </div>
 
     <div id="context-menu" class="context-menu">
-        <button onclick="contextEdit()">
-            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-            Rename
-        </button>
         <button onclick="contextDelete()" class="delete">
-            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            Delete
+            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Delete Terminal
         </button>
     </div>
 
@@ -476,9 +271,8 @@
         async function loadTerminals() {
             const res = await fetch(`/api/terminals${currentWorkspaceId !== 'all' ? '?workspaceId=' + currentWorkspaceId : ''}`);
             const data = await res.json();
-            if (data.success) {
-                terminals = data.terminals;
-            }
+            if (data.success) terminals = data.terminals;
+            renderList();
         }
 
         async function loadWorkspaces() {
@@ -486,25 +280,109 @@
             const data = await res.json();
             if (data.success) {
                 workspaces = data.workspaces;
+                populateWorkspaceDropdown();
+                populateModalWorkspaceSelect();
             }
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
+        function toggleWorkspaceDropdown() {
+            document.getElementById('ws-dropdown-menu').classList.toggle('show');
+            const handler = (e) => {
+                if (!e.target.closest('#ws-dropdown')) {
+                    document.getElementById('ws-dropdown-menu').classList.remove('show');
+                    document.removeEventListener('click', handler);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', handler), 10);
         }
 
-        function goHome() {
-            activeId = null;
-            document.getElementById('page-title').textContent = 'Dashboard';
-            document.getElementById('main-iframe').src = 'dashboard.html';
-            renderList();
+        function selectWorkspace(id, name) {
+            currentWorkspaceId = id;
+            document.getElementById('selected-ws-name').textContent = name;
+            document.getElementById('ws-dropdown-menu').classList.remove('show');
+            loadTerminals();
+            populateWorkspaceDropdown();
         }
 
-        function getTerminalUrl(token) {
-            if (token.startsWith('http://') || token.startsWith('https://')) {
-                return token;
+        function populateWorkspaceDropdown() {
+            const menu = document.getElementById('ws-dropdown-menu');
+            menu.innerHTML = '';
+
+            const allItem = document.createElement('div');
+            allItem.className = `dropdown-item ${currentWorkspaceId === 'all' ? 'active' : ''}`;
+            allItem.textContent = 'All Workspaces';
+            allItem.onclick = () => selectWorkspace('all', 'All Workspaces');
+            menu.appendChild(allItem);
+
+            workspaces.forEach(ws => {
+                const div = document.createElement('div');
+                div.className = `dropdown-item ${currentWorkspaceId === ws.id ? 'active' : ''}`;
+                div.style.justifyContent = 'space-between';
+                div.innerHTML = `<span>${ws.name}</span>`;
+
+                if (ws.owner_id === currentUser?.id) {
+                    const settingsBtn = document.createElement('button');
+                    settingsBtn.className = 'btn btn-ghost';
+                    settingsBtn.style.padding = '2px 6px';
+                    settingsBtn.innerHTML = '<svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
+                    settingsBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        showWorkspaceSettings(ws.id);
+                    };
+                    div.appendChild(settingsBtn);
+                }
+
+                div.onclick = () => selectWorkspace(ws.id, ws.name);
+                menu.appendChild(div);
+            });
+
+            const newItem = document.createElement('div');
+            newItem.className = 'dropdown-item';
+            newItem.style.borderTop = '1px solid var(--border)';
+            newItem.style.color = 'var(--accent)';
+            newItem.innerHTML = '<svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Create Workspace';
+            newItem.onclick = () => showCreateWorkspaceModal();
+            menu.appendChild(newItem);
+        }
+
+        function populateModalWorkspaceSelect() {
+            const select = document.getElementById('modal-workspace');
+            select.innerHTML = '';
+            workspaces.forEach(ws => {
+                if (ws.owner_id === currentUser?.id) {
+                    const opt = document.createElement('option');
+                    opt.value = ws.id;
+                    opt.textContent = ws.name;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        function renderList() {
+            const container = document.getElementById('terminals-list');
+            container.innerHTML = '';
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+
+            const filtered = terminals.filter(t => t.name.toLowerCase().includes(searchTerm) || t.token.toLowerCase().includes(searchTerm));
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 12px;">No terminals</div>';
+                return;
             }
-            return `https://${token}.trycloudflare.com`;
+
+            filtered.forEach(term => {
+                const div = document.createElement('div');
+                div.className = `terminal-item ${term.id === activeId ? 'active' : ''}`;
+                div.onclick = () => selectTerminal(term.id);
+                div.oncontextmenu = (e) => { e.preventDefault(); showTerminalMenu(term.id, e); };
+                div.innerHTML = `
+                    <div class="terminal-info">
+                        <div class="terminal-name">${term.name}</div>
+                        <div class="terminal-token">${term.token}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function selectTerminal(id) {
@@ -512,300 +390,240 @@
             const term = terminals.find(t => t.id === id);
             if (!term) return;
             document.getElementById('page-title').textContent = term.name;
-
-            const targetUrl = getTerminalUrl(term.token);
+            const targetUrl = term.token.startsWith('http') ? term.token : `https://${term.token}.trycloudflare.com`;
             document.getElementById('main-iframe').src = targetUrl;
-
             renderList();
             if (window.innerWidth < 768) toggleSidebar();
         }
 
-        function renderList() {
-            const container = document.getElementById('terminals-list');
-            container.innerHTML = '';
-
-            const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || '';
-
-            let filtered = terminals.filter(t =>
-                t.name.toLowerCase().includes(searchTerm) ||
-                t.token.toLowerCase().includes(searchTerm)
-            );
-
-            if (currentWorkspaceId !== 'all') {
-                filtered = filtered.filter(t => t.workspaceId === currentWorkspaceId);
-            }
-
-            if (filtered.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 12px;">No terminals here</div>';
-                return;
-            }
-
-            filtered.forEach(term => {
-                const active = term.id === activeId ? 'active' : '';
-                const div = document.createElement('div');
-                div.className = `terminal-item ${active}`;
-                div.onclick = () => selectTerminal(term.id);
-                div.innerHTML = `
-                    <div class="terminal-info">
-                        <div class="terminal-name">${term.name}</div>
-                        <div class="terminal-token">${term.token}</div>
-                    </div>
-                    <div style="display: flex; gap: 4px;">
-                        <button class="btn btn-ghost" style="padding: 4px;" title="Copy Link" onclick="event.stopPropagation(); copyTerminalLink('${term.token}')">
-                            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                        </button>
-                        <button class="btn btn-ghost" style="padding: 4px;" onclick="event.stopPropagation(); showTerminalMenu('${term.id}', event)">
-                            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/></svg>
-                        </button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
+        // Modals
+        function closeModals() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
         }
-
-        function showTerminalMenu(id, event) {
-            currentContextId = id;
-            const menu = document.getElementById('context-menu');
-            menu.style.display = 'block';
-            menu.style.top = event.clientY + 'px';
-            menu.style.left = (event.clientX - 180) + 'px';
-
-            const hide = () => {
-                menu.style.display = 'none';
-                document.removeEventListener('click', hide);
-            };
-            setTimeout(() => document.addEventListener('click', hide), 10);
+        function showAddModal() { document.getElementById('add-modal').classList.add('show'); }
+        function showAccountModal() {
+            document.getElementById('acc-username').value = currentUser.username;
+            document.getElementById('acc-new-pw').value = '';
+            document.getElementById('acc-curr-pw').value = '';
+            document.getElementById('account-modal').classList.add('show');
         }
-
-        function contextEdit() { showRenameModal(currentContextId); }
-        function contextDelete() { showDeleteModal(currentContextId); }
-
-        function showAddModal() {
-            populateWorkspaceSelects();
-            document.getElementById('add-modal').classList.add('show');
-        }
-        function hideAddModal() { document.getElementById('add-modal').classList.remove('show'); }
-
-        async function handleAddTerminal() {
-            const name = document.getElementById('modal-name').value.trim();
-            const token = document.getElementById('modal-token').value.trim();
-            const wsId = document.getElementById('modal-workspace').value;
-            if (!token) return alert('Token is required');
-
-            const res = await fetch('/api/terminals', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: name || 'Terminal', token, workspaceId: wsId })
-            });
-            const data = await res.json();
-            if (!data.success) return alert(data.error);
-
-            await loadTerminals();
-            renderList();
-            hideAddModal();
-            selectTerminal(data.terminal.id);
-        }
-
-        function showRenameModal(id) {
-            const term = terminals.find(t => t.id === id);
-            document.getElementById('rename-input').value = term.name;
-            document.getElementById('rename-modal').classList.add('show');
-        }
-        function hideRenameModal() { document.getElementById('rename-modal').classList.remove('show'); }
-
-        async function confirmRename() {
-            const newName = document.getElementById('rename-input').value.trim();
-            if (!newName) return;
-            // API not implemented for rename yet, but we can do it if needed.
-            // For now let's just use the current ContextId
-            alert('Rename not implemented in API yet');
-            hideRenameModal();
-        }
-
-        function showDeleteModal(id) {
-            document.getElementById('delete-modal').classList.add('show');
-        }
-        function hideDeleteModal() { document.getElementById('delete-modal').classList.remove('show'); }
-
-        async function confirmDelete() {
-            const res = await fetch(`/api/terminals/${currentContextId}`, { method: 'DELETE' });
-            const data = await res.json();
-            if (!data.success) return alert(data.error);
-
-            await loadTerminals();
-            renderList();
-            if (activeId === currentContextId) goHome();
-            hideDeleteModal();
-        }
-
         function showCreateWorkspaceModal() { document.getElementById('create-ws-modal').classList.add('show'); }
-        function hideCreateWorkspaceModal() { document.getElementById('create-ws-modal').classList.remove('show'); }
 
-        async function confirmCreateWorkspace() {
-            const name = document.getElementById('ws-name-input').value.trim();
-            if (!name) return;
-            const res = await fetch('/api/workspaces', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
+        async function showWorkspaceSettings(id) {
+            const ws = workspaces.find(w => w.id === id);
+            currentWorkspaceId = id; // temporarily set for context
+            document.getElementById('ws-settings-name').value = ws.name;
+            document.getElementById('ws-settings-modal').classList.add('show');
+            loadWorkspaceMembers(id);
+            renderPermissionTerminals('new-member-term-list');
+        }
+
+        async function loadWorkspaceMembers(wsId) {
+            const res = await fetch(`/api/workspaces/${wsId}/members`);
             const data = await res.json();
-            if (!data.success) return alert(data.error);
-
-            await loadWorkspaces();
-            populateWorkspaceDropdown();
-            hideCreateWorkspaceModal();
-        }
-
-        function populateWorkspaceDropdown() {
-            const select = document.getElementById('workspace-dropdown');
-            select.innerHTML = '<option value="all">All Workspaces</option>';
-            workspaces.forEach(ws => {
-                const opt = document.createElement('option');
-                opt.value = ws.id;
-                opt.textContent = ws.name;
-                select.appendChild(opt);
-            });
-            select.value = currentWorkspaceId;
-
-            // Only show manage button if a specific workspace is selected and user is owner
-            const manageBtn = document.getElementById('manage-ws-btn');
-            if (currentWorkspaceId !== 'all') {
-                const ws = workspaces.find(w => w.id === currentWorkspaceId);
-                if (ws && ws.owner_id === currentUser.id) {
-                    manageBtn.style.display = 'flex';
-                } else {
-                    manageBtn.style.display = 'none';
-                }
-            } else {
-                manageBtn.style.display = 'none';
-            }
-        }
-
-        function populateWorkspaceSelects() {
-            const select = document.getElementById('modal-workspace');
-            select.innerHTML = '';
-            workspaces.forEach(ws => {
-                const opt = document.createElement('option');
-                opt.value = ws.id;
-                opt.textContent = ws.name;
-                select.appendChild(opt);
-            });
-        }
-
-        async function loadUser() {
-            try {
-                const res = await fetch('/api/me');
-                if (!res.ok) throw new Error();
-                const data = await res.json();
-                currentUser = data.user;
-                document.getElementById('username-display').textContent = currentUser.username;
-                document.getElementById('credits-badge').textContent = `${currentUser.credits} CREDITS`;
-            } catch (e) {
-                window.location.href = '/auth.html';
-            }
-        }
-
-        async function showManageWorkspaceModal() {
-            if (currentWorkspaceId === 'all') return;
-            await loadMembers();
-            document.getElementById('manage-ws-modal').classList.add('show');
-        }
-
-        function hideManageWorkspaceModal() {
-            document.getElementById('manage-ws-modal').classList.remove('show');
-        }
-
-        async function loadMembers() {
-            const res = await fetch(`/api/workspaces/${currentWorkspaceId}/members`);
-            const data = await res.json();
-            if (data.success) {
-                renderMembers(data.members);
-            }
-        }
-
-        function renderMembers(members) {
-            const list = document.getElementById('members-list');
+            const list = document.getElementById('ws-members-list');
             list.innerHTML = '';
-            members.forEach(member => {
+
+            data.members.forEach(member => {
+                if (member.id === currentUser.id) return;
                 const div = document.createElement('div');
                 div.className = 'nav-item';
-                div.style.justifyContent = 'space-between';
+                div.style.background = 'rgba(255,255,255,0.02)';
+                div.style.marginBottom = '8px';
+                div.style.flexDirection = 'column';
+                div.style.alignItems = 'stretch';
                 div.innerHTML = `
-                    <span>${member.username} (${member.role})</span>
-                    ${member.username !== currentUser.username ? `
-                    <button class="btn btn-ghost" style="padding:4px; color:var(--danger);" onclick="removeMember(${member.id})">
-                        <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    </button>` : ''}
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-weight:600;">${member.username}</span>
+                        <button class="btn btn-ghost" style="color:var(--danger); padding:2px 8px;" onclick="handleRemoveMember(${member.id})">Remove</button>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <select class="input" style="background:#000; font-size:12px;" onchange="updateMemberAccess(${member.id}, this.value)">
+                            <option value="all" ${member.terminal_access_type === 'all' ? 'selected' : ''}>Full Access</option>
+                            <option value="selected" ${member.terminal_access_type === 'selected' ? 'selected' : ''}>Restricted</option>
+                        </select>
+                    </div>
+                    <div id="member-terms-${member.id}" class="permission-grid" style="display: ${member.terminal_access_type === 'selected' ? 'grid' : 'none'};">
+                        ${renderPermissionTerminalsHTML(member.id, member.terminal_ids || [])}
+                    </div>
                 `;
                 list.appendChild(div);
             });
         }
 
+        function renderPermissionTerminalsHTML(memberId, selectedIds) {
+            return terminals.map(t => `
+                <label class="permission-item">
+                    <input type="checkbox" value="${t.id}" ${selectedIds.includes(t.id) ? 'checked' : ''} onchange="updateMemberTerminalAccess(${memberId})">
+                    ${t.name}
+                </label>
+            `).join('');
+        }
+
+        function renderPermissionTerminals(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = terminals.map(t => `
+                <label class="permission-item">
+                    <input type="checkbox" value="${t.id}">
+                    ${t.name}
+                </label>
+            `).join('');
+        }
+
+        function toggleMemberTermList(type) {
+            const val = document.getElementById(`${type}-member-access`).value;
+            document.getElementById(`${type}-member-term-list`).style.display = val === 'selected' ? 'grid' : 'none';
+        }
+
+        // API Handlers
+        async function handleUpdateAccount() {
+            const username = document.getElementById('acc-username').value;
+            const newPassword = document.getElementById('acc-new-pw').value;
+            const currentPassword = document.getElementById('acc-curr-pw').value;
+
+            const res = await fetch('/api/account/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username, newPassword, currentPassword })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Account updated');
+                location.reload();
+            } else alert(data.error);
+        }
+
+        async function handleAddTerminal() {
+            const name = document.getElementById('modal-name').value;
+            const token = document.getElementById('modal-token').value;
+            const workspaceId = document.getElementById('modal-workspace').value;
+            const res = await fetch('/api/terminals', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, token, workspaceId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeModals();
+                loadTerminals();
+            } else alert(data.error);
+        }
+
+        async function confirmCreateWorkspace() {
+            const name = document.getElementById('new-ws-name').value;
+            const res = await fetch('/api/workspaces', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name })
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeModals();
+                loadWorkspaces();
+            }
+        }
+
+        async function handleRenameWorkspace() {
+            const name = document.getElementById('ws-settings-name').value;
+            const res = await fetch(`/api/workspaces/${currentWorkspaceId}`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name })
+            });
+            if ((await res.json()).success) loadWorkspaces();
+        }
+
+        async function handleDeleteWorkspace() {
+            if (!confirm('Delete this workspace?')) return;
+            const res = await fetch(`/api/workspaces/${currentWorkspaceId}`, { method: 'DELETE' });
+            if ((await res.json()).success) {
+                closeModals();
+                selectWorkspace('all', 'All Workspaces');
+                loadWorkspaces();
+            }
+        }
+
         async function handleAddMember() {
-            const username = document.getElementById('subuser-username').value.trim();
-            if (!username) return;
+            const username = document.getElementById('new-member-username').value;
+            const type = document.getElementById('new-member-access').value;
+            const selected = Array.from(document.querySelectorAll('#new-member-term-list input:checked')).map(i => i.value);
 
             const res = await fetch(`/api/workspaces/${currentWorkspaceId}/members`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, role: 'member' })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username, terminal_access_type: type, terminal_ids: selected })
             });
             const data = await res.json();
-            if (!data.success) return alert(data.error);
-
-            document.getElementById('subuser-username').value = '';
-            await loadMembers();
+            if (data.success) {
+                document.getElementById('new-member-username').value = '';
+                loadWorkspaceMembers(currentWorkspaceId);
+            } else alert(data.error);
         }
 
-        async function removeMember(userId) {
-            if (!confirm('Remove this member?')) return;
-            const res = await fetch(`/api/workspaces/${currentWorkspaceId}/members/${userId}`, {
-                method: 'DELETE'
+        async function updateMemberAccess(userId, type) {
+            document.getElementById(`member-terms-${userId}`).style.display = type === 'selected' ? 'grid' : 'none';
+            saveMemberPerms(userId);
+        }
+
+        async function updateMemberTerminalAccess(userId) {
+            saveMemberPerms(userId);
+        }
+
+        async function saveMemberPerms(userId) {
+            const type = document.querySelector(`#member-terms-${userId}`).previousElementSibling.querySelector('select').value;
+            const selected = Array.from(document.querySelectorAll(`#member-terms-${userId} input:checked`)).map(i => i.value);
+            await fetch(`/api/workspaces/${currentWorkspaceId}/members/${userId}`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ terminal_access_type: type, terminal_ids: selected })
             });
-            const data = await res.json();
-            if (!data.success) return alert(data.error);
-            await loadMembers();
         }
 
-        function copyTerminalLink(token) {
-            const url = getTerminalUrl(token);
-            navigator.clipboard.writeText(url).then(() => {
-                alert('Connection link copied to clipboard!');
-            });
-        }
-
-        async function handleLogout() {
-            if (confirm('Logout from KS SSH?')) {
-                await fetch('/api/logout', { method: 'POST' });
-                window.location.href = '/auth.html';
+        async function handleRemoveMember(userId) {
+            if (confirm('Remove member?')) {
+                await fetch(`/api/workspaces/${currentWorkspaceId}/members/${userId}`, { method: 'DELETE' });
+                loadWorkspaceMembers(currentWorkspaceId);
             }
         }
 
-        document.getElementById('workspace-dropdown').onchange = (e) => {
-            currentWorkspaceId = e.target.value;
-            renderList();
-        };
+        function showTerminalMenu(id, e) {
+            currentContextId = id;
+            const menu = document.getElementById('context-menu');
+            menu.style.display = 'block';
+            menu.style.top = e.clientY + 'px';
+            menu.style.left = e.clientX + 'px';
+            const h = () => { menu.style.display = 'none'; document.removeEventListener('click', h); };
+            setTimeout(() => document.addEventListener('click', h), 10);
+        }
+
+        async function contextDelete() {
+            if (confirm('Delete terminal?')) {
+                await fetch(`/api/terminals/${currentContextId}`, { method: 'DELETE' });
+                loadTerminals();
+            }
+        }
+
+        function goHome() {
+            document.getElementById('page-title').textContent = 'Dashboard';
+            document.getElementById('main-iframe').src = 'dashboard.html';
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        async function handleLogout() {
+            await fetch('/api/logout', { method: 'POST' });
+            location.href = '/auth.html';
+        }
 
         window.onload = async () => {
-            await loadUser();
+            const userRes = await fetch('/api/me');
+            if (!userRes.ok) location.href = '/auth.html';
+            const userData = await userRes.json();
+            currentUser = userData.user;
+            document.getElementById('credits-badge').textContent = `${currentUser.credits} CREDITS`;
+
             await loadWorkspaces();
-
-            // If no workspaces, create one
-            if (workspaces.length === 0) {
-                const res = await fetch('/api/workspaces', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: 'Default Workspace' })
-                });
-                await loadWorkspaces();
-            }
-
-            populateWorkspaceDropdown();
             await loadTerminals();
-            renderList();
-
-            document.getElementById('search-input').addEventListener('input', renderList);
+            document.getElementById('search-input').oninput = renderList;
         };
     </script>
 </body>

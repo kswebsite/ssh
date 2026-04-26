@@ -237,6 +237,39 @@ export default {
       });
     }
 
+    // UPDATE ACCOUNT
+    if (url.pathname === "/api/account/update" && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const { username, newPassword, currentPassword } = (await request.json()) as any;
+
+      // Verify current password
+      const userRow = await env.DB.prepare("SELECT password_hash FROM users WHERE id = ?")
+        .bind(user.id).first();
+      if (!userRow || !(await verifyPassword(currentPassword, userRow.password_hash as string))) {
+        return jsonResponse({ error: "Incorrect current password" }, 401);
+      }
+
+      if (username) {
+        try {
+          await env.DB.prepare("UPDATE users SET username = ? WHERE id = ?")
+            .bind(username.toLowerCase(), user.id).run();
+        } catch (err: any) {
+          if (err.message?.includes("UNIQUE")) return jsonResponse({ error: "Username already taken" }, 400);
+          throw err;
+        }
+      }
+
+      if (newPassword) {
+        const hash = await hashPassword(newPassword);
+        await env.DB.prepare("UPDATE users SET password_hash = ? WHERE id = ?")
+          .bind(hash, user.id).run();
+      }
+
+      return jsonResponse({ success: true });
+    }
+
     // LOGOUT
     if (url.pathname === "/api/logout" && request.method === "POST") {
       const cookieHeader = request.headers.get("Cookie") || "";
@@ -291,7 +324,36 @@ export default {
       return jsonResponse({ success: true, workspace: { id, name } });
     }
 
-    // TERMINALS - GET
+    // WORKSPACES - PATCH (Rename)
+    if (url.pathname.startsWith("/api/workspaces/") && request.method === "PATCH") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const id = url.pathname.split("/").pop();
+      const { name } = (await request.json()) as any;
+      if (!name) return jsonResponse({ error: "Name is required" }, 400);
+
+      const result = await env.DB.prepare("UPDATE workspaces SET name = ? WHERE id = ? AND owner_id = ?")
+        .bind(name, id, user.id).run();
+
+      if (result.meta.changes === 0) return jsonResponse({ error: "Unauthorized or not found" }, 403);
+      return jsonResponse({ success: true });
+    }
+
+    // WORKSPACES - DELETE
+    if (url.pathname.startsWith("/api/workspaces/") && request.method === "DELETE") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const id = url.pathname.split("/").pop();
+      const result = await env.DB.prepare("DELETE FROM workspaces WHERE id = ? AND owner_id = ?")
+        .bind(id, user.id).run();
+
+      if (result.meta.changes === 0) return jsonResponse({ error: "Unauthorized or not found" }, 403);
+      return jsonResponse({ success: true });
+    }
+
+    // TERMINALS - GET (With access enforcement)
     if (url.pathname === "/api/terminals" && request.method === "GET") {
       const user = await getSessionUser(request, env);
       if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
@@ -301,10 +363,15 @@ export default {
       let query = `
         SELECT t.* FROM terminals t
         JOIN workspaces w ON t.workspace_id = w.id
-        LEFT JOIN workspace_members wm ON w.id = wm.workspace_id
+        LEFT JOIN workspace_members wm ON w.id = wm.workspace_id AND wm.user_id = ?
         WHERE (w.owner_id = ? OR wm.user_id = ?)
+        AND (
+          w.owner_id = ?
+          OR wm.terminal_access_type = 'all'
+          OR t.id IN (SELECT terminal_id FROM member_terminal_access WHERE user_id = ? AND workspace_id = t.workspace_id)
+        )
       `;
-      let params: any[] = [user.id, user.id];
+      let params: any[] = [user.id, user.id, user.id, user.id, user.id];
 
       if (workspaceId) {
         query += " AND t.workspace_id = ?";
@@ -376,12 +443,21 @@ export default {
       if (!ws) return jsonResponse({ error: "Unauthorized" }, 403);
 
       const members = await env.DB.prepare(
-        `SELECT u.id, u.username, wm.role FROM users u
+        `SELECT u.id, u.username, wm.role, wm.terminal_access_type FROM users u
          JOIN workspace_members wm ON u.id = wm.user_id
          WHERE wm.workspace_id = ?`
       ).bind(workspaceId).all();
 
-      return jsonResponse({ success: true, members: members.results });
+      const results = await Promise.all(members.results.map(async (m: any) => {
+        if (m.terminal_access_type === 'selected') {
+          const terminals = await env.DB.prepare("SELECT terminal_id FROM member_terminal_access WHERE workspace_id = ? AND user_id = ?")
+            .bind(workspaceId, m.id).all();
+          m.terminal_ids = terminals.results.map((t: any) => t.terminal_id);
+        }
+        return m;
+      }));
+
+      return jsonResponse({ success: true, members: results });
     }
 
     // MEMBERS - POST (Add by username)
@@ -390,7 +466,7 @@ export default {
       if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
 
       const workspaceId = url.pathname.split("/")[3];
-      const { username, role } = (await request.json()) as any;
+      const { username, role, terminal_access_type, terminal_ids } = (await request.json()) as any;
 
       // Verify ownership
       const ws = await env.DB.prepare(
@@ -400,22 +476,67 @@ export default {
       if (!ws) return jsonResponse({ error: "Unauthorized" }, 403);
 
       // Find user to add
-      const targetUser = await env.DB.prepare(
+      const targetUser = (await env.DB.prepare(
         "SELECT id FROM users WHERE username = ?"
-      ).bind(username.toLowerCase()).first();
+      ).bind(username.toLowerCase()).first()) as any;
 
       if (!targetUser) return jsonResponse({ error: "User not found" }, 404);
 
-      try {
-        await env.DB.prepare(
-          "INSERT INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)"
-        ).bind(workspaceId, targetUser.id, role || 'member').run();
+      const stmts = [
+        env.DB.prepare(
+          "INSERT INTO workspace_members (workspace_id, user_id, role, terminal_access_type) VALUES (?, ?, ?, ?)"
+        ).bind(workspaceId, targetUser.id, role || 'member', terminal_access_type || 'all')
+      ];
 
+      if (terminal_access_type === 'selected' && Array.isArray(terminal_ids)) {
+        terminal_ids.forEach(tid => {
+          stmts.push(env.DB.prepare("INSERT INTO member_terminal_access (workspace_id, user_id, terminal_id) VALUES (?, ?, ?)")
+            .bind(workspaceId, targetUser.id, tid));
+        });
+      }
+
+      try {
+        await env.DB.batch(stmts);
         return jsonResponse({ success: true });
       } catch (e: any) {
         if (e.message?.includes("UNIQUE")) return jsonResponse({ error: "User already a member" }, 400);
         throw e;
       }
+    }
+
+    // MEMBERS - PATCH (Update permissions)
+    if (url.pathname.startsWith("/api/workspaces/") && url.pathname.includes("/members/") && request.method === "PATCH") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const parts = url.pathname.split("/");
+      const workspaceId = parts[3];
+      const targetUserId = parts[5];
+      const { terminal_access_type, terminal_ids } = (await request.json()) as any;
+
+      // Verify ownership
+      const ws = await env.DB.prepare(
+        "SELECT id FROM workspaces WHERE id = ? AND owner_id = ?"
+      ).bind(workspaceId, user.id).first();
+
+      if (!ws) return jsonResponse({ error: "Unauthorized" }, 403);
+
+      const stmts = [
+        env.DB.prepare("UPDATE workspace_members SET terminal_access_type = ? WHERE workspace_id = ? AND user_id = ?")
+          .bind(terminal_access_type, workspaceId, targetUserId),
+        env.DB.prepare("DELETE FROM member_terminal_access WHERE workspace_id = ? AND user_id = ?")
+          .bind(workspaceId, targetUserId)
+      ];
+
+      if (terminal_access_type === 'selected' && Array.isArray(terminal_ids)) {
+        terminal_ids.forEach(tid => {
+          stmts.push(env.DB.prepare("INSERT INTO member_terminal_access (workspace_id, user_id, terminal_id) VALUES (?, ?, ?)")
+            .bind(workspaceId, targetUserId, tid));
+        });
+      }
+
+      await env.DB.batch(stmts);
+      return jsonResponse({ success: true });
     }
 
     // MEMBERS - DELETE
