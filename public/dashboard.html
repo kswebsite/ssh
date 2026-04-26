@@ -98,29 +98,55 @@
     </div>
 
     <div style="margin-top: 40px;">
-        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 20px;">Quick Access</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 18px; font-weight: 600;">All Terminals</h2>
+            <input type="text" id="dashboard-search" class="input" placeholder="Search..." style="max-width: 200px; padding: 6px 12px; font-size: 13px;">
+        </div>
         <div id="terminals-list"></div>
     </div>
 
     <script>
+        let allTerminals = [];
+
+        function getTerminalUrl(token) {
+            if (token.startsWith('http://') || token.startsWith('https://')) {
+                return token;
+            }
+            return `https://${token}.trycloudflare.com`;
+        }
+
+        async function fetchTerminals() {
+            const res = await fetch('/api/terminals');
+            const data = await res.json();
+            if (data.success) {
+                allTerminals = data.terminals;
+                renderTerminals();
+            }
+        }
+
         function renderTerminals() {
-            const terminals = JSON.parse(localStorage.getItem('ks_ssh_terminals') || '[]');
             const container = document.getElementById('terminals-list');
             const statTerminals = document.getElementById('stat-terminals');
+            const searchTerm = document.getElementById('dashboard-search').value.toLowerCase();
 
-            statTerminals.textContent = terminals.length;
+            statTerminals.textContent = allTerminals.length;
             container.innerHTML = '';
 
-            if (terminals.length === 0) {
+            const filtered = allTerminals.filter(t =>
+                t.name.toLowerCase().includes(searchTerm) ||
+                t.token.toLowerCase().includes(searchTerm)
+            );
+
+            if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-                        <p>No terminals found. Add one from the sidebar to get started.</p>
+                        <p>${searchTerm ? 'No terminals match your search.' : 'No terminals found. Add one from the sidebar to get started.'}</p>
                     </div>`;
                 return;
             }
 
-            terminals.slice(0, 5).forEach(term => {
+            filtered.forEach(term => {
                 const row = document.createElement('div');
                 row.className = 'terminal-row';
                 row.innerHTML = `
@@ -134,6 +160,9 @@
                         </div>
                     </div>
                     <div class="term-actions">
+                        <button class="btn btn-secondary" onclick="copyLink('${term.token}')" title="Copy Link">
+                            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        </button>
                         <button class="btn btn-primary" onclick="connect('${term.id}')">
                             Connect
                             <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -144,14 +173,20 @@
             });
         }
 
+        function copyLink(token) {
+            const url = getTerminalUrl(token);
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Copied connection link!');
+            });
+        }
+
         function connect(id) {
             // Communicate with parent window
             window.parent.selectTerminal(id);
         }
 
-        window.onload = renderTerminals;
-        // Watch for localstorage changes
-        window.addEventListener('storage', renderTerminals);
+        window.onload = fetchTerminals;
+        document.getElementById('dashboard-search').oninput = renderTerminals;
     </script>
 </body>
 </html>
