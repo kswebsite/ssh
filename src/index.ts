@@ -86,10 +86,10 @@ async function claimAFKEarnings(db: D1Database, userId: number) {
 
   const newCredits = user.credits + earned;
 
-  await db
-    .prepare("UPDATE users SET credits = ?, last_active = CURRENT_TIMESTAMP WHERE id = ?")
-    .bind(newCredits, userId)
-    .run();
+  await db.batch([
+    db.prepare("UPDATE users SET credits = ?, last_active = CURRENT_TIMESTAMP WHERE id = ?").bind(newCredits, userId),
+    db.prepare("INSERT INTO earnings_logs (user_id, earned, type) VALUES (?, ?, 'afk')").bind(userId, earned)
+  ]);
 
   return { earned, newCredits };
 }
@@ -117,7 +117,7 @@ async function getSessionUser(request: Request, env: Env) {
         email: result.email as string,
         credits: result.credits as number,
         created_at: result.created_at as string,
-        is_admin: Boolean(result.is_admin),
+        is_admin: result.is_admin === 1,
       }
     : null;
 }
@@ -338,7 +338,7 @@ export default {
           `INSERT OR REPLACE INTO user_stats (user_id, daily_video_earnings, last_video_claim, last_reset)
            VALUES (?, ?, CURRENT_TIMESTAMP, ?)`
         ).bind(user.id, currentDaily + reward, isNewDay ? now.toISOString() : stats.last_reset),
-        env.DB.prepare("INSERT INTO video_logs (user_id, earned) VALUES (?, ?)").bind(user.id, reward)
+        env.DB.prepare("INSERT INTO earnings_logs (user_id, earned, type) VALUES (?, ?, 'video')").bind(user.id, reward)
       ]);
 
       return jsonResponse({ success: true, earned: reward });
@@ -349,19 +349,23 @@ export default {
       const user = await getSessionUser(request, env);
       if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
 
-      const videoLogs = await env.DB.prepare(
-        "SELECT 'Video Reward' as type, earned as amount, created_at FROM video_logs WHERE user_id = ? ORDER BY created_at DESC"
+      const earningLogs = await env.DB.prepare(
+        "SELECT type, earned as amount, created_at FROM earnings_logs WHERE user_id = ? ORDER BY created_at DESC"
       ).bind(user.id).all();
 
       const couponLogs = await env.DB.prepare(
-        `SELECT 'Coupon: ' || c.code as type, c.reward as amount, cu.used_at as created_at
+        `SELECT 'coupon' as type, c.reward as amount, cu.used_at as created_at, c.code
          FROM coupon_usage cu
          JOIN coupons c ON cu.coupon_id = c.id
          WHERE cu.user_id = ?
          ORDER BY cu.used_at DESC`
       ).bind(user.id).all();
 
-      const history = [...videoLogs.results, ...couponLogs.results].sort(
+      const history = [...earningLogs.results, ...couponLogs.results.map((c: any) => ({
+          type: `Coupon: ${c.code}`,
+          amount: c.amount,
+          created_at: c.created_at
+      }))].sort(
         (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
