@@ -344,6 +344,30 @@ export default {
       return jsonResponse({ success: true, earned: reward });
     }
 
+    // USER: BILLING HISTORY
+    if (url.pathname === "/api/billing/history" && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const videoLogs = await env.DB.prepare(
+        "SELECT 'Video Reward' as type, earned as amount, created_at FROM video_logs WHERE user_id = ? ORDER BY created_at DESC"
+      ).bind(user.id).all();
+
+      const couponLogs = await env.DB.prepare(
+        `SELECT 'Coupon: ' || c.code as type, c.reward as amount, cu.used_at as created_at
+         FROM coupon_usage cu
+         JOIN coupons c ON cu.coupon_id = c.id
+         WHERE cu.user_id = ?
+         ORDER BY cu.used_at DESC`
+      ).bind(user.id).all();
+
+      const history = [...videoLogs.results, ...couponLogs.results].sort(
+        (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      return jsonResponse({ success: true, history });
+    }
+
     // UPDATE ACCOUNT
     if (url.pathname === "/api/account/update" && request.method === "POST") {
       const user = await getSessionUser(request, env);
