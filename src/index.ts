@@ -93,7 +93,7 @@ async function getSessionUser(request: Request, env: Env) {
   if (!sessionId) return null;
 
   const result = await env.DB.prepare(
-    `SELECT u.id, u.username, u.email, u.credits 
+    `SELECT u.id, u.username, u.email, u.credits, u.created_at
      FROM sessions s 
      JOIN users u ON s.user_id = u.id 
      WHERE s.id = ? AND s.expires_at > CURRENT_TIMESTAMP`
@@ -107,6 +107,7 @@ async function getSessionUser(request: Request, env: Env) {
         username: result.username as string,
         email: result.email as string,
         credits: result.credits as number,
+        created_at: result.created_at as string,
       }
     : null;
 }
@@ -148,6 +149,10 @@ export default {
 
     if (url.pathname === "/dashboard.html" || url.pathname === "/dashboard") {
       return env.ASSETS.fetch(new URL("/dashboard.html", request.url));
+    }
+
+    if (url.pathname === "/account.html" || url.pathname === "/account") {
+      return env.ASSETS.fetch(new URL("/account.html", request.url));
     }
 
     // ==================== API ENDPOINTS ====================
@@ -233,6 +238,7 @@ export default {
           email: user.email,
           credits: newCredits,
           earned,
+          created_at: user.created_at,
         },
       });
     }

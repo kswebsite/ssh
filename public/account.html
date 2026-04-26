@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings</title>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+    <style>
+        body { padding: 32px; background: #000; color: #fff; }
+        .settings-container { max-width: 800px; }
+        .settings-section { margin-bottom: 48px; }
+        .settings-header { margin-bottom: 24px; border-bottom: 1px solid #1e293b; padding-bottom: 12px; }
+        .settings-header h2 { font-size: 18px; font-weight: 700; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+
+        .info-card { background: #0a0a0a; border: 1px solid #1e293b; padding: 20px; border-radius: 8px; }
+        .info-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .info-value { font-size: 16px; font-weight: 600; }
+
+        .form-group { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 32px; letter-spacing: -0.02em;">Account Settings</h1>
+
+        <!-- Profile Overview -->
+        <div class="settings-section">
+            <div class="settings-header"><h2>Overview</h2></div>
+            <div class="grid">
+                <div class="info-card">
+                    <div class="info-label">Current Balance</div>
+                    <div class="info-value" id="disp-credits">0 CREDITS</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Member Since</div>
+                    <div class="info-value" id="disp-joined">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Management -->
+        <div class="settings-section">
+            <div class="settings-header"><h2>Profile</h2></div>
+            <div style="max-width: 400px;">
+                <div class="form-group">
+                    <label class="section-label" style="margin:0 0 8px;">Username</label>
+                    <input id="acc-username" type="text" class="input">
+                </div>
+                <div class="form-group">
+                    <label class="section-label" style="margin:0 0 8px;">Email Address</label>
+                    <input id="acc-email" type="text" class="input" disabled style="opacity: 0.5;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div class="settings-section">
+            <div class="settings-header"><h2>Security & Password</h2></div>
+            <div class="grid">
+                <div style="max-width: 400px;">
+                    <div class="form-group">
+                        <label class="section-label" style="margin:0 0 8px;">New Password</label>
+                        <input id="acc-new-pw" type="password" class="input" placeholder="Leave blank to keep current">
+                    </div>
+                    <div class="form-group">
+                        <label class="section-label" style="margin:0 0 8px;">Current Password</label>
+                        <input id="acc-curr-pw" type="password" class="input" placeholder="Required for changes">
+                    </div>
+                    <button class="btn btn-primary" onclick="handleUpdate()" style="margin-top: 8px;">Update Security</button>
+                </div>
+                <div class="info-card">
+                    <h3 style="font-size:14px; margin-bottom:12px;">Security Recommendations</h3>
+                    <ul style="font-size:12px; color:var(--text-secondary); padding-left:16px;">
+                        <li style="margin-bottom:8px;">Use a password with at least 12 characters.</li>
+                        <li style="margin-bottom:8px;">Mix uppercase, lowercase, and symbols.</li>
+                        <li>Change your password every 90 days.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Statistics -->
+        <div class="settings-section">
+            <div class="settings-header"><h2>System Usage</h2></div>
+            <div class="grid">
+                <div class="info-card">
+                    <div class="info-label">Active Workspaces</div>
+                    <div class="info-value" id="disp-ws-count">0</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Connected Terminals</div>
+                    <div class="info-value" id="disp-term-count">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadProfile() {
+            const res = await fetch('/api/me');
+            const data = await res.json();
+            if (data.success) {
+                const u = data.user;
+                document.getElementById('disp-credits').textContent = `${u.credits} CREDITS`;
+                document.getElementById('disp-joined').textContent = new Date(u.created_at).toLocaleDateString();
+                document.getElementById('acc-username').value = u.username;
+                document.getElementById('acc-email').value = u.email;
+            }
+
+            // Load counts
+            const wsRes = await fetch('/api/workspaces');
+            const wsData = await wsRes.json();
+            if (wsData.success) document.getElementById('disp-ws-count').textContent = wsData.workspaces.length;
+
+            const termRes = await fetch('/api/terminals');
+            const termData = await termRes.json();
+            if (termData.success) document.getElementById('disp-term-count').textContent = termData.terminals.length;
+        }
+
+        async function handleUpdate() {
+            const username = document.getElementById('acc-username').value;
+            const newPassword = document.getElementById('acc-new-pw').value;
+            const currentPassword = document.getElementById('acc-curr-pw').value;
+
+            if (!currentPassword) return alert('Current password is required');
+
+            const res = await fetch('/api/account/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username, newPassword, currentPassword })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Account updated successfully');
+                location.reload();
+                // Update parent shell if needed
+                if (window.parent && window.parent.refreshUser) {
+                    window.parent.refreshUser();
+                }
+            } else {
+                alert(data.error);
+            }
+        }
+
+        window.onload = loadProfile;
+    </script>
+</body>
+</html>
