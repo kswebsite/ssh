@@ -130,23 +130,27 @@ export default {
     const url = new URL(request.url);
 
     // ==================== SERVE STATIC FILES FROM public/ FOLDER ====================
-    if (url.pathname === "/" || url.pathname === "/auth.html") {
-      return env.ASSETS.fetch(new URL("/auth.html", request.url));
-    }
-
     if (url.pathname === "/") {
-      return env.ASSETS.fetch(new URL("/", request.url));
+      const user = await getSessionUser(request, env);
+      if (!user) {
+        return Response.redirect(`${url.origin}/auth.html`, 302);
+      }
+      return env.ASSETS.fetch(new URL("/index.html", request.url));
     }
 
-    if (url.pathname === "/auth.js") {
-      return env.ASSETS.fetch(new URL("/auth.js", request.url));
+    if (url.pathname === "/auth.html") {
+      const user = await getSessionUser(request, env);
+      if (user) {
+        return Response.redirect(`${url.origin}/`, 302);
+      }
+      return env.ASSETS.fetch(request);
     }
 
     // ==================== API ENDPOINTS ====================
 
     // REGISTER
     if (url.pathname === "/api/register" && request.method === "POST") {
-      const { username, email, password, confirmPassword } = await request.json();
+      const { username, email, password, confirmPassword } = (await request.json()) as any;
 
       if (!username || !email || !password || password !== confirmPassword) {
         return jsonResponse({ error: "All fields required and passwords must match" }, 400);
@@ -171,7 +175,7 @@ export default {
 
     // LOGIN
     if (url.pathname === "/api/login" && request.method === "POST") {
-      const { identifier, password } = await request.json();
+      const { identifier, password } = (await request.json()) as any;
       if (!identifier || !password) {
         return jsonResponse({ error: "Identifier and password required" }, 400);
       }
@@ -247,7 +251,12 @@ export default {
       return response;
     }
 
-    // Fallback
+    // Fallback: serve from assets
+    const response = await env.ASSETS.fetch(request);
+    if (response.status !== 404) {
+      return response;
+    }
+
     return new Response("Not found", { status: 404 });
   },
 };

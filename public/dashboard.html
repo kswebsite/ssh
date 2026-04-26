@@ -4,624 +4,154 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-        
-        :root {
-            --primary-blue: #3b82f6;
-            --bg-dark: #020617;
-            --panel-bg: rgba(15, 23, 42, 0.95);
+        body {
+            padding: 24px;
+            background: transparent;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body, html {
-            height: 100dvh;
-            width: 100%;
-            overflow: hidden;
-            background: var(--bg-dark);
-            font-family: 'Inter', sans-serif;
-            color: white;
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
         }
 
-        /* Minimal Top Bar (no credits) */
-        .top-bar {
-            height: 56px;
-            background: #0f172a;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-            padding: 0 16px;
+        .stat-card {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
+            gap: 16px;
         }
 
-        @media (min-width: 768px) {
-            .top-bar { padding: 0 24px; height: 64px; }
-        }
-
-        .workspaces-section {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-            max-width: 420px;
-        }
-
-        .form-input {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 6px;
-            padding: 9px 12px;
-            color: white;
-            font-size: 13px;
-            outline: none;
-        }
-
-        .form-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-
-        .action-btn-small {
-            padding: 9px 14px;
-            background: rgba(59, 130, 246, 0.15);
-            border: 1px solid rgba(59, 130, 246, 0.4);
-            border-radius: 6px;
-            color: #60a5fa;
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            min-width: 42px;
+            color: var(--accent);
         }
 
-        .btn-primary {
-            background: #3b82f6;
-            border-radius: 6px;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            font-size: 13px;
-        }
+        .stat-icon svg { width: 24px; height: 24px; }
 
-        .btn-primary:hover { background: #2563eb; }
+        .stat-info h3 { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-info p { font-size: 24px; font-weight: 700; color: var(--text-primary); }
 
-        /* Content */
-        .content {
-            padding: 16px 16px 24px;
-            overflow-y: auto;
-            height: calc(100dvh - 56px);
-        }
-
-        @media (min-width: 768px) {
-            .content { padding: 24px; height: calc(100dvh - 64px); }
-        }
-
-        .section-card {
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
-        }
-
-        .section-header {
-            font-size: 17px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #e2e8f0;
-        }
-
-        /* Terminal List - ONE LINE per terminal */
         .terminal-row {
             display: flex;
             align-items: center;
-            background: rgba(15, 23, 42, 0.85);
-            border: 1px solid rgba(59, 130, 246, 0.15);
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 8px;
+            justify-content: space-between;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
             transition: all 0.2s;
         }
 
         .terminal-row:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 15px -4px rgba(59, 130, 246, 0.3);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .terminal-name {
-            flex: 1;
-            font-weight: 500;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .term-meta { display: flex; align-items: center; gap: 16px; }
+        .term-icon { color: var(--accent); }
+        .term-name { font-weight: 600; font-size: 15px; }
+        .term-token { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+
+        .term-actions { display: flex; gap: 8px; }
+
+        .empty-state {
+            text-align: center;
+            padding: 64px 20px;
+            color: var(--text-muted);
         }
-
-        .terminal-name svg {
-            width: 18px;
-            height: 18px;
-            color: #60a5fa;
-        }
-
-        .terminal-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .connect-btn {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .connect-btn:hover { background: #2563eb; }
-
-        .connect-btn svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        .dot-btn {
-            background: none;
-            border: none;
-            color: #60a5fa;
-            cursor: pointer;
-            padding: 6px;
-        }
-
-        .dot-btn:hover { color: white; }
-
-        /* Context Menu */
-        .context-menu {
-            position: absolute;
-            background: #1e293b;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 8px;
-            padding: 4px 0;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
-            z-index: 10000;
-            min-width: 170px;
-            display: none;
-        }
-
-        .context-menu button {
-            width: 100%;
-            padding: 10px 16px;
-            background: none;
-            border: none;
-            color: #e2e8f0;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-
-        .context-menu button:hover { background: rgba(59, 130, 246, 0.2); }
-        .context-menu button.delete { color: #f87171; }
-
-        /* Modals */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-
-        .modal-overlay.visible { display: flex; }
-
-        .modal {
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 8px;
-            width: 100%;
-            max-width: 380px;
-            padding: 24px;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title { font-size: 18px; font-weight: 700; }
-
-        .input-field {
-            width: 100%;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 6px;
-            padding: 12px 16px;
-            color: white;
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-flex {
-            flex: 1;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .btn-secondary { background: transparent; border: 1px solid #334155; color: #94a3b8; }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-danger { background: #dc2626; color: white; }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.3; }
     </style>
 </head>
 <body>
 
-<!-- Minimal Top Bar (no credits) -->
-<div class="top-bar">
-    <div class="workspaces-section">
-        <select id="workspace-dropdown" class="form-input"></select>
-        <button onclick="showCreateWorkspaceModal()" class="action-btn-small">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-            </svg>
-        </button>
+    <div class="dashboard-grid">
+        <div class="card stat-card">
+            <div class="stat-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 21h6l-.75-4M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <div class="stat-info">
+                <h3>Total Terminals</h3>
+                <p id="stat-terminals">0</p>
+            </div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div class="stat-info">
+                <h3>Active Session</h3>
+                <p id="stat-active">None</p>
+            </div>
+        </div>
     </div>
 
-    <button onclick="showAddModal()" class="btn-primary">
-        <span style="font-size:18px;line-height:1;">+</span>
-        <span>Add Terminal</span>
-    </button>
-</div>
-
-<!-- CONTENT - Only one Terminals section -->
-<div class="content">
-    <div class="section-card">
-        <div class="section-header">Terminals</div>
+    <div style="margin-top: 40px;">
+        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 20px;">Quick Access</h2>
         <div id="terminals-list"></div>
-        <div id="empty-state" style="text-align:center; padding:40px 20px; color:#64748b; display:none;">
-            No terminals in this workspace yet
-        </div>
     </div>
-</div>
 
-<!-- ADD MODAL -->
-<div id="add-modal" onclick="if(event.target.id==='add-modal')hideAddModal()" class="modal-overlay">
-    <div onclick="event.stopPropagation()" class="modal">
-        <div class="modal-header">
-            <h2 class="modal-title">New Terminal</h2>
-            <button onclick="hideAddModal()" class="modal-close">×</button>
-        </div>
-        <input id="modal-name" placeholder="Display Name" class="input-field">
-        <input id="modal-token" placeholder="Token (from KS Panel)" class="input-field">
-        <div class="modal-actions">
-            <button onclick="hideAddModal()" class="btn-flex btn-secondary">Cancel</button>
-            <button onclick="handleAddTerminal()" class="btn-flex btn-primary">Add</button>
-        </div>
-    </div>
-</div>
+    <script>
+        function renderTerminals() {
+            const terminals = JSON.parse(localStorage.getItem('ks_ssh_terminals') || '[]');
+            const container = document.getElementById('terminals-list');
+            const statTerminals = document.getElementById('stat-terminals');
 
-<!-- CREATE WORKSPACE MODAL -->
-<div id="create-ws-modal" onclick="if(event.target.id==='create-ws-modal')hideCreateWorkspaceModal()" class="modal-overlay">
-    <div onclick="event.stopPropagation()" class="modal">
-        <div class="modal-header">
-            <h2 class="modal-title">Create New Workspace</h2>
-            <button onclick="hideCreateWorkspaceModal()" class="modal-close">×</button>
-        </div>
-        <input id="ws-name-input" placeholder="Workspace name" class="input-field">
-        <div class="modal-actions">
-            <button onclick="hideCreateWorkspaceModal()" class="btn-flex btn-secondary">Cancel</button>
-            <button onclick="confirmCreateWorkspace()" class="btn-flex btn-primary">Create</button>
-        </div>
-    </div>
-</div>
+            statTerminals.textContent = terminals.length;
+            container.innerHTML = '';
 
-<!-- RENAME MODAL -->
-<div id="rename-modal" onclick="if(event.target.id==='rename-modal')hideRenameModal()" class="modal-overlay">
-    <div onclick="event.stopPropagation()" class="modal">
-        <div class="modal-header">
-            <h2 class="modal-title">Rename Terminal</h2>
-            <button onclick="hideRenameModal()" class="modal-close">×</button>
-        </div>
-        <input id="rename-input" class="input-field" placeholder="New name">
-        <div class="modal-actions">
-            <button onclick="hideRenameModal()" class="btn-flex btn-secondary">Cancel</button>
-            <button onclick="confirmRename()" class="btn-flex btn-primary">Save</button>
-        </div>
-    </div>
-</div>
+            if (terminals.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                        <p>No terminals found. Add one from the sidebar to get started.</p>
+                    </div>`;
+                return;
+            }
 
-<!-- DELETE MODAL -->
-<div id="delete-modal" onclick="if(event.target.id==='delete-modal')hideDeleteModal()" class="modal-overlay">
-    <div onclick="event.stopPropagation()" class="modal">
-        <div class="modal-header">
-            <h2 class="modal-title" style="color:#f87171;">Delete Terminal</h2>
-            <button onclick="hideDeleteModal()" class="modal-close">×</button>
-        </div>
-        <p id="delete-name-display" style="margin-bottom:12px; font-weight:600;"></p>
-        <div class="modal-actions">
-            <button onclick="hideDeleteModal()" class="btn-flex btn-secondary">Cancel</button>
-            <button onclick="confirmDelete()" class="btn-flex btn-danger">Delete</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    let terminals = [];
-    let workspaces = [];
-    let currentWorkspaceId = null;
-    let pendingRenameId = null;
-    let pendingDeleteId = null;
-    let currentContextId = null;
-
-    function loadData() {
-        terminals = JSON.parse(localStorage.getItem('ks_ssh_terminals') || '[]');
-        workspaces = JSON.parse(localStorage.getItem('ks_ssh_workspaces') || '[]');
-    }
-
-    function saveData() {
-        localStorage.setItem('ks_ssh_terminals', JSON.stringify(terminals));
-    }
-
-    function populateWorkspaceDropdown() {
-        const select = document.getElementById('workspace-dropdown');
-        select.innerHTML = '';
-        workspaces.forEach(ws => {
-            const opt = document.createElement('option');
-            opt.value = ws.id;
-            opt.textContent = ws.name;
-            if (ws.id === currentWorkspaceId) opt.selected = true;
-            select.appendChild(opt);
-        });
-        if (workspaces.length && !currentWorkspaceId) {
-            currentWorkspaceId = workspaces[0].id;
-            select.value = currentWorkspaceId;
-        }
-    }
-
-    function renderTerminals() {
-        const container = document.getElementById('terminals-list');
-        const empty = document.getElementById('empty-state');
-        container.innerHTML = '';
-
-        const filtered = terminals.filter(t => t.workspaceId === currentWorkspaceId);
-
-        if (filtered.length === 0) {
-            empty.style.display = 'block';
-            return;
-        }
-        empty.style.display = 'none';
-
-        filtered.forEach(term => {
-            const row = document.createElement('div');
-            row.className = 'terminal-row';
-            row.innerHTML = `
-                <div class="terminal-name" onclick="connectTerminal('${term.id}')">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    ${term.name}
-                </div>
-                <div class="terminal-actions">
-                    <button onclick="connectTerminal('${term.id}'); event.stopImmediatePropagation();" class="connect-btn">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7M5 12h14"/>
-                        </svg>
-                        Connect
-                    </button>
-                    <button onclick="showContextMenu('${term.id}', event)" class="dot-btn">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:20px;height:20px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 5v.01M12 12v.01M12 19v.01"/>
-                        </svg>
-                    </button>
-                </div>
-            `;
-            container.appendChild(row);
-        });
-    }
-
-    function connectTerminal(id) {
-        const term = terminals.find(t => t.id === id);
-        if (term) {
-            term.lastUsed = Date.now();
-            saveData();
-            location.href = "/" + term.token + ".trycloudflare.com";
-            renderTerminals();
-        }
-    }
-
-    // Context Menu (Edit + Delete with SVG)
-    function showContextMenu(id, e) {
-        e.stopImmediatePropagation();
-        currentContextId = id;
-
-        let menu = document.getElementById('context-menu');
-        if (!menu) {
-            menu = document.createElement('div');
-            menu.id = 'context-menu';
-            menu.className = 'context-menu';
-            menu.innerHTML = `
-                <button onclick="contextEdit()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                    Edit / Rename
-                </button>
-                <button onclick="contextDelete()" class="delete">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    Delete
-                </button>
-            `;
-            document.body.appendChild(menu);
+            terminals.slice(0, 5).forEach(term => {
+                const row = document.createElement('div');
+                row.className = 'terminal-row';
+                row.innerHTML = `
+                    <div class="term-meta">
+                        <div class="term-icon">
+                            <svg style="width:24px;height:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <div>
+                            <div class="term-name">${term.name}</div>
+                            <div class="term-token">${term.token}</div>
+                        </div>
+                    </div>
+                    <div class="term-actions">
+                        <button class="btn btn-primary" onclick="connect('${term.id}')">
+                            Connect
+                            <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
         }
 
-        const rect = e.currentTarget.getBoundingClientRect();
-        menu.style.top = `${rect.bottom + window.scrollY + 5}px`;
-        menu.style.left = `${rect.left + window.scrollX - 120}px`;
-        menu.style.display = 'block';
-
-        document.addEventListener('click', hideContextMenuOnce);
-    }
-
-    function hideContextMenuOnce() {
-        const menu = document.getElementById('context-menu');
-        if (menu) menu.style.display = 'none';
-        document.removeEventListener('click', hideContextMenuOnce);
-    }
-
-    function contextEdit() {
-        hideContextMenuOnce();
-        if (currentContextId) showRenameModal(currentContextId);
-    }
-
-    function contextDelete() {
-        hideContextMenuOnce();
-        if (currentContextId) showDeleteModal(currentContextId);
-    }
-
-    function showRenameModal(id) {
-        const term = terminals.find(t => t.id === id);
-        if (!term) return;
-        pendingRenameId = id;
-        document.getElementById('rename-input').value = term.name;
-        document.getElementById('rename-modal').classList.add('visible');
-    }
-
-    function hideRenameModal() {
-        document.getElementById('rename-modal').classList.remove('visible');
-        pendingRenameId = null;
-    }
-
-    function confirmRename() {
-        if (!pendingRenameId) return;
-        const newName = document.getElementById('rename-input').value.trim();
-        if (!newName) return alert('Name cannot be empty');
-        const term = terminals.find(t => t.id === pendingRenameId);
-        if (term) term.name = newName;
-        saveData();
-        hideRenameModal();
-        renderTerminals();
-    }
-
-    function showDeleteModal(id) {
-        const term = terminals.find(t => t.id === id);
-        if (!term) return;
-        pendingDeleteId = id;
-        document.getElementById('delete-name-display').textContent = term.name;
-        document.getElementById('delete-modal').classList.add('visible');
-    }
-
-    function hideDeleteModal() {
-        document.getElementById('delete-modal').classList.remove('visible');
-        pendingDeleteId = null;
-    }
-
-    function confirmDelete() {
-        if (!pendingDeleteId) return;
-        terminals = terminals.filter(t => t.id !== pendingDeleteId);
-        saveData();
-        hideDeleteModal();
-        renderTerminals();
-    }
-
-    function showAddModal() {
-        document.getElementById('modal-name').value = '';
-        document.getElementById('modal-token').value = '';
-        document.getElementById('add-modal').classList.add('visible');
-    }
-
-    function hideAddModal() {
-        document.getElementById('add-modal').classList.remove('visible');
-    }
-
-    function handleAddTerminal() {
-        const name = document.getElementById('modal-name').value.trim();
-        const token = document.getElementById('modal-token').value.trim();
-        if (!token) return alert('Token is required');
-
-        const newTerm = {
-            id: Date.now().toString(),
-            name: name || `Terminal ${terminals.length + 1}`,
-            token: token,
-            workspaceId: currentWorkspaceId,
-            added: Date.now(),
-            lastUsed: Date.now()
-        };
-
-        terminals.unshift(newTerm);
-        saveData();
-        hideAddModal();
-        renderTerminals();
-    }
-
-    function showCreateWorkspaceModal() {
-        document.getElementById('ws-name-input').value = '';
-        document.getElementById('create-ws-modal').classList.add('visible');
-    }
-
-    function hideCreateWorkspaceModal() {
-        document.getElementById('create-ws-modal').classList.remove('visible');
-    }
-
-    function confirmCreateWorkspace() {
-        const name = document.getElementById('ws-name-input').value.trim();
-        if (!name) return alert('Workspace name is required');
-
-        const newWs = { id: Date.now().toString(), name: name, created: Date.now() };
-        workspaces.unshift(newWs);
-        localStorage.setItem('ks_ssh_workspaces', JSON.stringify(workspaces));
-
-        populateWorkspaceDropdown();
-        hideCreateWorkspaceModal();
-        currentWorkspaceId = newWs.id;
-        renderTerminals();
-    }
-
-    function init() {
-        loadData();
-        populateWorkspaceDropdown();
-
-        const savedWs = localStorage.getItem('ks_current_workspace');
-        if (savedWs && workspaces.some(w => w.id === savedWs)) {
-            currentWorkspaceId = savedWs;
-            document.getElementById('workspace-dropdown').value = savedWs;
+        function connect(id) {
+            // Communicate with parent window
+            window.parent.selectTerminal(id);
         }
 
-        document.getElementById('workspace-dropdown').addEventListener('change', function() {
-            currentWorkspaceId = this.value;
-            localStorage.setItem('ks_current_workspace', currentWorkspaceId);
-            renderTerminals();
-        });
-
-        renderTerminals();
-    }
-
-    window.onload = init;
-</script>
+        window.onload = renderTerminals;
+        // Watch for localstorage changes
+        window.addEventListener('storage', renderTerminals);
+    </script>
 </body>
 </html>
