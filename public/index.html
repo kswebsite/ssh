@@ -646,16 +646,19 @@
             const userData = await userRes.json();
             currentUser = userData.user;
             document.getElementById('credits-badge').textContent = `${currentUser.credits} CREDITS`;
-            if (currentUser.is_admin) document.getElementById('nav-admin').style.display = 'flex';
+            document.getElementById('nav-admin').style.display = currentUser.is_admin ? 'flex' : 'none';
         }
 
         window.onload = async () => {
             const userRes = await fetch('/api/me');
-            if (!userRes.ok) location.href = '/auth.html';
+            if (!userRes.ok) {
+                location.href = '/auth.html';
+                return;
+            }
             const userData = await userRes.json();
             currentUser = userData.user;
             document.getElementById('credits-badge').textContent = `${currentUser.credits} CREDITS`;
-            if (currentUser.is_admin) document.getElementById('nav-admin').style.display = 'flex';
+            document.getElementById('nav-admin').style.display = currentUser.is_admin ? 'flex' : 'none';
 
             await loadWorkspaces();
             await loadTerminals();
