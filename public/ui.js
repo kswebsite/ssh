@@ -148,11 +148,13 @@ const ui = {
         toast.textContent = message;
         this._toastContainer.appendChild(toast);
 
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(20px)';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        });
     }
 };
 

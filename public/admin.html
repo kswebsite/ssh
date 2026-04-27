@@ -124,29 +124,69 @@
         }
 
         async function toggleBan(id, current) {
-            if (await ui.confirm(`${current ? 'Unban' : 'Ban'} this user?`)) {
-                await fetch(`/api/admin/users/${id}/ban`, {
+            if (!await ui.confirm(`${current ? 'Unban' : 'Ban'} this user?`)) return;
+
+            const originalUsers = allUsers.map(u => ({...u}));
+            const index = allUsers.findIndex(u => u.id === id);
+            if (index !== -1) allUsers[index].is_banned = !current;
+            renderUserList();
+
+            try {
+                const res = await fetch(`/api/admin/users/${id}/ban`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ banned: !current })
                 });
-                ui.showToast(current ? 'User unbanned' : 'User banned');
-                loadUsers();
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                ui.showToast(current ? 'User unbanned' : 'User banned', 'success');
+            } catch (err) {
+                ui.showToast(err.message || 'Action failed', 'error');
+                allUsers = originalUsers;
+                renderUserList();
             }
         }
 
         async function promoteAdmin(id) {
-            if (await ui.confirm('Promote this user to Admin?')) {
-                await fetch(`/api/admin/users/${id}/promote`, { method: 'POST' });
-                ui.showToast('User promoted to Admin');
-                loadUsers();
+            if (!await ui.confirm('Promote this user to Admin?')) return;
+
+            const originalUsers = allUsers.map(u => ({...u}));
+            const index = allUsers.findIndex(u => u.id === id);
+            if (index !== -1) allUsers[index].is_admin = 1;
+            renderUserList();
+
+            try {
+                const res = await fetch(`/api/admin/users/${id}/promote`, { method: 'POST' });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                ui.showToast('User promoted to Admin', 'success');
+            } catch (err) {
+                ui.showToast(err.message || 'Action failed', 'error');
+                allUsers = originalUsers;
+                renderUserList();
             }
         }
 
+
+        let allCoupons = [];
         async function loadCoupons() {
             const res = await fetch('/api/admin/coupons');
             const data = await res.json();
-            document.getElementById('coupon-list').innerHTML = data.coupons.map(c => `<tr class="user-row"><td><code>${c.code}</code></td><td>${c.reward}</td><td>${c.current_uses}/${c.max_uses}</td><td><button class="btn btn-ghost" style="color:var(--danger);" onclick="deleteCoupon('${c.id}')">Delete</button></td></tr>`).join('');
+            if (data.success) {
+                allCoupons = data.coupons;
+                renderCouponList();
+            }
+        }
+
+        function renderCouponList() {
+            document.getElementById('coupon-list').innerHTML = allCoupons.map(c => `
+                <tr class="user-row">
+                    <td><code>${c.code}</code></td>
+                    <td>${c.reward}</td>
+                    <td>${c.current_uses}/${c.max_uses}</td>
+                    <td><button class="btn btn-ghost" style="color:var(--danger);" onclick="deleteCoupon('${c.id}')">Delete</button></td>
+                </tr>
+            `).join('');
         }
 
         async function showCreateCoupon() {
@@ -157,24 +197,53 @@
             ], 'Create Coupon');
 
             if(!res || !res.code || !res.reward) return;
-            await fetch('/api/admin/coupons', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    code: res.code,
-                    reward: parseInt(res.reward),
-                    max_uses: parseInt(res.max)
-                })
-            });
-            ui.showToast('Coupon created', 'success');
-            loadCoupons();
+
+            const tempId = 'temp-' + Date.now();
+            const originalCoupons = [...allCoupons];
+            const newCoupon = { id: tempId, code: res.code.toUpperCase(), reward: parseInt(res.reward), current_uses: 0, max_uses: parseInt(res.max) };
+
+            allCoupons.unshift(newCoupon);
+            renderCouponList();
+            ui.showToast('Creating coupon...', 'info');
+
+            try {
+                const apiRes = await fetch('/api/admin/coupons', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        code: res.code,
+                        reward: parseInt(res.reward),
+                        max_uses: parseInt(res.max)
+                    })
+                });
+                const data = await apiRes.json();
+                if (data.success) {
+                    ui.showToast('Coupon created', 'success');
+                    loadCoupons(); // get real IDs
+                } else throw new Error(data.error);
+            } catch (err) {
+                ui.showToast(err.message || 'Action failed', 'error');
+                allCoupons = originalCoupons;
+                renderCouponList();
+            }
         }
 
         async function deleteCoupon(id) {
-            if(await ui.confirm('Delete this coupon?')) {
-                await fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' });
-                ui.showToast('Coupon deleted');
-                loadCoupons();
+            if(!await ui.confirm('Delete this coupon?')) return;
+
+            const originalCoupons = [...allCoupons];
+            allCoupons = allCoupons.filter(c => c.id !== id);
+            renderCouponList();
+
+            try {
+                const res = await fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                ui.showToast('Coupon deleted', 'success');
+            } catch (err) {
+                ui.showToast(err.message || 'Action failed', 'error');
+                allCoupons = originalCoupons;
+                renderCouponList();
             }
         }
 
@@ -196,14 +265,27 @@
                 { name: 'credits', label: 'New Balance', type: 'number', value: curr }
             ], 'Adjust User Credits');
 
-            if(res && res.credits !== null) {
-                await fetch(`/api/admin/users/${id}/credits`, {
+            if(!res || res.credits === null) return;
+
+            const originalUsers = allUsers.map(u => ({...u}));
+            const newCredits = parseInt(res.credits);
+            const index = allUsers.findIndex(u => u.id === id);
+            if (index !== -1) allUsers[index].credits = newCredits;
+            renderUserList();
+
+            try {
+                const res = await fetch(`/api/admin/users/${id}/credits`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ credits: parseInt(res.credits) })
+                    body: JSON.stringify({ credits: newCredits })
                 });
-                ui.showToast('Credits updated');
-                loadUsers();
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                ui.showToast('Credits updated', 'success');
+            } catch (err) {
+                ui.showToast(err.message || 'Action failed', 'error');
+                allUsers = originalUsers;
+                renderUserList();
             }
         }
 

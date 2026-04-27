@@ -610,20 +610,40 @@
 
         // API Handlers
         async function handleAddTerminal() {
-            const name = document.getElementById('modal-name').value;
+            const name = document.getElementById('modal-name').value || 'Terminal';
             const token = document.getElementById('modal-token').value;
             const workspaceId = document.getElementById('modal-workspace').value;
-            const res = await fetch('/api/terminals', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ name, token, workspaceId })
-            });
-            const data = await res.json();
-            if (data.success) {
-                ui.showToast('Terminal added', 'success');
-                closeModals();
-                loadTerminals();
-            } else ui.showToast(data.error, 'error');
+            if (!token || !workspaceId) return ui.showToast('Token and workspace are required', 'error');
+
+            const tempId = 'temp-' + Date.now();
+            const originalTerminals = [...terminals];
+            const newTerm = { id: tempId, name, token, workspace_id: workspaceId };
+
+            // Optimistic update
+            terminals.push(newTerm);
+            renderList();
+            closeModals();
+            ui.showToast('Terminal adding...', 'info');
+
+            try {
+                const res = await fetch('/api/terminals', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, token, workspaceId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Replace tempId with real id
+                    const index = terminals.findIndex(t => t.id === tempId);
+                    if (index !== -1) terminals[index] = data.terminal;
+                    renderList();
+                    ui.showToast('Terminal added', 'success');
+                } else throw new Error(data.error);
+            } catch (err) {
+                ui.showToast(err.message || 'Failed to add terminal', 'error');
+                terminals = originalTerminals;
+                renderList();
+            }
         }
 
         async function refreshTerminalStatus(id) {
@@ -656,30 +676,63 @@
             const token = document.getElementById('edit-token').value;
             const workspaceId = document.getElementById('edit-workspace').value;
 
-            const res = await fetch(`/api/terminals/${id}`, {
-                method: 'PATCH',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ name, token, workspaceId })
-            });
-            const data = await res.json();
-            if (data.success) {
-                ui.showToast('Terminal updated', 'success');
-                closeModals();
-                loadTerminals();
-            } else ui.showToast(data.error, 'error');
+            const originalTerminals = terminals.map(t => ({...t}));
+            const index = terminals.findIndex(t => t.id === id);
+            if (index !== -1) {
+                terminals[index] = { ...terminals[index], name, token, workspace_id: workspaceId };
+            }
+
+            renderList();
+            closeModals();
+            ui.showToast('Saving...', 'info');
+
+            try {
+                const res = await fetch(`/api/terminals/${id}`, {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, token, workspaceId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    ui.showToast('Terminal updated', 'success');
+                } else throw new Error(data.error);
+            } catch (err) {
+                ui.showToast(err.message || 'Failed to update terminal', 'error');
+                terminals = originalTerminals;
+                renderList();
+            }
         }
 
         async function confirmCreateWorkspace() {
             const name = document.getElementById('new-ws-name').value;
-            const res = await fetch('/api/workspaces', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ name })
-            });
-            const data = await res.json();
-            if (data.success) {
-                closeModals();
-                loadWorkspaces();
+            if (!name) return;
+
+            const tempId = 'temp-ws-' + Date.now();
+            const originalWorkspaces = [...workspaces];
+            const newWS = { id: tempId, name, owner_id: currentUser?.id };
+
+            workspaces.push(newWS);
+            populateWorkspaceDropdown();
+            closeModals();
+            ui.showToast('Creating workspace...', 'info');
+
+            try {
+                const res = await fetch('/api/workspaces', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const idx = workspaces.findIndex(w => w.id === tempId);
+                    if (idx !== -1) workspaces[idx] = data.workspace;
+                    populateWorkspaceDropdown();
+                    ui.showToast('Workspace created', 'success');
+                } else throw new Error(data.error);
+            } catch (err) {
+                ui.showToast(err.message || 'Failed to create workspace', 'error');
+                workspaces = originalWorkspaces;
+                populateWorkspaceDropdown();
             }
         }
 
