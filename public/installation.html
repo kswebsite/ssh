@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation Guide</title>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+    <script src="ui.js"></script>
+    <style>
+        body { padding: 16px; background: #000; color: #fff; }
+        .install-container { max-width: 900px; margin: 0 auto; }
+        .install-section { margin-bottom: 40px; }
+        .platform-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .platform-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 4px; }
+        .code-block { background: #0a0a0a; border: 1px solid var(--border); border-radius: 4px; padding: 16px; position: relative; margin-bottom: 16px; }
+        .code-block pre { margin: 0; font-family: var(--font-mono); font-size: 13px; color: var(--accent); overflow-x: auto; }
+        .copy-btn { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-muted); padding: 4px 8px; border-radius: 2px; font-size: 10px; cursor: pointer; transition: all 0.2s; font-family: var(--font-mono); }
+        .copy-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+        .step-list { list-style: none; padding: 0; }
+        .step-item { display: flex; gap: 12px; margin-bottom: 12px; font-size: 14px; color: var(--text-secondary); }
+        .step-num { min-width: 20px; height: 20px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="install-container animate-slide-up">
+        <h1 style="font-size: 20px; font-weight: 800; margin-bottom: 24px; letter-spacing: 0.05em; font-family: var(--font-mono);">INSTALLATION_GUIDE</h1>
+
+        <!-- LINUX -->
+        <div class="install-section">
+            <div class="platform-header">
+                <div class="platform-icon">
+                    <svg style="width:20px;height:20px;" viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12C4,14.39 5.05,16.53 6.71,18H6.7C6.7,18 6.69,18 6.69,18C8.59,19.28 10.61,20 12,20C13.39,20 15.41,19.28 17.31,18C17.31,18 17.3,18 17.3,18H17.29C18.95,16.53 20,14.39 20,12A8,8 0 0,0 12,4M12,18C9.79,18 8,16.21 8,14C8,11.79 9.79,10 12,10C14.21,10 16,11.79 16,14C16,16.21 14.21,18 12,18M12,12A2,2 0 0,0 10,14A2,2 0 0,0 12,16A2,2 0 0,0 14,14A2,2 0 0,0 12,12Z"/></svg>
+                </div>
+                <h2 style="font-size: 16px; font-weight: 700;">Linux (Ubuntu/Debian)</h2>
+            </div>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div>Download and run the installation script:</div>
+                </div>
+            </div>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+                <pre>curl -sSL https://ks-ssh.com/install.sh | sudo bash</pre>
+            </div>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div>Configure your terminal with the token from the dashboard.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WINDOWS -->
+        <div class="install-section">
+            <div class="platform-header">
+                <div class="platform-icon">
+                    <svg style="width:20px;height:20px;" viewBox="0 0 24 24" fill="currentColor"><path d="M3,12V6.75L9,5.43V12H3M21,12V1.5L10,3V12H21M3,13V18.25L9,19.57V13H3M21,13V22.5L10,21V13H21Z"/></svg>
+                </div>
+                <h2 style="font-size: 16px; font-weight: 700;">Windows (PowerShell)</h2>
+            </div>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div>Run PowerShell as Administrator and execute:</div>
+                </div>
+            </div>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+                <pre>iwr https://ks-ssh.com/install.ps1 -useb | iex</pre>
+            </div>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div>Follow the on-screen prompts to complete setup.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function copyCode(btn) {
+            const pre = btn.nextElementSibling;
+            navigator.clipboard.writeText(pre.textContent).then(() => {
+                const originalText = btn.textContent;
+                btn.textContent = 'COPIED!';
+                btn.style.background = 'var(--success)';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = 'rgba(255,255,255,0.05)';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
