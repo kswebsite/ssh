@@ -435,3 +435,23 @@ body::after {
 
 .toast.error { border-left-color: var(--danger); }
 .toast.success { border-left-color: var(--success); }
+
+/* Skeleton Loading */
+.skeleton {
+    background: linear-gradient(90deg, #0a0a0a 25%, #161616 50%, #0a0a0a 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+    color: transparent !important;
+    pointer-events: none;
+    border: none !important;
+}
+
+.skeleton * {
+    visibility: hidden;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}

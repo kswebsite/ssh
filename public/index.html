@@ -177,7 +177,11 @@
                     </button>
                 </div>
 
-                <div id="terminals-list"></div>
+                <div id="terminals-list">
+                    <div class="terminal-item skeleton" style="height: 38px; margin-bottom: 2px;"></div>
+                    <div class="terminal-item skeleton" style="height: 38px; margin-bottom: 2px;"></div>
+                    <div class="terminal-item skeleton" style="height: 38px; margin-bottom: 2px;"></div>
+                </div>
             </div>
 
             <div style="padding: 16px; border-top: 1px solid var(--border);">
@@ -816,17 +820,30 @@
         }
 
         window.onload = async () => {
-            const userRes = await fetch('/api/me');
+            // Parallelize initial data load
+            const [userRes, wsRes] = await Promise.all([
+                fetch('/api/me'),
+                fetch('/api/workspaces')
+            ]);
+
             if (!userRes.ok) {
                 location.href = '/auth.html';
                 return;
             }
+
             const userData = await userRes.json();
             currentUser = userData.user;
             document.getElementById('credits-badge').textContent = `${currentUser.credits} CREDITS`;
             document.getElementById('nav-admin').style.display = (currentUser.is_admin || currentUser.username === 'ksssh') ? 'flex' : 'none';
 
-            await loadWorkspaces();
+            const wsData = await wsRes.json();
+            if (wsData.success) {
+                workspaces = wsData.workspaces;
+                populateWorkspaceDropdown();
+                populateModalWorkspaceSelect();
+            }
+
+            // Terminals load separately to allow early sidebar render
             await loadTerminals();
             document.getElementById('search-input').oninput = renderList;
         };
