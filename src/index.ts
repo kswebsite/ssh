@@ -346,11 +346,19 @@ export default {
          ORDER BY cu.used_at DESC`
       ).bind(user.id).all();
 
-      const history = [...earningLogs.results, ...couponLogs.results.map((c: any) => ({
+      const usageLogs = await env.DB.prepare(
+        "SELECT type, -amount as amount, created_at FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC"
+      ).bind(user.id).all();
+
+      const history = [
+        ...earningLogs.results,
+        ...couponLogs.results.map((c: any) => ({
           type: `Coupon: ${c.code}`,
           amount: c.amount,
           created_at: c.created_at
-      }))].sort(
+        })),
+        ...usageLogs.results
+      ].sort(
         (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
@@ -578,6 +586,37 @@ export default {
       )
         .bind(name || null, token || null, workspaceId || null, id)
         .run();
+
+      return jsonResponse({ success: true });
+    }
+
+    // TERMINALS - USAGE BILLING
+    if (url.pathname === "/api/terminals/usage" && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const { terminalId } = (await request.json()) as any;
+      if (!terminalId) return jsonResponse({ error: "Terminal ID is required" }, 400);
+
+      // Verify access to terminal
+      const term = (await env.DB.prepare(
+        `SELECT t.* FROM terminals t
+         JOIN workspaces w ON t.workspace_id = w.id
+         LEFT JOIN workspace_members wm ON w.id = wm.workspace_id AND wm.user_id = ?
+         WHERE t.id = ? AND (w.owner_id = ? OR wm.user_id = ?)`
+      ).bind(user.id, terminalId, user.id, user.id).first()) as any;
+
+      if (!term) return jsonResponse({ error: "Terminal not found or unauthorized" }, 404);
+
+      if (user.credits < 1) {
+        return jsonResponse({ error: "Insufficient credits" }, 403);
+      }
+
+      await env.DB.batch([
+        env.DB.prepare("UPDATE users SET credits = credits - 1 WHERE id = ?").bind(user.id),
+        env.DB.prepare("INSERT INTO usage_logs (id, user_id, terminal_id, amount, type) VALUES (?, ?, ?, ?, ?)")
+          .bind(crypto.randomUUID(), user.id, terminalId, 1, 'terminal_usage')
+      ]);
 
       return jsonResponse({ success: true });
     }
