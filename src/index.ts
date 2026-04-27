@@ -548,6 +548,76 @@ export default {
       return jsonResponse({ success: true });
     }
 
+    // TERMINALS - PATCH (Update)
+    if (url.pathname.startsWith("/api/terminals/") && request.method === "PATCH") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const id = url.pathname.split("/").pop();
+      const { name, token, workspaceId } = (await request.json()) as any;
+
+      // Verify ownership of original terminal
+      const term = await env.DB.prepare(
+        `SELECT t.id FROM terminals t
+         JOIN workspaces w ON t.workspace_id = w.id
+         WHERE t.id = ? AND w.owner_id = ?`
+      ).bind(id, user.id).first();
+
+      if (!term) return jsonResponse({ error: "Not found or unauthorized" }, 404);
+
+      // If workspace is being changed, verify ownership of new workspace
+      if (workspaceId) {
+        const ws = await env.DB.prepare(
+          "SELECT id FROM workspaces WHERE id = ? AND owner_id = ?"
+        ).bind(workspaceId, user.id).first();
+        if (!ws) return jsonResponse({ error: "Unauthorized to move to this workspace" }, 403);
+      }
+
+      await env.DB.prepare(
+        "UPDATE terminals SET name = COALESCE(?, name), token = COALESCE(?, token), workspace_id = COALESCE(?, workspace_id) WHERE id = ?"
+      )
+        .bind(name || null, token || null, workspaceId || null, id)
+        .run();
+
+      return jsonResponse({ success: true });
+    }
+
+    // TERMINALS - STATUS CHECK
+    if (url.pathname.startsWith("/api/terminals/") && url.pathname.endsWith("/status") && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const id = url.pathname.split("/")[3];
+
+      const term = (await env.DB.prepare(
+        `SELECT t.* FROM terminals t
+         JOIN workspaces w ON t.workspace_id = w.id
+         LEFT JOIN workspace_members wm ON w.id = wm.workspace_id AND wm.user_id = ?
+         WHERE t.id = ? AND (w.owner_id = ? OR wm.user_id = ?)`
+      ).bind(user.id, id, user.id, user.id).first()) as any;
+
+      if (!term) return jsonResponse({ error: "Not found or unauthorized" }, 404);
+
+      const targetUrl = term.token.startsWith('http') ? term.token : `https://${term.token}.trycloudflare.com`;
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const res = await fetch(targetUrl, {
+          method: 'GET',
+          signal: controller.signal,
+          headers: { 'User-Agent': 'KS-SSH-Status-Check' }
+        });
+
+        clearTimeout(timeoutId);
+        return jsonResponse({ success: true, online: res.ok || res.status === 401 || res.status === 403 || res.status === 404 });
+        // We consider it online if we get ANY response from the server, even error codes, as long as it's not a timeout/network error
+      } catch (e) {
+        return jsonResponse({ success: true, online: false });
+      }
+    }
+
     // MEMBERS - GET
     if (url.pathname.startsWith("/api/workspaces/") && url.pathname.endsWith("/members") && request.method === "GET") {
       const user = await getSessionUser(request, env);

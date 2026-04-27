@@ -53,14 +53,23 @@
         .terminal-item {
             display: flex; align-items: center; justify-content: space-between;
             padding: 6px 10px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; margin-bottom: 1px;
-            border: 1px solid transparent;
+            border: 1px solid transparent; gap: 8px;
         }
         .terminal-item:hover { background: rgba(255, 255, 255, 0.03); border-color: var(--border); }
-        .terminal-item:hover { background: rgba(255, 255, 255, 0.03); }
         .terminal-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
         .terminal-info { flex: 1; min-width: 0; }
         .terminal-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .terminal-token { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+
+        .terminal-status { width: 6px; height: 6px; border-radius: 50%; background: #4b5563; flex-shrink: 0; }
+        .terminal-status.online { background: #10b981; box-shadow: 0 0 6px #10b981; }
+        .terminal-status.offline { background: #ef4444; }
+        .terminal-status.checking { background: #f59e0b; animation: pulse 1s infinite; }
+
+        .terminal-actions { display: none; align-items: center; gap: 4px; }
+        .terminal-item:hover .terminal-actions { display: flex; }
+        .terminal-action-btn { padding: 4px; color: var(--text-muted); border-radius: 4px; transition: all 0.2s; cursor: pointer; }
+        .terminal-action-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
         
         #main-content { flex: 1; display: flex; flex-direction: column; background: #000; }
         .top-bar {
@@ -154,7 +163,12 @@
                     </div>
                 </div>
 
-                <div class="section-label">Terminals</div>
+                <div class="section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>Terminals</span>
+                    <button class="terminal-action-btn" title="Refresh All" onclick="refreshAllStatuses()" style="margin-right:8px;">
+                        <svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </button>
+                </div>
                 <div style="padding: 0 8px 12px;">
                     <input id="search-input" type="text" class="input" placeholder="Search..." style="margin-bottom: 8px; height: 36px; font-size: 13px;">
                     <button onclick="showAddModal()" class="btn btn-primary" style="width: 100%; height: 36px; font-size: 13px;">
@@ -190,6 +204,34 @@
     </div>
 
     <!-- MODALS -->
+    <!-- Edit Terminal -->
+    <div id="edit-modal" class="modal-overlay" onclick="if(event.target===this)closeModals()">
+        <div class="modal-container">
+            <div class="modal-header">
+                <span class="modal-title">Edit Terminal</span>
+            </div>
+            <div class="modal-content">
+                <input id="edit-id" type="hidden">
+                <div style="margin-bottom: 16px;">
+                    <label class="section-label" style="margin:0 0 8px;">Name</label>
+                    <input id="edit-name" type="text" class="input" placeholder="Server name">
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label class="section-label" style="margin:0 0 8px;">Token / URL</label>
+                    <input id="edit-token" type="text" class="input" placeholder="token or https://...">
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <label class="section-label" style="margin:0 0 8px;">Workspace</label>
+                    <select id="edit-workspace" class="input" style="background:#000;"></select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModals()">Cancel</button>
+                <button class="btn btn-primary" onclick="handleEditTerminal()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Terminal -->
     <div id="add-modal" class="modal-overlay" onclick="if(event.target===this)closeModals()">
         <div class="modal-container">
@@ -364,8 +406,9 @@
             menu.appendChild(newItem);
         }
 
-        function populateModalWorkspaceSelect() {
-            const select = document.getElementById('modal-workspace');
+        function populateModalWorkspaceSelect(targetId) {
+            const select = document.getElementById(targetId);
+            if (!select) return;
             select.innerHTML = '';
             workspaces.forEach(ws => {
                 if (ws.owner_id === currentUser?.id) {
@@ -392,15 +435,30 @@
             filtered.forEach(term => {
                 const div = document.createElement('div');
                 div.className = `terminal-item ${term.id === activeId ? 'active' : ''}`;
-                div.onclick = () => selectTerminal(term.id);
+                div.dataset.id = term.id;
+                div.onclick = (e) => {
+                    if (e.target.closest('.terminal-action-btn')) return;
+                    selectTerminal(term.id);
+                };
                 div.oncontextmenu = (e) => { e.preventDefault(); showTerminalMenu(term.id, e); };
                 div.innerHTML = `
+                    <div class="terminal-status" id="status-${term.id}"></div>
                     <div class="terminal-info">
                         <div class="terminal-name">${term.name}</div>
                         <div class="terminal-token">${term.token}</div>
                     </div>
+                    <div class="terminal-actions">
+                        <div class="terminal-action-btn" title="Refresh" onclick="refreshTerminalStatus('${term.id}')">
+                            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </div>
+                        <div class="terminal-action-btn" title="Edit" onclick="showEditTerminalModal('${term.id}')">
+                            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        </div>
+                    </div>
                 `;
                 container.appendChild(div);
+                // Trigger background status check
+                refreshTerminalStatus(term.id);
             });
         }
 
@@ -420,7 +478,22 @@
         function closeModals() {
             document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
         }
-        function showAddModal() { document.getElementById('add-modal').classList.add('show'); }
+        function showAddModal() {
+            populateModalWorkspaceSelect('modal-workspace');
+            document.getElementById('add-modal').classList.add('show');
+        }
+        function showEditTerminalModal(id) {
+            const term = terminals.find(t => t.id === id);
+            if (!term) return;
+
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-name').value = term.name;
+            document.getElementById('edit-token').value = term.token;
+            populateModalWorkspaceSelect('edit-workspace');
+            document.getElementById('edit-workspace').value = term.workspace_id;
+
+            document.getElementById('edit-modal').classList.add('show');
+        }
         function showAccountModal() {
             document.getElementById('acc-username').value = currentUser.username;
             document.getElementById('acc-new-pw').value = '';
@@ -507,6 +580,50 @@
             });
             const data = await res.json();
             if (data.success) {
+                ui.showToast('Terminal added', 'success');
+                closeModals();
+                loadTerminals();
+            } else ui.showToast(data.error, 'error');
+        }
+
+        async function refreshTerminalStatus(id) {
+            const dot = document.getElementById(`status-${id}`);
+            if (!dot) return;
+
+            dot.className = 'terminal-status checking';
+
+            try {
+                const res = await fetch(`/api/terminals/${id}/status`);
+                const data = await res.json();
+
+                if (data.success && data.online) {
+                    dot.className = 'terminal-status online';
+                } else {
+                    dot.className = 'terminal-status offline';
+                }
+            } catch (e) {
+                dot.className = 'terminal-status offline';
+            }
+        }
+
+        function refreshAllStatuses() {
+            terminals.forEach(t => refreshTerminalStatus(t.id));
+        }
+
+        async function handleEditTerminal() {
+            const id = document.getElementById('edit-id').value;
+            const name = document.getElementById('edit-name').value;
+            const token = document.getElementById('edit-token').value;
+            const workspaceId = document.getElementById('edit-workspace').value;
+
+            const res = await fetch(`/api/terminals/${id}`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, token, workspaceId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                ui.showToast('Terminal updated', 'success');
                 closeModals();
                 loadTerminals();
             } else ui.showToast(data.error, 'error');
