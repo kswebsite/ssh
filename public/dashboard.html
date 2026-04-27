@@ -182,8 +182,13 @@
         }
 
         window.onload = loadDashboard;
+
+        let searchTimeout;
         document.getElementById('terminal-search').oninput = () => {
-            fetch('/api/terminals').then(r => r.json()).then(d => renderTerminals(d.terminals));
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fetch('/api/terminals').then(r => r.json()).then(d => renderTerminals(d.terminals));
+            }, 300);
         };
     </script>
 </body>
