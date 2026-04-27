@@ -65,15 +65,15 @@
         <div class="dashboard-grid">
             <div class="main-col">
                 <div class="stat-group">
-                    <div class="stat-card-modern">
+                <div class="stat-card-modern" id="stat-terminals-card">
                         <div class="stat-label">Total Terminals</div>
                         <div id="stat-terminals" class="stat-value">0</div>
                     </div>
-                    <div class="stat-card-modern">
+                <div class="stat-card-modern" id="stat-workspaces-card">
                         <div class="stat-label">Workspaces</div>
                         <div id="stat-workspaces" class="stat-value">0</div>
                     </div>
-                    <div class="stat-card-modern">
+                <div class="stat-card-modern" id="stat-earnings-card">
                         <div class="stat-label">Total Earnings</div>
                         <div id="stat-total-earned" class="stat-value">0</div>
                     </div>
@@ -84,7 +84,10 @@
                     <input type="text" id="terminal-search" class="input" placeholder="Search terminals..." style="max-width: 200px; height: 36px; font-size: 13px;">
                 </div>
                 <div id="terminals-list">
-                    <!-- Terminals list -->
+                <!-- Skeleton Loading -->
+                <div class="terminal-card-modern skeleton" style="height: 66px; margin-bottom: 8px;"></div>
+                <div class="terminal-card-modern skeleton" style="height: 66px; margin-bottom: 8px;"></div>
+                <div class="terminal-card-modern skeleton" style="height: 66px; margin-bottom: 8px;"></div>
                 </div>
             </div>
 
@@ -115,7 +118,9 @@
                     <h2 class="section-title">Recent Activity</h2>
                 </div>
                 <div class="card" id="activity-list" style="padding: 0 20px;">
-                    <!-- Activity list -->
+                <!-- Skeleton Loading -->
+                <div class="activity-item skeleton" style="height: 50px; margin: 12px 0;"></div>
+                <div class="activity-item skeleton" style="height: 50px; margin: 12px 0;"></div>
                 </div>
             </div>
         </div>
@@ -123,29 +128,39 @@
 
     <script>
         async function loadDashboard() {
-            const userRes = await fetch('/api/me');
-            const userData = await userRes.json();
-            if (userData.success) {
-                document.getElementById('user-name').textContent = userData.user.username;
+            // Apply skeletons to stat cards initially
+            ['stat-terminals-card', 'stat-workspaces-card', 'stat-earnings-card'].forEach(id => {
+                document.getElementById(id).classList.add('skeleton');
+            });
+
+            // Parallelize API calls
+            const [userRes, wsRes, termRes, billRes] = await Promise.all([
+                fetch('/api/me').then(r => r.json()),
+                fetch('/api/workspaces').then(r => r.json()),
+                fetch('/api/terminals').then(r => r.json()),
+                fetch('/api/billing/history').then(r => r.json())
+            ]);
+
+            if (userRes.success) {
+                document.getElementById('user-name').textContent = userRes.user.username;
             }
 
-            const wsRes = await fetch('/api/workspaces');
-            const wsData = await wsRes.json();
-            if (wsData.success) document.getElementById('stat-workspaces').textContent = wsData.workspaces.length;
-
-            const termRes = await fetch('/api/terminals');
-            const termData = await termRes.json();
-            if (termData.success) {
-                document.getElementById('stat-terminals').textContent = termData.terminals.length;
-                renderTerminals(termData.terminals);
+            if (wsRes.success) {
+                document.getElementById('stat-workspaces-card').classList.remove('skeleton');
+                document.getElementById('stat-workspaces').textContent = wsRes.workspaces.length;
             }
 
-            const billRes = await fetch('/api/billing/history');
-            const billData = await billRes.json();
-            if (billData.success) {
-                const total = billData.history.reduce((sum, item) => sum + item.amount, 0);
+            if (termRes.success) {
+                document.getElementById('stat-terminals-card').classList.remove('skeleton');
+                document.getElementById('stat-terminals').textContent = termRes.terminals.length;
+                renderTerminals(termRes.terminals);
+            }
+
+            if (billRes.success) {
+                document.getElementById('stat-earnings-card').classList.remove('skeleton');
+                const total = billRes.history.reduce((sum, item) => sum + item.amount, 0);
                 document.getElementById('stat-total-earned').textContent = total;
-                renderActivity(billData.history.slice(0, 5));
+                renderActivity(billRes.history.slice(0, 5));
             }
         }
 
