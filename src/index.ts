@@ -171,6 +171,22 @@ export default {
       return env.ASSETS.fetch(new URL("/admin.html", request.url));
     }
 
+    if (url.pathname === "/afk") {
+      const user = await getSessionUser(request, env);
+      if (!user) return Response.redirect(`${url.origin}/auth.html`, 302);
+
+      const configRow = await env.DB.prepare("SELECT value FROM config WHERE key = 'afk_ad_code'").first();
+      const adCode = (configRow?.value as string) || "<!-- No Ad Code Configured -->";
+
+      const templateRes = await env.ASSETS.fetch(new URL("/afk_template.html", request.url));
+      let html = await templateRes.text();
+      html = html.replace("<!-- AFK_AD_CODE -->", adCode);
+
+      return new Response(html, {
+        headers: { "Content-Type": "text/html" }
+      });
+    }
+
     // ==================== API ENDPOINTS ====================
 
     // REGISTER
