@@ -263,71 +263,6 @@ export default {
       }
     }
 
-    // USER: LIST VIDEOS
-    if (url.pathname === "/api/videos" && request.method === "GET") {
-      const user = await getSessionUser(request, env);
-      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const videos = await env.DB.prepare("SELECT * FROM videos WHERE is_active = 1").all();
-      return jsonResponse({ success: true, videos: videos.results });
-    }
-
-    // USER: EARN VIDEO
-    if (url.pathname === "/api/earn/video" && request.method === "POST") {
-      const user = await getSessionUser(request, env);
-      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const { videoId } = (await request.json()) as any;
-      if (!videoId) return jsonResponse({ error: "Video ID is required" }, 400);
-
-      // Fetch video details
-      const video = (await env.DB.prepare("SELECT * FROM videos WHERE id = ? AND is_active = 1").bind(videoId).first()) as any;
-      if (!video) return jsonResponse({ error: "Video not found or inactive" }, 404);
-
-      const configArr = await env.DB.prepare("SELECT * FROM config WHERE key LIKE 'video_%'").all();
-      const config = configArr.results.reduce((acc: any, row: any) => {
-        acc[row.key] = row.value;
-        return acc;
-      }, {});
-
-      const reward = video.reward;
-      const cooldownHours = parseInt(config.video_cooldown_hours || "24");
-      const dailyMax = parseInt(config.video_daily_max || "50");
-
-      // Check stats
-      let stats = (await env.DB.prepare("SELECT * FROM user_stats WHERE user_id = ?").bind(user.id).first()) as any;
-      if (!stats) {
-        await env.DB.prepare("INSERT INTO user_stats (user_id) VALUES (?)").bind(user.id).run();
-        stats = { daily_video_earnings: 0, last_video_claim: null, last_reset: new Date().toISOString() };
-      }
-
-      const now = new Date();
-      const lastReset = new Date(stats.last_reset);
-      const isNewDay = now.getTime() - lastReset.getTime() > 24 * 60 * 60 * 1000;
-
-      let currentDaily = isNewDay ? 0 : stats.daily_video_earnings;
-      if (currentDaily + reward > dailyMax) return jsonResponse({ error: "Daily video earning limit reached" }, 400);
-
-      if (stats.last_video_claim) {
-        const lastClaim = new Date(stats.last_video_claim);
-        const hoursPassed = (now.getTime() - lastClaim.getTime()) / (1000 * 60 * 60);
-        if (hoursPassed < cooldownHours) {
-          const remaining = Math.ceil(cooldownHours - hoursPassed);
-          return jsonResponse({ error: `Video earning is on cooldown. Try again in ${remaining} hours.` }, 400);
-        }
-      }
-
-      await env.DB.batch([
-        env.DB.prepare("UPDATE users SET credits = credits + ? WHERE id = ?").bind(reward, user.id),
-        env.DB.prepare(
-          `INSERT OR REPLACE INTO user_stats (user_id, daily_video_earnings, last_video_claim, last_reset)
-           VALUES (?, ?, CURRENT_TIMESTAMP, ?)`
-        ).bind(user.id, currentDaily + reward, isNewDay ? now.toISOString() : stats.last_reset),
-        env.DB.prepare("INSERT INTO earnings_logs (user_id, earned, type) VALUES (?, ?, 'video')").bind(user.id, reward)
-      ]);
-
-      return jsonResponse({ success: true, earned: reward });
-    }
 
     // USER: BILLING HISTORY
     if (url.pathname === "/api/billing/history" && request.method === "GET") {
@@ -768,42 +703,6 @@ export default {
       return jsonResponse({ success: true });
     }
 
-    // ADMIN: VIDEOS - LIST
-    if (url.pathname === "/api/admin/videos" && request.method === "GET") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const videos = await env.DB.prepare("SELECT * FROM videos ORDER BY created_at DESC").all();
-      return jsonResponse({ success: true, videos: videos.results });
-    }
-
-    // ADMIN: VIDEOS - CREATE
-    if (url.pathname === "/api/admin/videos" && request.method === "POST") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const { title, url: videoUrl, reward, duration_seconds } = (await request.json()) as any;
-      if (!title || !videoUrl || !reward || !duration_seconds) return jsonResponse({ error: "All fields required" }, 400);
-
-      const id = crypto.randomUUID();
-      await env.DB.prepare(
-        "INSERT INTO videos (id, title, url, reward, duration_seconds) VALUES (?, ?, ?, ?, ?)"
-      )
-        .bind(id, title, videoUrl, reward, duration_seconds)
-        .run();
-
-      return jsonResponse({ success: true });
-    }
-
-    // ADMIN: VIDEOS - DELETE
-    if (url.pathname.startsWith("/api/admin/videos/") && request.method === "DELETE") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const id = url.pathname.split("/").pop();
-      await env.DB.prepare("DELETE FROM videos WHERE id = ?").bind(id).run();
-      return jsonResponse({ success: true });
-    }
 
     // MEMBERS - DELETE
     if (url.pathname.startsWith("/api/workspaces/") && url.pathname.includes("/members/") && request.method === "DELETE") {
@@ -975,6 +874,8 @@ export default {
       const stmts = Object.entries(settings).map(([key, value]) =>
         env.DB.prepare("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)").bind(key, String(value))
       );
+
+      if (stmts.length === 0) return jsonResponse({ success: true });
 
       await env.DB.batch(stmts);
       return jsonResponse({ success: true });
