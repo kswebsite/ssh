@@ -61,39 +61,6 @@ async function verifyPassword(password: string, storedHash: string): Promise<boo
   return computedHash === hashB64;
 }
 
-// ==================== AFK EARNING LOGIC (dynamic via config) ====================
-async function claimAFKEarnings(db: D1Database, userId: number) {
-  const userStmt = db.prepare("SELECT credits, last_active FROM users WHERE id = ?").bind(userId);
-  const user = (await userStmt.first()) as { credits: number; last_active: string } | null;
-  if (!user) return { earned: 0, newCredits: 0 };
-
-  const configArr = await db.prepare("SELECT * FROM config WHERE key LIKE 'afk_%'").all();
-  const config = configArr.results.reduce((acc: any, row: any) => {
-    acc[row.key] = row.value;
-    return acc;
-  }, {});
-
-  const rate = parseInt(config.afk_rate || "10");
-  const maxHours = parseInt(config.afk_max_hours || "24");
-
-  const last = new Date(user.last_active);
-  const now = new Date();
-  const diffMs = Math.max(0, now.getTime() - last.getTime());
-  const diffHours = diffMs / (1000 * 60 * 60);
-
-  let earned = Math.floor(diffHours * rate);
-  earned = Math.min(earned, rate * maxHours);
-
-  const newCredits = user.credits + earned;
-
-  await db.batch([
-    db.prepare("UPDATE users SET credits = ?, last_active = CURRENT_TIMESTAMP WHERE id = ?").bind(newCredits, userId),
-    db.prepare("INSERT INTO earnings_logs (user_id, earned, type) VALUES (?, ?, 'afk')").bind(userId, earned)
-  ]);
-
-  return { earned, newCredits };
-}
-
 // ==================== SESSION HELPERS ====================
 async function getSessionUser(request: Request, env: Env) {
   const cookieHeader = request.headers.get("Cookie") || "";
@@ -171,21 +138,6 @@ export default {
       return env.ASSETS.fetch(new URL("/admin.html", request.url));
     }
 
-    if (url.pathname === "/afk") {
-      const user = await getSessionUser(request, env);
-      if (!user) return Response.redirect(`${url.origin}/auth.html`, 302);
-
-      const configRow = await env.DB.prepare("SELECT value FROM config WHERE key = 'afk_ad_code'").first();
-      const adCode = (configRow?.value as string) || "<!-- No Ad Code Configured -->";
-
-      const templateRes = await env.ASSETS.fetch(new URL("/afk_template.html", request.url));
-      let html = await templateRes.text();
-      html = html.replace("<!-- AFK_AD_CODE -->", adCode);
-
-      return new Response(html, {
-        headers: { "Content-Type": "text/html" }
-      });
-    }
 
     // ==================== API ENDPOINTS ====================
 
@@ -221,14 +173,18 @@ export default {
         return jsonResponse({ error: "Identifier and password required" }, 400);
       }
 
-      const userRow = await env.DB.prepare(
+      const userRow = (await env.DB.prepare(
         "SELECT * FROM users WHERE username = ? OR email = ?"
       )
         .bind(identifier.toLowerCase(), identifier.toLowerCase())
-        .first();
+        .first()) as any;
 
       if (!userRow || !(await verifyPassword(password, userRow.password_hash as string))) {
         return jsonResponse({ error: "Invalid credentials" }, 401);
+      }
+
+      if (userRow.is_banned) {
+        return jsonResponse({ error: "Your account has been banned." }, 403);
       }
 
       const sessionId = crypto.randomUUID();
@@ -255,12 +211,10 @@ export default {
       return response;
     }
 
-    // ME (with AFK earnings claim)
+    // ME
     if (url.pathname === "/api/me" && request.method === "GET") {
       const user = await getSessionUser(request, env);
       if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const { earned, newCredits } = await claimAFKEarnings(env.DB, user.id);
 
       return jsonResponse({
         success: true,
@@ -268,8 +222,7 @@ export default {
           id: user.id,
           username: user.username,
           email: user.email,
-          credits: newCredits,
-          earned,
+          credits: user.credits,
           created_at: user.created_at,
           is_admin: user.is_admin,
         },
@@ -720,14 +673,14 @@ export default {
       const user = await getSessionUser(request, env);
       if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
 
-      const { title, video_id, reward, duration_seconds } = (await request.json()) as any;
-      if (!title || !video_id || !reward || !duration_seconds) return jsonResponse({ error: "All fields required" }, 400);
+      const { title, url: videoUrl, reward, duration_seconds } = (await request.json()) as any;
+      if (!title || !videoUrl || !reward || !duration_seconds) return jsonResponse({ error: "All fields required" }, 400);
 
       const id = crypto.randomUUID();
       await env.DB.prepare(
-        "INSERT INTO videos (id, title, video_id, reward, duration_seconds) VALUES (?, ?, ?, ?, ?)"
+        "INSERT INTO videos (id, title, url, reward, duration_seconds) VALUES (?, ?, ?, ?, ?)"
       )
-        .bind(id, title, video_id, reward, duration_seconds)
+        .bind(id, title, videoUrl, reward, duration_seconds)
         .run();
 
       return jsonResponse({ success: true });
@@ -774,7 +727,7 @@ export default {
       if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
 
       const users = await env.DB.prepare(
-        `SELECT id, username, email, credits, last_active, created_at, is_admin FROM users ORDER BY created_at DESC`
+        `SELECT id, username, email, credits, last_active, created_at, is_admin, is_banned FROM users ORDER BY created_at DESC`
       ).all();
 
       return jsonResponse({ success: true, users: users.results });
@@ -824,6 +777,32 @@ export default {
       if (Number(targetId) === user.id) return jsonResponse({ error: "Cannot delete yourself" }, 400);
 
       await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(targetId).run();
+      return jsonResponse({ success: true });
+    }
+
+    // ADMIN: BAN/UNBAN USER
+    if (url.pathname.startsWith("/api/admin/users/") && url.pathname.endsWith("/ban") && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const targetId = url.pathname.split("/")[4];
+      const { banned } = (await request.json()) as any;
+
+      await env.DB.prepare("UPDATE users SET is_banned = ? WHERE id = ?")
+        .bind(banned ? 1 : 0, targetId).run();
+
+      return jsonResponse({ success: true });
+    }
+
+    // ADMIN: PROMOTE TO ADMIN
+    if (url.pathname.startsWith("/api/admin/users/") && url.pathname.endsWith("/promote") && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const targetId = url.pathname.split("/")[4];
+      await env.DB.prepare("UPDATE users SET is_admin = 1 WHERE id = ?")
+        .bind(targetId).run();
+
       return jsonResponse({ success: true });
     }
 

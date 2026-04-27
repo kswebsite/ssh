@@ -17,7 +17,7 @@
             transition: all 0.2s ease; cursor: pointer;
         }
         .video-item:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .video-thumb { aspect-ratio: 16/9; background: #111; position: relative; }
+        .video-thumb { aspect-ratio: 16/9; background: #111; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .video-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .video-badge { position: absolute; top: 8px; right: 8px; background: var(--accent); color: white; padding: 2px 6px; border-radius: 2px; font-size: 10px; font-weight: 700; font-family: var(--font-mono); }
 
@@ -27,7 +27,8 @@
 
         .player-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .player-content { width: 100%; max-width: 900px; background: #0a0a0a; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; }
-        .player-iframe { aspect-ratio: 16/9; width: 100%; }
+        .player-iframe-container { aspect-ratio: 16/9; width: 100%; background: #000; position: relative; }
+        .player-iframe-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
         .player-controls { padding: 24px; display: flex; justify-content: space-between; align-items: center; }
 
         .ad-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 10; text-align: center; }
@@ -46,7 +47,7 @@
     <div id="player-modal" class="player-modal">
         <div class="player-content">
             <div style="position: relative;">
-                <div id="yt-container"></div>
+                <div id="video-container" class="player-iframe-container"></div>
                 <div id="ad-overlay" class="ad-overlay">
                     <div style="width: 300px; height: 250px; background: #111; display: flex; align-items: center; justify-content: center; border: 1px solid #333; margin-bottom: 20px;">
                         <p style="font-size: 11px; color: var(--text-muted);">ADVERTISEMENT</p>
@@ -66,10 +67,8 @@
         </div>
     </div>
 
-    <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         let videos = [];
-        let player = null;
         let currentVideo = null;
         let timerInterval = null;
 
@@ -82,12 +81,32 @@
             }
         }
 
+        function getThumbnail(v) {
+            const url = v.url || `https://www.youtube.com/watch?v=${v.video_id}`;
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                const id = url.includes('youtube.com') ? new URL(url).searchParams.get('v') : url.split('/').pop();
+                return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+            }
+            if (url.includes('instagram.com')) {
+                return 'https://www.instagram.com/static/images/ico/favicon-192.png/47ae032a3af6.png'; // Fallback IG icon
+            }
+            return 'https://via.placeholder.com/320x180?text=Video+Reward';
+        }
+
+        function getPlatform(url) {
+            if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
+            if (url.includes('instagram.com')) return 'Instagram';
+            if (url.includes('tiktok.com')) return 'TikTok';
+            if (url.includes('facebook.com')) return 'Facebook';
+            return 'Web';
+        }
+
         function renderVideos() {
             const container = document.getElementById('video-list');
             container.innerHTML = videos.map(v => `
                 <div class="video-item" onclick="openPlayer('${v.id}')">
                     <div class="video-thumb">
-                        <img src="https://img.youtube.com/vi/${v.video_id}/mqdefault.jpg" alt="${v.title}">
+                        <img src="${getThumbnail(v)}" alt="${v.title}">
                         <div class="video-badge">+${v.reward} Credits</div>
                     </div>
                     <div class="video-info">
@@ -95,7 +114,7 @@
                         <div class="video-meta">
                             <span>${Math.floor(v.duration_seconds / 60)}:${(v.duration_seconds % 60).toString().padStart(2, '0')}</span>
                             <span>•</span>
-                            <span>YouTube</span>
+                            <span>${getPlatform(v.url || '')}</span>
                         </div>
                     </div>
                 </div>
@@ -108,25 +127,23 @@
             document.getElementById('current-video-reward').textContent = `+${currentVideo.reward} Credits`;
             document.getElementById('player-modal').style.display = 'flex';
 
-            if (player) {
-                player.loadVideoById(currentVideo.video_id);
-            } else {
-                player = new YT.Player('yt-container', {
-                    height: '100%',
-                    width: '100%',
-                    videoId: currentVideo.video_id,
-                    playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0 },
-                    events: { 'onStateChange': onPlayerStateChange }
-                });
-            }
-        }
+            const container = document.getElementById('video-container');
+            const url = currentVideo.url || `https://www.youtube.com/watch?v=${currentVideo.video_id}`;
 
-        function onPlayerStateChange(event) {
-            // When video starts or is playing, show ad overlay after some time or immediately
-            // For this demo, let's trigger the "Ad" halfway through or after 5 seconds
-            if (event.data == YT.PlayerState.PLAYING) {
-                startAdTimer();
+            let embedUrl = '';
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                const id = url.includes('youtube.com') ? new URL(url).searchParams.get('v') : url.split('/').pop();
+                embedUrl = `https://www.youtube.com/embed/${id}?autoplay=1&controls=1`;
+            } else if (url.includes('instagram.com')) {
+                embedUrl = `${url.split('?')[0]}embed`;
+            } else {
+                embedUrl = url;
             }
+
+            container.innerHTML = `<iframe src="${embedUrl}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+
+            // Start timer immediately for non-YouTube or simpler logic
+            startAdTimer();
         }
 
         function startAdTimer() {
@@ -168,7 +185,8 @@
         }
 
         function closePlayer() {
-            if (player) player.stopVideo();
+            const container = document.getElementById('video-container');
+            container.innerHTML = ''; // Kill the iframe
             if (timerInterval) clearInterval(timerInterval);
             document.getElementById('player-modal').style.display = 'none';
             document.getElementById('ad-overlay').style.display = 'none';
