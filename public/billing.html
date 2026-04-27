@@ -7,15 +7,15 @@
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
     <style>
-        body { padding: 32px; background: #000; color: #fff; }
+        body { padding: 16px; background: #000; color: #fff; }
         .billing-container { max-width: 1000px; margin: 0 auto; }
 
-        .history-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-top: 24px; }
-        .history-table th { text-align: left; padding: 12px 16px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-        .history-row { background: #0a0a0a; border: 1px solid #1e293b; transition: all 0.2s; }
-        .history-row td { padding: 16px; font-size: 14px; border-top: 1px solid #1e293b; border-bottom: 1px solid #1e293b; }
-        .history-row td:first-child { border-left: 1px solid #1e293b; border-radius: 8px 0 0 8px; }
-        .history-row td:last-child { border-right: 1px solid #1e293b; border-radius: 0 8px 8px 0; }
+        .history-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; margin-top: 20px; }
+        .history-table th { text-align: left; padding: 8px 12px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--font-mono); }
+        .history-row { background: #0a0a0a; border: 1px solid #1e293b; transition: all 0.1s; }
+        .history-row td { padding: 10px 12px; font-size: 13px; border-top: 1px solid #1e293b; border-bottom: 1px solid #1e293b; }
+        .history-row td:first-child { border-left: 1px solid #1e293b; border-radius: 2px 0 0 2px; }
+        .history-row td:last-child { border-right: 1px solid #1e293b; border-radius: 0 2px 2px 0; }
 
         .amount-positive { color: #10b981; font-weight: 600; }
         .empty-state { text-align: center; padding: 64px 20px; color: var(--text-muted); border: 1px dashed #1e293b; border-radius: 12px; margin-top: 24px; }
@@ -23,13 +23,13 @@
 </head>
 <body>
     <div class="billing-container animate-slide-up">
-        <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 32px; letter-spacing: -0.02em;">Billing & History</h1>
+        <h1 style="font-size: 20px; font-weight: 800; margin-bottom: 24px; letter-spacing: 0.05em; font-family: var(--font-mono);">BILLING_HISTORY</h1>
 
         <div class="card" style="margin-bottom: 40px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h2 style="font-size: 14px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Available Balance</h2>
-                    <p id="current-balance" style="font-size: 32px; font-weight: 700;">0 CREDITS</p>
+                    <h2 style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; font-family: var(--font-mono);">Available Balance</h2>
+                    <p id="current-balance" style="font-size: 24px; font-weight: 700; font-family: var(--font-mono);">0 CREDITS</p>
                 </div>
                 <button class="btn btn-primary" onclick="window.parent.navigateTo('dashboard')">Earn More</button>
             </div>

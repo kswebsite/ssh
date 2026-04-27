@@ -7,12 +7,12 @@
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
     <style>
-        body { padding: 32px; background: #000; color: #fff; }
+        body { padding: 16px; background: #000; color: #fff; }
         .dashboard-container { max-width: 1200px; margin: 0 auto; }
 
         .welcome-hero {
-            padding: 40px; background: linear-gradient(135deg, #0a0a0a 0%, #111 100%);
-            border: 1px solid #1e293b; border-radius: 24px; margin-bottom: 32px;
+            padding: 24px; background: linear-gradient(135deg, #0a0a0a 0%, #111 100%);
+            border: 1px solid #1e293b; border-radius: 4px; margin-bottom: 20px;
             position: relative; overflow: hidden;
         }
         .welcome-hero::after {
@@ -21,35 +21,35 @@
             transform: rotate(-15deg); pointer-events: none;
         }
 
-        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; }
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         @media (max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
-        .stat-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .stat-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
         .stat-card-modern {
-            background: #0a0a0a; border: 1px solid #1e293b; padding: 24px; border-radius: 16px;
+            background: #0a0a0a; border: 1px solid #1e293b; padding: 16px; border-radius: 4px;
             transition: all 0.3s ease;
         }
         .stat-card-modern:hover { border-color: var(--accent); transform: translateY(-2px); }
-        .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-        .stat-value { font-size: 28px; font-weight: 700; color: #fff; }
+        .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-family: var(--font-mono); }
+        .stat-value { font-size: 24px; font-weight: 700; color: #fff; font-family: var(--font-mono); }
 
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .section-title { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
 
         .terminal-card-modern {
-            background: #0a0a0a; border: 1px solid #1e293b; padding: 20px; border-radius: 16px;
-            display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+            background: #0a0a0a; border: 1px solid #1e293b; padding: 14px; border-radius: 4px;
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
             transition: all 0.2s ease;
         }
         .terminal-card-modern:hover { background: #0f0f0f; border-color: var(--accent); }
 
         .quick-action-card {
             background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.1);
-            padding: 20px; border-radius: 16px; display: flex; align-items: center; gap: 16px;
-            cursor: pointer; transition: all 0.2s; margin-bottom: 12px;
+            padding: 14px; border-radius: 4px; display: flex; align-items: center; gap: 12px;
+            cursor: pointer; transition: all 0.2s; margin-bottom: 8px;
         }
         .quick-action-card:hover { background: rgba(59, 130, 246, 0.1); border-color: var(--accent); }
-        .action-icon { width: 40px; height: 40px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+        .action-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 2px; display: flex; align-items: center; justify-content: center; color: white; }
 
         .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #1e293b; }
         .activity-item:last-child { border-bottom: none; }
@@ -58,8 +58,8 @@
 <body>
     <div class="dashboard-container animate-slide-up">
         <div class="welcome-hero">
-            <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 8px;">Welcome back, <span id="user-name">User</span>!</h1>
-            <p style="color: var(--text-muted); font-size: 16px;">Manage your cloud terminals and earn credits seamlessly.</p>
+            <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 4px;">Welcome back, <span id="user-name">User</span>!</h1>
+            <p style="color: var(--text-muted); font-size: 14px; font-family: var(--font-mono);">SYSTEM_STATUS: ONLINE // CREDITS_EARNING: ACTIVE</p>
         </div>
 
         <div class="dashboard-grid">
