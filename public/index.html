@@ -12,7 +12,7 @@
         .app { display: flex; height: 100vh; width: 100vw; }
         #sidebar {
             width: 240px; min-width: 240px; background: var(--bg-sidebar);
-            border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 50;
+            border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100;
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         @media (max-width: 767px) {
@@ -66,6 +66,13 @@
         .top-bar {
             height: 48px; background: #000; border-bottom: 1px solid var(--border);
             padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .sidebar-toggle {
+            display: none; padding: 8px; margin-left: -8px; color: var(--text-secondary);
+            cursor: pointer;
+        }
+        @media (max-width: 767px) {
+            .sidebar-toggle { display: block; }
         }
         .iframe-container { flex: 1; background: #000; position: relative; }
         iframe { width: 100%; height: 100%; border: 0; }
@@ -165,9 +172,9 @@
         <main id="main-content">
             <div class="top-bar">
                 <div style="display: flex; align-items: center; gap: 16px;">
-                    <button class="btn btn-ghost" onclick="toggleSidebar()" style="padding: 8px; @media(min-width:768px){display:none;}">
+                    <div class="sidebar-toggle" onclick="toggleSidebar()">
                         <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    </button>
+                    </div>
                     <h2 id="page-title" style="font-size: 16px; font-weight: 600;">Dashboard</h2>
                 </div>
                 <div id="credits-badge" class="badge badge-primary">0 CREDITS</div>
@@ -402,7 +409,7 @@
             const targetUrl = term.token.startsWith('http') ? term.token : `https://${term.token}.trycloudflare.com`;
             document.getElementById('main-iframe').src = targetUrl;
             renderList();
-            if (window.innerWidth < 768) toggleSidebar();
+            closeSidebarMobile();
         }
 
         // Modals
@@ -651,6 +658,7 @@
                 document.getElementById('page-title').textContent = 'Earn Credits';
                 document.getElementById('main-iframe').src = 'earn.html';
             }
+            closeSidebarMobile();
         }
 
         function goHome() { navigateTo('dashboard'); }
@@ -660,6 +668,13 @@
             const backdrop = document.getElementById('sidebar-backdrop');
             sidebar.classList.toggle('open');
             backdrop.classList.toggle('show');
+        }
+
+        function closeSidebarMobile() {
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebar-backdrop').classList.remove('show');
+            }
         }
         async function handleLogout() {
             await fetch('/api/logout', { method: 'POST' });
