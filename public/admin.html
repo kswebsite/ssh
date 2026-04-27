@@ -40,7 +40,6 @@
         <div class="admin-tabs">
             <div class="admin-tab active" onclick="switchTab('users', event)">Users</div>
             <div class="admin-tab" onclick="switchTab('coupons', event)">Coupons</div>
-            <div class="admin-tab" onclick="switchTab('videos', event)">Videos</div>
             <div class="admin-tab" onclick="switchTab('settings', event)">Settings</div>
         </div>
 
@@ -66,19 +65,11 @@
             </div>
         </div>
 
-        <div id="tab-videos" class="tab-content">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:12px;"><h2>Video Rewards</h2><button class="btn btn-primary" onclick="showCreateVideo()">+ Add Video</button></div>
-            <div class="table-responsive">
-                <table class="user-table"><thead><tr><th>Title</th><th>Reward</th><th>Duration</th><th>URL</th><th>Actions</th></tr></thead><tbody id="video-list"></tbody></table>
-            </div>
-        </div>
 
         <div id="tab-settings" class="tab-content">
             <h2>System Config</h2>
             <div class="card config-form" id="settings-form">
-                <div class="config-group"><label class="config-label">Daily Video Max</label><input id="cfg-video_daily_max" class="input" type="number"></div>
-                <div class="config-group"><label class="config-label">Video Cooldown (Hrs)</label><input id="cfg-video_cooldown_hours" class="input" type="number"></div>
-                <button class="btn btn-primary" onclick="saveSettings()">Save Configuration</button>
+                <p style="color: var(--text-muted); font-size: 13px;">No global settings available at this time.</p>
             </div>
         </div>
     </div>
@@ -91,7 +82,6 @@
             document.getElementById(`tab-${tab}`).classList.add('active');
             if(tab === 'users') loadUsers();
             if(tab === 'coupons') loadCoupons();
-            if(tab === 'videos') loadVideos();
             if(tab === 'settings') loadSettings();
         }
 
@@ -159,52 +149,6 @@
             document.getElementById('coupon-list').innerHTML = data.coupons.map(c => `<tr class="user-row"><td><code>${c.code}</code></td><td>${c.reward}</td><td>${c.current_uses}/${c.max_uses}</td><td><button class="btn btn-ghost" style="color:var(--danger);" onclick="deleteCoupon('${c.id}')">Delete</button></td></tr>`).join('');
         }
 
-        async function loadVideos() {
-            const res = await fetch('/api/admin/videos');
-            const data = await res.json();
-            document.getElementById('video-list').innerHTML = data.videos.map(v => `
-                <tr class="user-row">
-                    <td><b>${v.title}</b></td>
-                    <td>${v.reward} Credits</td>
-                    <td>${v.duration_seconds}s</td>
-                    <td><code style="font-size:10px;">${v.url || v.video_id}</code></td>
-                    <td><button class="btn btn-ghost" style="color:var(--danger);" onclick="deleteVideo('${v.id}')">Delete</button></td>
-                </tr>
-            `).join('');
-        }
-
-        async function showCreateVideo() {
-            const res = await ui.prompt([
-                { name: 'title', label: 'Video Title', placeholder: 'e.g. My Cool Video' },
-                { name: 'url', label: 'Video URL (YouTube, Instagram, etc.)', placeholder: 'https://...' },
-                { name: 'reward', label: 'Reward amount', type: 'number', value: '10' },
-                { name: 'duration', label: 'Duration (seconds)', type: 'number', value: '30' }
-            ], 'Add Video Reward');
-
-            if(!res || !res.title || !res.url) return;
-
-            await fetch('/api/admin/videos', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    title: res.title,
-                    url: res.url,
-                    reward: parseInt(res.reward),
-                    duration_seconds: parseInt(res.duration)
-                })
-            });
-            ui.showToast('Video added successfully', 'success');
-            loadVideos();
-        }
-
-        async function deleteVideo(id) {
-            if(await ui.confirm('Are you sure you want to delete this video?')) {
-                await fetch(`/api/admin/videos/${id}`, { method: 'DELETE' });
-                ui.showToast('Video deleted');
-                loadVideos();
-            }
-        }
-
         async function showCreateCoupon() {
             const res = await ui.prompt([
                 { name: 'code', label: 'Coupon Code', placeholder: 'SUMMER2024' },
@@ -244,16 +188,7 @@
         }
 
         async function saveSettings() {
-            const settings = {};
-            ['video_daily_max', 'video_cooldown_hours'].forEach(k => {
-                settings[k] = document.getElementById(`cfg-${k}`).value;
-            });
-            await fetch('/api/admin/settings', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(settings)
-            });
-            ui.showToast('Settings saved', 'success');
+            ui.showToast('No settings to save');
         }
 
         async function adjustCredits(id, curr) {

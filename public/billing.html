@@ -32,9 +32,15 @@
                     <h2 style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; font-family: var(--font-mono);">Available Balance</h2>
                     <p id="current-balance" style="font-size: 24px; font-weight: 700; font-family: var(--font-mono);">0 CREDITS</p>
                 </div>
-                <div style="display: flex; gap: 8px; flex: 1; min-width: 280px; justify-content: flex-end;">
-                    <input type="text" id="coupon-code" class="input" placeholder="Enter coupon code..." style="max-width: 200px; height: 38px;">
-                    <button class="btn btn-primary" onclick="redeemCoupon()" style="height: 38px;">Redeem</button>
+                <div style="display: flex; gap: 12px; flex: 1; min-width: 280px; justify-content: flex-end; align-items: center;">
+                    <a href="https://market.ksw.workers.dev" target="_blank" class="btn btn-secondary" style="height: 38px; background: rgba(59, 130, 246, 0.1); border-color: var(--accent); color: var(--accent);">
+                        <svg style="width:16px;height:16px;margin-right:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        KS Market
+                    </a>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="coupon-code" class="input" placeholder="Coupon Code" style="max-width: 140px; height: 38px;">
+                        <button class="btn btn-primary" onclick="redeemCoupon()" style="height: 38px;">Redeem</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -98,15 +104,18 @@
                 const container = document.getElementById('history-list');
                 container.innerHTML = historyData.history.map(item => {
                     let typeLabel = item.type;
-                    if (item.type === 'video') typeLabel = '📺 Video Reward';
+                    if (item.type === 'video') typeLabel = '📺 KS Market Reward';
                     if (item.type === 'afk') typeLabel = '⌛ AFK Earning';
+                    if (item.type === 'terminal_usage') typeLabel = '🖥️ Terminal Usage';
                     if (item.type.startsWith('Coupon')) typeLabel = '🎟️ ' + item.type;
+
+                    const isNegative = item.amount < 0;
 
                     return `
                         <tr class="history-row">
                             <td style="color: var(--text-muted); font-size: 12px;">${new Date(item.created_at).toLocaleString()}</td>
                             <td style="font-weight: 500;">${typeLabel}</td>
-                            <td class="amount-positive">+${item.amount}</td>
+                            <td class="${isNegative ? '' : 'amount-positive'}" style="${isNegative ? 'color: var(--danger);' : ''}">${isNegative ? '' : '+'}${item.amount}</td>
                             <td><span class="badge badge-primary" style="font-size: 10px;">COMPLETED</span></td>
                         </tr>
                     `;
