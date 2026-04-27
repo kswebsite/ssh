@@ -332,6 +332,7 @@
         let currentUser = null;
         let currentWorkspaceId = 'all';
         let currentContextId = null;
+        let usageInterval = null;
 
         async function loadTerminals() {
             const res = await fetch(`/api/terminals${currentWorkspaceId !== 'all' ? '?workspaceId=' + currentWorkspaceId : ''}`);
@@ -476,6 +477,45 @@
             document.getElementById('main-iframe').src = targetUrl;
             renderList();
             closeSidebarMobile();
+
+            // Start usage billing
+            startUsageBilling(id);
+        }
+
+        function startUsageBilling(terminalId) {
+            if (usageInterval) clearInterval(usageInterval);
+
+            // Deduct immediately on open
+            deductCredit(terminalId);
+
+            // Then every minute
+            usageInterval = setInterval(() => {
+                if (activeId === terminalId) {
+                    deductCredit(terminalId);
+                } else {
+                    clearInterval(usageInterval);
+                }
+            }, 60000);
+        }
+
+        async function deductCredit(terminalId) {
+            try {
+                const res = await fetch('/api/terminals/usage', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ terminalId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    refreshUser(); // Update credits badge
+                } else if (data.error === 'Insufficient credits') {
+                    ui.showToast('Insufficient credits. Closing terminal.', 'error');
+                    clearInterval(usageInterval);
+                    goHome();
+                }
+            } catch (e) {
+                console.error('Usage billing error:', e);
+            }
         }
 
         // Modals
@@ -787,6 +827,13 @@
                 document.getElementById('page-title').textContent = 'Installation Guide';
                 document.getElementById('main-iframe').src = 'installation.html';
             }
+
+            if (usageInterval) {
+                clearInterval(usageInterval);
+                usageInterval = null;
+                activeId = null;
+            }
+
             closeSidebarMobile();
         }
 
