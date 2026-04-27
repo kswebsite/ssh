@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KS SSH - Auth</title>
   <link rel="stylesheet" href="theme.css">
+  <script src="ui.js"></script>
   <style>
     body {
       min-height: 100dvh;
@@ -272,7 +273,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Registration failed');
-        alert('Account created! Please login.');
+        await ui.alert('Account created! Please login.', 'Success');
         switchTab(0);
       } catch (err) {
         errorEl.textContent = err.message;

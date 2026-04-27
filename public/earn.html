@@ -6,6 +6,7 @@
     <title>Earn Credits</title>
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+    <script src="ui.js"></script>
     <style>
         body { padding: 16px; background: #000; color: #fff; }
         .earn-container { max-width: 1200px; margin: 0 auto; }
@@ -158,11 +159,11 @@
             });
             const data = await res.json();
             if (data.success) {
-                alert(`Successfully claimed ${data.earned} credits!`);
+                ui.showToast(`Successfully claimed ${data.earned} credits!`, 'success');
                 closePlayer();
-                window.parent.refreshUser();
+                if (window.parent && window.parent.refreshUser) window.parent.refreshUser();
             } else {
-                alert(data.error);
+                ui.showToast(data.error, 'error');
             }
         }
 

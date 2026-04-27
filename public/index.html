@@ -6,6 +6,7 @@
     <title>KS SSH — Web Terminal</title>
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+    <script src="ui.js"></script>
     <style>
         body, html { height: 100dvh; width: 100%; overflow: hidden; background: #000; }
         .app { display: flex; height: 100vh; width: 100vw; }
@@ -69,12 +70,7 @@
         .iframe-container { flex: 1; background: #000; position: relative; }
         iframe { width: 100%; height: 100%; border: 0; }
         
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(4px);
-            z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px;
-        }
-        .modal-overlay.show { display: flex; }
-        .modal { width: 100%; max-width: 440px; animation: modalIn 0.2s ease-out; }
+        .modal { width: 100%; max-width: 440px; }
         @keyframes modalIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         
         .permission-grid {
@@ -185,72 +181,82 @@
     <!-- MODALS -->
     <!-- Add Terminal -->
     <div id="add-modal" class="modal-overlay" onclick="if(event.target===this)closeModals()">
-        <div class="modal card">
-            <h3 style="margin-bottom: 20px;">Add Terminal</h3>
-            <div style="margin-bottom: 16px;">
-                <label class="section-label" style="margin:0 0 8px;">Name</label>
-                <input id="modal-name" type="text" class="input" placeholder="Server name">
+        <div class="modal-container">
+            <div class="modal-header">
+                <span class="modal-title">Add Terminal</span>
             </div>
-            <div style="margin-bottom: 16px;">
-                <label class="section-label" style="margin:0 0 8px;">Token / URL</label>
-                <input id="modal-token" type="text" class="input" placeholder="token or https://...">
+            <div class="modal-content">
+                <div style="margin-bottom: 16px;">
+                    <label class="section-label" style="margin:0 0 8px;">Name</label>
+                    <input id="modal-name" type="text" class="input" placeholder="Server name">
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label class="section-label" style="margin:0 0 8px;">Token / URL</label>
+                    <input id="modal-token" type="text" class="input" placeholder="token or https://...">
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <label class="section-label" style="margin:0 0 8px;">Workspace</label>
+                    <select id="modal-workspace" class="input" style="background:#000;"></select>
+                </div>
             </div>
-            <div style="margin-bottom: 24px;">
-                <label class="section-label" style="margin:0 0 8px;">Workspace</label>
-                <select id="modal-workspace" class="input" style="background:#000;"></select>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModals()">Cancel</button>
-                <button class="btn btn-primary" style="flex: 1;" onclick="handleAddTerminal()">Add</button>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModals()">Cancel</button>
+                <button class="btn btn-primary" onclick="handleAddTerminal()">Add Terminal</button>
             </div>
         </div>
     </div>
 
     <!-- Workspace Settings -->
     <div id="ws-settings-modal" class="modal-overlay" onclick="if(event.target===this)closeModals()">
-        <div class="modal card" style="max-width: 500px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3>Workspace Settings</h3>
-                <button class="btn btn-danger" style="padding: 6px 12px; font-size: 11px;" onclick="handleDeleteWorkspace()">Delete Workspace</button>
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <span class="modal-title">Workspace Settings</span>
+                <button class="btn btn-danger" style="padding: 4px 8px; font-size: 10px;" onclick="handleDeleteWorkspace()">Delete</button>
             </div>
-            <div style="margin-bottom: 20px;">
-                <label class="section-label" style="margin:0 0 8px;">Workspace Name</label>
-                <div style="display: flex; gap: 8px;">
-                    <input id="ws-settings-name" type="text" class="input">
-                    <button class="btn btn-primary" onclick="handleRenameWorkspace()">Rename</button>
+            <div class="modal-content">
+                <div style="margin-bottom: 20px;">
+                    <label class="section-label" style="margin:0 0 8px;">Workspace Name</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input id="ws-settings-name" type="text" class="input">
+                        <button class="btn btn-primary" onclick="handleRenameWorkspace()">Rename</button>
+                    </div>
                 </div>
-            </div>
-            <div style="margin-bottom: 20px;">
-                <label class="section-label" style="margin:0 0 8px;">Add Member</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input id="new-member-username" type="text" class="input" placeholder="Username">
-                    <select id="new-member-access" class="input" style="width: 120px; background:#000;" onchange="toggleMemberTermList('new')">
-                        <option value="all">Full Access</option>
-                        <option value="selected">Restricted</option>
-                    </select>
-                    <button class="btn btn-primary" onclick="handleAddMember()">Add</button>
+                <div style="margin-bottom: 20px;">
+                    <label class="section-label" style="margin:0 0 8px;">Add Member</label>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <input id="new-member-username" type="text" class="input" placeholder="Username">
+                        <select id="new-member-access" class="input" style="width: 120px; background:#000;" onchange="toggleMemberTermList('new')">
+                            <option value="all">Full Access</option>
+                            <option value="selected">Restricted</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="handleAddMember()">Add</button>
+                    </div>
+                    <div id="new-member-term-list" class="permission-grid" style="display: none;"></div>
                 </div>
-                <div id="new-member-term-list" class="permission-grid" style="display: none;"></div>
+                <div class="section-label">Members</div>
+                <div id="ws-members-list" style="margin-top: 8px;"></div>
             </div>
-            <div class="section-label">Members</div>
-            <div id="ws-members-list" style="margin-top: 8px;"></div>
-            <div style="margin-top: 24px;">
-                <button class="btn btn-secondary" style="width: 100%;" onclick="closeModals()">Done</button>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModals()">Done</button>
             </div>
         </div>
     </div>
 
     <!-- Create Workspace -->
     <div id="create-ws-modal" class="modal-overlay" onclick="if(event.target===this)closeModals()">
-        <div class="modal card">
-            <h3 style="margin-bottom: 20px;">Create Workspace</h3>
-            <div style="margin-bottom: 24px;">
-                <label class="section-label" style="margin:0 0 8px;">Name</label>
-                <input id="new-ws-name" type="text" class="input" placeholder="e.g. Production">
+        <div class="modal-container">
+            <div class="modal-header">
+                <span class="modal-title">Create Workspace</span>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModals()">Cancel</button>
-                <button class="btn btn-primary" style="flex: 1;" onclick="confirmCreateWorkspace()">Create</button>
+            <div class="modal-content">
+                <div style="margin-bottom: 8px;">
+                    <label class="section-label" style="margin:0 0 8px;">Name</label>
+                    <input id="new-ws-name" type="text" class="input" placeholder="e.g. Production">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModals()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmCreateWorkspace()">Create Workspace</button>
             </div>
         </div>
     </div>
@@ -492,7 +498,7 @@
             if (data.success) {
                 closeModals();
                 loadTerminals();
-            } else alert(data.error);
+            } else ui.showToast(data.error, 'error');
         }
 
         async function confirmCreateWorkspace() {
@@ -531,7 +537,7 @@
                 if (!data.success) throw new Error(data.error);
                 loadWorkspaces(); // refresh to be sure
             } catch (err) {
-                alert('Failed to rename: ' + err.message);
+                ui.showToast('Failed to rename: ' + err.message, 'error');
                 if (ws) ws.name = oldName;
                 populateWorkspaceDropdown();
                 document.getElementById('selected-ws-name').textContent = oldName;
@@ -539,7 +545,7 @@
         }
 
         async function handleDeleteWorkspace() {
-            if (!confirm('Delete this workspace?')) return;
+            if (!await ui.confirm('Delete this workspace?')) return;
             const res = await fetch(`/api/workspaces/${currentWorkspaceId}`, { method: 'DELETE' });
             if ((await res.json()).success) {
                 closeModals();
@@ -562,7 +568,7 @@
             if (data.success) {
                 document.getElementById('new-member-username').value = '';
                 loadWorkspaceMembers(currentWorkspaceId);
-            } else alert(data.error);
+            } else ui.showToast(data.error, 'error');
         }
 
         async function updateMemberAccess(userId, type) {
@@ -585,7 +591,7 @@
         }
 
         async function handleRemoveMember(userId) {
-            if (confirm('Remove member?')) {
+            if (await ui.confirm('Remove member?')) {
                 await fetch(`/api/workspaces/${currentWorkspaceId}/members/${userId}`, { method: 'DELETE' });
                 loadWorkspaceMembers(currentWorkspaceId);
             }
@@ -602,7 +608,7 @@
         }
 
         async function contextDelete() {
-            if (!confirm('Delete terminal?')) return;
+            if (!await ui.confirm('Delete terminal?')) return;
 
             const originalTerminals = [...terminals];
             terminals = terminals.filter(t => t.id !== currentContextId);
@@ -612,8 +618,9 @@
                 const res = await fetch(`/api/terminals/${currentContextId}`, { method: 'DELETE' });
                 const data = await res.json();
                 if (!data.success) throw new Error(data.error);
+                ui.showToast('Terminal deleted');
             } catch (err) {
-                alert('Failed to delete: ' + err.message);
+                ui.showToast('Failed to delete: ' + err.message, 'error');
                 terminals = originalTerminals;
                 renderList();
             }

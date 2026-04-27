@@ -6,6 +6,7 @@
     <title>Admin Panel</title>
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+    <script src="ui.js"></script>
     <style>
         body { padding: 16px; background: #000; color: #fff; }
         .admin-container { max-width: 1200px; margin: 0 auto; }
@@ -64,6 +65,7 @@
                 <div class="config-group"><label class="config-label">AFK Max Hours</label><input id="cfg-afk_max_hours" class="input" type="number"></div>
                 <div class="config-group"><label class="config-label">Daily Video Max</label><input id="cfg-video_daily_max" class="input" type="number"></div>
                 <div class="config-group"><label class="config-label">Video Cooldown (Hrs)</label><input id="cfg-video_cooldown_hours" class="input" type="number"></div>
+                <div class="config-group"><label class="config-label">AFK Ad Code (HTML)</label><textarea id="cfg-afk_ad_code" class="input" style="height:120px; font-family:var(--font-mono); font-size:12px;"></textarea></div>
                 <button class="btn btn-primary" onclick="saveSettings()">Save Configuration</button>
             </div>
         </div>
@@ -111,42 +113,64 @@
         }
 
         async function showCreateVideo() {
-            const title = prompt('Video Title:');
-            const video_id = prompt('YouTube Video ID:');
-            const reward = prompt('Reward amount:');
-            const duration = prompt('Duration in seconds:', '30');
-            if(!title || !video_id || !reward) return;
+            const res = await ui.prompt([
+                { name: 'title', label: 'Video Title', placeholder: 'e.g. My Cool Video' },
+                { name: 'video_id', label: 'YouTube Video ID', placeholder: 'e.g. dQw4w9WgXcQ' },
+                { name: 'reward', label: 'Reward amount', type: 'number', value: '10' },
+                { name: 'duration', label: 'Duration (seconds)', type: 'number', value: '30' }
+            ], 'Add Video Reward');
+
+            if(!res || !res.title || !res.video_id) return;
 
             await fetch('/api/admin/videos', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ title, video_id, reward: parseInt(reward), duration_seconds: parseInt(duration) })
+                body: JSON.stringify({
+                    title: res.title,
+                    video_id: res.video_id,
+                    reward: parseInt(res.reward),
+                    duration_seconds: parseInt(res.duration)
+                })
             });
+            ui.showToast('Video added successfully', 'success');
             loadVideos();
         }
 
         async function deleteVideo(id) {
-            if(confirm('Delete video?')) {
+            if(await ui.confirm('Are you sure you want to delete this video?')) {
                 await fetch(`/api/admin/videos/${id}`, { method: 'DELETE' });
+                ui.showToast('Video deleted');
                 loadVideos();
             }
         }
 
         async function showCreateCoupon() {
-            const code = prompt('Code:');
-            const reward = prompt('Reward:');
-            const max = prompt('Max Uses:', '100');
-            if(!code || !reward) return;
+            const res = await ui.prompt([
+                { name: 'code', label: 'Coupon Code', placeholder: 'SUMMER2024' },
+                { name: 'reward', label: 'Reward amount', type: 'number', value: '50' },
+                { name: 'max', label: 'Max Uses', type: 'number', value: '100' }
+            ], 'Create Coupon');
+
+            if(!res || !res.code || !res.reward) return;
             await fetch('/api/admin/coupons', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ code, reward: parseInt(reward), max_uses: parseInt(max) })
+                body: JSON.stringify({
+                    code: res.code,
+                    reward: parseInt(res.reward),
+                    max_uses: parseInt(res.max)
+                })
             });
+            ui.showToast('Coupon created', 'success');
             loadCoupons();
         }
 
         async function deleteCoupon(id) {
-            if(confirm('Delete coupon?')) { await fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' }); loadCoupons(); }
+            if(await ui.confirm('Delete this coupon?')) {
+                await fetch(`/api/admin/coupons/${id}`, { method: 'DELETE' });
+                ui.showToast('Coupon deleted');
+                loadCoupons();
+            }
         }
 
         async function loadSettings() {
@@ -160,7 +184,7 @@
 
         async function saveSettings() {
             const settings = {};
-            ['afk_rate', 'afk_max_hours', 'video_daily_max', 'video_cooldown_hours'].forEach(k => {
+            ['afk_rate', 'afk_max_hours', 'video_daily_max', 'video_cooldown_hours', 'afk_ad_code'].forEach(k => {
                 settings[k] = document.getElementById(`cfg-${k}`).value;
             });
             await fetch('/api/admin/settings', {
@@ -168,13 +192,21 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(settings)
             });
-            alert('Saved!');
+            ui.showToast('Settings saved', 'success');
         }
 
         async function adjustCredits(id, curr) {
-            const val = prompt('New Balance:', curr);
-            if(val !== null) {
-                await fetch(`/api/admin/users/${id}/credits`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ credits: parseInt(val) }) });
+            const res = await ui.prompt([
+                { name: 'credits', label: 'New Balance', type: 'number', value: curr }
+            ], 'Adjust User Credits');
+
+            if(res && res.credits !== null) {
+                await fetch(`/api/admin/users/${id}/credits`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ credits: parseInt(res.credits) })
+                });
+                ui.showToast('Credits updated');
                 loadUsers();
             }
         }
