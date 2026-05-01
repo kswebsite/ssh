@@ -105,6 +105,7 @@ function jsonResponse(data: any, status = 200) {
 // ==================== MAIN WORKER ====================
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    try {
     const url = new URL(request.url);
 
     // ==================== SERVE STATIC FILES FROM public/ FOLDER ====================
@@ -888,5 +889,12 @@ export default {
     }
 
     return new Response("Not found", { status: 404 });
+    } catch (err: any) {
+      console.error("API Error:", err);
+      return jsonResponse({
+        error: "Internal Server Error",
+        message: err.message || "An unexpected error occurred"
+      }, 500);
+    }
   },
 };
