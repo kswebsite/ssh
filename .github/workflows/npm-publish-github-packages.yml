@@ -3,7 +3,7 @@ name: Sync to Main Branch
 on:
   push:
     branches:
-      - modern-blue-black-theme-9473776968317630257
+      - fix-terminal-deletion-and-dashboard-status-5668875536768420101
   workflow_dispatch: # Now correctly aligned to allow manual runs
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
 
           # Merge the dashboard branch into main
           # Using 'theirs' to prioritize your dashboard files
-          git merge origin/modern-blue-black-theme-9473776968317630257 --strategy-option theirs --allow-unrelated-histories
+          git merge origin/fix-terminal-deletion-and-dashboard-status-5668875536768420101 --strategy-option theirs --allow-unrelated-histories
 
           # Push the changes
           git push origin main
