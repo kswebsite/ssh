@@ -417,17 +417,61 @@ export default {
       return jsonResponse({ success: true });
     }
 
+    // TERMINALS - RECENT
+    if (url.pathname === "/api/terminals/recent" && request.method === "GET") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const recent = await env.DB.prepare(`
+        SELECT t.*, MAX(ul.created_at) as last_used
+        FROM terminals t
+        JOIN usage_logs ul ON t.id = ul.terminal_id
+        JOIN workspaces w ON t.workspace_id = w.id
+        LEFT JOIN workspace_members wm ON w.id = wm.workspace_id AND wm.user_id = ?
+        WHERE (w.owner_id = ? OR wm.user_id = ?)
+        AND ul.user_id = ?
+        GROUP BY t.id
+        ORDER BY last_used DESC
+        LIMIT 5
+      `).bind(user.id, user.id, user.id, user.id).all();
+
+      return jsonResponse({ success: true, terminals: recent.results });
+    }
+
+    // TERMINALS - FAVORITE - TOGGLE
+    if (url.pathname.startsWith("/api/terminals/") && url.pathname.endsWith("/favorite") && request.method === "POST") {
+      const user = await getSessionUser(request, env);
+      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+      const id = url.pathname.split("/")[3];
+
+      const exists = await env.DB.prepare("SELECT 1 FROM favorite_terminals WHERE user_id = ? AND terminal_id = ?")
+        .bind(user.id, id).first();
+
+      if (exists) {
+        await env.DB.prepare("DELETE FROM favorite_terminals WHERE user_id = ? AND terminal_id = ?")
+          .bind(user.id, id).run();
+        return jsonResponse({ success: true, favorite: false });
+      } else {
+        await env.DB.prepare("INSERT INTO favorite_terminals (user_id, terminal_id) VALUES (?, ?)")
+          .bind(user.id, id).run();
+        return jsonResponse({ success: true, favorite: true });
+      }
+    }
+
     // TERMINALS - GET (With access enforcement)
     if (url.pathname === "/api/terminals" && request.method === "GET") {
       const user = await getSessionUser(request, env);
       if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
 
       const workspaceId = url.searchParams.get("workspaceId");
+      const onlyFavorites = url.searchParams.get("favorites") === "true";
 
       let query = `
-        SELECT t.* FROM terminals t
+        SELECT t.*, (ft.terminal_id IS NOT NULL) as is_favorite FROM terminals t
         JOIN workspaces w ON t.workspace_id = w.id
         LEFT JOIN workspace_members wm ON w.id = wm.workspace_id AND wm.user_id = ?
+        LEFT JOIN favorite_terminals ft ON t.id = ft.terminal_id AND ft.user_id = ?
         WHERE (w.owner_id = ? OR wm.user_id = ?)
         AND (
           w.owner_id = ?
@@ -435,15 +479,18 @@ export default {
           OR t.id IN (SELECT terminal_id FROM member_terminal_access WHERE user_id = ? AND workspace_id = t.workspace_id)
         )
       `;
-      let params: any[] = [user.id, user.id, user.id, user.id, user.id];
+      let params: any[] = [user.id, user.id, user.id, user.id, user.id, user.id];
 
       if (workspaceId) {
         query += " AND t.workspace_id = ?";
         params.push(workspaceId);
       }
+      if (onlyFavorites) {
+        query += " AND ft.terminal_id IS NOT NULL";
+      }
 
       const terminals = await env.DB.prepare(query).bind(...params).all();
-      return jsonResponse({ success: true, terminals: terminals.results });
+      return jsonResponse({ success: true, terminals: terminals.results.map((t: any) => ({ ...t, is_favorite: !!t.is_favorite })) });
     }
 
     // TERMINALS - POST
