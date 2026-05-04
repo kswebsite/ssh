@@ -74,11 +74,26 @@
         }
         .terminal-action-btn:hover { color: var(--accent); background: rgba(59, 130, 246, 0.1); box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
         
-        #main-content { flex: 1; display: flex; flex-direction: column; background: #000; }
+        #main-content { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; }
         .top-bar {
             height: 48px; background: #000; border-bottom: 1px solid var(--border);
             padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
         }
+        .header-collapsed .top-bar { height: 0; padding: 0; border: 0; }
+
+        .header-toggle-btn {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-top: none; padding: 2px 20px; border-radius: 0 0 8px 8px;
+            color: var(--text-muted); cursor: pointer; z-index: 1000;
+            display: none; transition: all 0.2s;
+            box-shadow: var(--shadow-md);
+        }
+        .header-toggle-btn:hover { color: var(--accent); background: #111; }
+        .header-toggle-btn svg { width: 16px; height: 16px; transition: transform 0.3s; }
+        .header-collapsed .header-toggle-btn svg { transform: rotate(180deg); }
         .sidebar-toggle {
             display: none; padding: 8px; margin-left: -8px; color: var(--text-secondary);
             cursor: pointer;
@@ -207,6 +222,9 @@
         </aside>
 
         <main id="main-content">
+            <button id="header-toggle" class="header-toggle-btn" onclick="toggleHeader()" title="Toggle Header">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+            </button>
             <div class="top-bar">
                 <div style="display: flex; align-items: center; gap: 16px;">
                     <div class="sidebar-toggle" onclick="toggleSidebar()">
@@ -489,6 +507,10 @@
         }
 
         let lastSelectedId = null;
+        function toggleHeader() {
+            document.getElementById('main-content').classList.toggle('header-collapsed');
+        }
+
         async function selectTerminal(id) {
             lastSelectedId = id;
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -497,6 +519,8 @@
             if (!term) return;
 
             document.getElementById('page-title').textContent = term.name;
+            document.getElementById('header-toggle').style.display = 'block';
+
             const iframe = document.getElementById('main-iframe');
             const overlay = document.getElementById('connection-overlay');
             const statusText = document.getElementById('connection-status-text');
@@ -915,6 +939,8 @@
         function navigateTo(page) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.terminal-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('header-toggle').style.display = 'none';
+            document.getElementById('main-content').classList.remove('header-collapsed');
 
             const iframe = document.getElementById('main-iframe');
             const overlay = document.getElementById('connection-overlay');
