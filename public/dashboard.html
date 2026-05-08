@@ -219,24 +219,6 @@
             }
         }
 
-        async function refreshTerminalStatus(id) {
-            const dot = document.getElementById(`status-${id}`);
-            if (!dot) return;
-
-            try {
-                const res = await fetch(`/api/terminals/${id}/status`);
-                const data = await res.json();
-                if (data.success && data.online) {
-                    dot.style.background = '#10b981';
-                    dot.style.boxShadow = '0 0 8px #10b981';
-                } else {
-                    dot.style.background = '#ef4444';
-                    dot.style.boxShadow = 'none';
-                }
-            } catch (e) {
-                dot.style.background = '#ef4444';
-            }
-        }
 
         function renderActivity(history) {
             const container = document.getElementById('activity-list');
