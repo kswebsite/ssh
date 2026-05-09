@@ -507,11 +507,13 @@
         }
 
         let lastSelectedId = null;
+        let connectionId = 0;
         function toggleHeader() {
             document.getElementById('main-content').classList.toggle('header-collapsed');
         }
 
         async function selectTerminal(id) {
+            const thisConnId = ++connectionId;
             lastSelectedId = id;
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             activeId = id;
@@ -527,8 +529,9 @@
             const spinner = document.getElementById('connection-spinner');
             const retryBtn = document.getElementById('connection-retry-btn');
 
-            // Show connecting state
+            // Show connecting state immediately and hide old content
             iframe.classList.remove('visible');
+            iframe.src = 'about:blank'; // Clear old frame content
             overlay.classList.remove('hidden');
             spinner.classList.remove('hidden');
             retryBtn.classList.add('hidden');
@@ -542,16 +545,37 @@
                 const res = await fetch(`/api/terminals/${id}/status`);
                 const data = await res.json();
 
+                // If user started a new connection while we were fetching, stop this one
+                if (thisConnId !== connectionId) return;
+
                 if (data.success && data.online) {
                     const targetUrl = term.token.startsWith('http') ? term.token : `https://${term.token}.trycloudflare.com`;
+
+                    // Pre-load the iframe and show it only when ready
+                    iframe.onload = () => {
+                        if (thisConnId === connectionId) {
+                            iframe.classList.add('visible');
+                            overlay.classList.add('hidden');
+                            iframe.onload = null;
+                        }
+                    };
+
                     iframe.src = targetUrl;
-                    iframe.classList.add('visible');
-                    overlay.classList.add('hidden');
                     startUsageBilling(id);
+
+                    // Fallback to show iframe if load event takes too long
+                    setTimeout(() => {
+                        if (thisConnId === connectionId && !iframe.classList.contains('visible')) {
+                            iframe.classList.add('visible');
+                            overlay.classList.add('hidden');
+                        }
+                    }, 5000);
+
                 } else {
                     throw new Error("Terminal is offline");
                 }
             } catch (e) {
+                if (thisConnId !== connectionId) return;
                 spinner.classList.add('hidden');
                 statusText.textContent = "Unable to connect to terminal. Please make sure it's online and try again.";
                 statusText.classList.add('error-text');
@@ -937,12 +961,14 @@
         }
 
         function navigateTo(page) {
+            connectionId++; // Cancel any pending terminal connection
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.terminal-item').forEach(el => el.classList.remove('active'));
             document.getElementById('header-toggle').style.display = 'none';
             document.getElementById('main-content').classList.remove('header-collapsed');
 
             const iframe = document.getElementById('main-iframe');
+            iframe.onload = null; // Clear any pending terminal load handler
             const overlay = document.getElementById('connection-overlay');
             iframe.classList.add('visible');
             overlay.classList.add('hidden');
