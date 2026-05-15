@@ -63,9 +63,9 @@ async function verifyPassword(password: string, storedHash: string): Promise<boo
 
 // ==================== SESSION HELPERS ====================
 async function getSessionUser(request: Request, env: Env) {
-  // Full Auth & Credits Removal: Skip validation and return default admin user
+  // Full Auth & Credits Removal: Skip validation and return default user
   const result = await env.DB.prepare(
-    "SELECT id, username, email, created_at, is_admin FROM users WHERE username = 'ksssh' OR is_admin = 1 LIMIT 1"
+    "SELECT id, username, email, created_at FROM users WHERE username = 'ksssh' OR id = 1 LIMIT 1"
   ).first();
 
   if (!result) {
@@ -74,7 +74,6 @@ async function getSessionUser(request: Request, env: Env) {
       username: "admin",
       email: "admin@example.com",
       created_at: new Date().toISOString(),
-      is_admin: true,
     };
   }
 
@@ -83,7 +82,6 @@ async function getSessionUser(request: Request, env: Env) {
     username: result.username as string,
     email: result.email as string,
     created_at: result.created_at as string,
-    is_admin: result.is_admin === 1,
   };
 }
 
@@ -123,11 +121,6 @@ export default {
       return Response.redirect(`${url.origin}/`, 302);
     }
 
-    if (url.pathname === "/admin.html" || url.pathname === "/admin") {
-      return env.ASSETS.fetch(new URL("/admin.html", request.url));
-    }
-
-
     // ==================== API ENDPOINTS ====================
 
     // ME
@@ -142,7 +135,6 @@ export default {
           username: user.username,
           email: user.email,
           created_at: user.created_at,
-          is_admin: user.is_admin,
         },
       });
     }
@@ -564,159 +556,6 @@ export default {
       return jsonResponse({ success: true });
     }
 
-    // ==================== ADMIN API ====================
-
-    // ADMIN: LIST ALL USERS
-    if (url.pathname === "/api/admin/users" && request.method === "GET") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const users = await env.DB.prepare(
-        `SELECT id, username, email, credits, last_active, created_at, is_admin, is_banned FROM users ORDER BY created_at DESC`
-      ).all();
-
-      return jsonResponse({ success: true, users: users.results });
-    }
-
-    // ADMIN: USER DETAILS (Workspaces + Terminals)
-    if (url.pathname.startsWith("/api/admin/users/") && url.pathname.endsWith("/details") && request.method === "GET") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const targetId = url.pathname.split("/")[4];
-
-      const workspaces = await env.DB.prepare(
-        `SELECT w.*, (SELECT COUNT(*) FROM terminals WHERE workspace_id = w.id) as terminal_count
-         FROM workspaces w WHERE w.owner_id = ?`
-      ).bind(targetId).all();
-
-      const terminals = await env.DB.prepare(
-        `SELECT t.*, w.name as workspace_name FROM terminals t
-         JOIN workspaces w ON t.workspace_id = w.id
-         WHERE w.owner_id = ?`
-      ).bind(targetId).all();
-
-      return jsonResponse({ success: true, workspaces: workspaces.results, terminals: terminals.results });
-    }
-
-    // ADMIN: UPDATE USER CREDITS
-    if (url.pathname.startsWith("/api/admin/users/") && url.pathname.endsWith("/credits") && request.method === "POST") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const targetId = url.pathname.split("/")[4];
-      const { credits } = (await request.json()) as any;
-
-      await env.DB.prepare("UPDATE users SET credits = ? WHERE id = ?")
-        .bind(credits, targetId).run();
-
-      return jsonResponse({ success: true });
-    }
-
-    // ADMIN: DELETE USER
-    if (url.pathname.startsWith("/api/admin/users/") && request.method === "DELETE") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const targetId = url.pathname.split("/")[4];
-      if (Number(targetId) === user.id) return jsonResponse({ error: "Cannot delete yourself" }, 400);
-
-      await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(targetId).run();
-      return jsonResponse({ success: true });
-    }
-
-    // ADMIN: BAN/UNBAN USER
-    if (url.pathname.startsWith("/api/admin/users/") && url.pathname.endsWith("/ban") && request.method === "POST") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const targetId = url.pathname.split("/")[4];
-      const { banned } = (await request.json()) as any;
-
-      await env.DB.prepare("UPDATE users SET is_banned = ? WHERE id = ?")
-        .bind(banned ? 1 : 0, targetId).run();
-
-      return jsonResponse({ success: true });
-    }
-
-    // ADMIN: PROMOTE TO ADMIN
-    if (url.pathname.startsWith("/api/admin/users/") && url.pathname.endsWith("/promote") && request.method === "POST") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const targetId = url.pathname.split("/")[4];
-      await env.DB.prepare("UPDATE users SET is_admin = 1 WHERE id = ?")
-        .bind(targetId).run();
-
-      return jsonResponse({ success: true });
-    }
-
-    // ADMIN: COUPONS - LIST
-    if (url.pathname === "/api/admin/coupons" && request.method === "GET") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const coupons = await env.DB.prepare("SELECT * FROM coupons ORDER BY created_at DESC").all();
-      return jsonResponse({ success: true, coupons: coupons.results });
-    }
-
-    // ADMIN: COUPONS - CREATE
-    if (url.pathname === "/api/admin/coupons" && request.method === "POST") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const { code, reward, max_uses, expires_at } = (await request.json()) as any;
-      if (!code || !reward) return jsonResponse({ error: "Code and reward are required" }, 400);
-
-      const id = crypto.randomUUID();
-      await env.DB.prepare(
-        "INSERT INTO coupons (id, code, reward, max_uses, expires_at) VALUES (?, ?, ?, ?, ?)"
-      )
-        .bind(id, code.toUpperCase(), reward, max_uses || 1, expires_at || null)
-        .run();
-
-      return jsonResponse({ success: true });
-    }
-
-    // ADMIN: COUPONS - DELETE
-    if (url.pathname.startsWith("/api/admin/coupons/") && request.method === "DELETE") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const id = url.pathname.split("/").pop();
-      await env.DB.prepare("DELETE FROM coupons WHERE id = ?").bind(id).run();
-      return jsonResponse({ success: true });
-    }
-
-    // ADMIN: CONFIG - GET
-    if (url.pathname === "/api/admin/settings" && request.method === "GET") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const config = await env.DB.prepare("SELECT * FROM config").all();
-      const settings = config.results.reduce((acc: any, row: any) => {
-        acc[row.key] = row.value;
-        return acc;
-      }, {});
-
-      return jsonResponse({ success: true, settings });
-    }
-
-    // ADMIN: CONFIG - UPDATE
-    if (url.pathname === "/api/admin/settings" && request.method === "POST") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const settings = (await request.json()) as any;
-      const stmts = Object.entries(settings).map(([key, value]) =>
-        env.DB.prepare("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)").bind(key, String(value))
-      );
-
-      if (stmts.length === 0) return jsonResponse({ success: true });
-
-      await env.DB.batch(stmts);
-      return jsonResponse({ success: true });
-    }
 
     // Fallback: serve from assets
     const response = await env.ASSETS.fetch(request);
