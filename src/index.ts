@@ -63,30 +63,28 @@ async function verifyPassword(password: string, storedHash: string): Promise<boo
 
 // ==================== SESSION HELPERS ====================
 async function getSessionUser(request: Request, env: Env) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const sessionMatch = cookieHeader.match(/session=([^;]+)/);
-  const sessionId = sessionMatch ? sessionMatch[1] : null;
-  if (!sessionId) return null;
-
+  // Full Auth & Credits Removal: Skip validation and return default admin user
   const result = await env.DB.prepare(
-    `SELECT u.id, u.username, u.email, u.credits, u.created_at, u.is_admin
-     FROM sessions s 
-     JOIN users u ON s.user_id = u.id 
-     WHERE s.id = ? AND s.expires_at > CURRENT_TIMESTAMP`
-  )
-    .bind(sessionId)
-    .first();
+    "SELECT id, username, email, created_at, is_admin FROM users WHERE username = 'ksssh' OR is_admin = 1 LIMIT 1"
+  ).first();
 
-  return result
-    ? {
-        id: result.id as number,
-        username: result.username as string,
-        email: result.email as string,
-        credits: result.credits as number,
-        created_at: result.created_at as string,
-        is_admin: result.is_admin === 1,
-      }
-    : null;
+  if (!result) {
+    return {
+      id: 1,
+      username: "admin",
+      email: "admin@example.com",
+      created_at: new Date().toISOString(),
+      is_admin: true,
+    };
+  }
+
+  return {
+    id: result.id as number,
+    username: result.username as string,
+    email: result.email as string,
+    created_at: result.created_at as string,
+    is_admin: result.is_admin === 1,
+  };
 }
 
 // ==================== JSON RESPONSE HELPER ====================
@@ -110,19 +108,11 @@ export default {
 
     // ==================== SERVE STATIC FILES FROM public/ FOLDER ====================
     if (url.pathname === "/") {
-      const user = await getSessionUser(request, env);
-      if (!user) {
-        return Response.redirect(`${url.origin}/auth.html`, 302);
-      }
       return env.ASSETS.fetch(new URL("/index.html", request.url));
     }
 
     if (url.pathname === "/auth.html" || url.pathname === "/auth") {
-      const user = await getSessionUser(request, env);
-      if (user) {
-        return Response.redirect(`${url.origin}/`, 302);
-      }
-      return env.ASSETS.fetch(new URL("/auth.html", request.url));
+      return Response.redirect(`${url.origin}/`, 302);
     }
 
     if (url.pathname === "/dashboard.html" || url.pathname === "/dashboard") {
@@ -130,87 +120,15 @@ export default {
     }
 
     if (url.pathname === "/account.html" || url.pathname === "/account") {
-      return env.ASSETS.fetch(new URL("/account.html", request.url));
+      return Response.redirect(`${url.origin}/`, 302);
     }
 
     if (url.pathname === "/admin.html" || url.pathname === "/admin") {
-      const user = await getSessionUser(request, env);
-      if (!user || !user.is_admin) return Response.redirect(`${url.origin}/`, 302);
       return env.ASSETS.fetch(new URL("/admin.html", request.url));
     }
 
 
     // ==================== API ENDPOINTS ====================
-
-    // REGISTER
-    if (url.pathname === "/api/register" && request.method === "POST") {
-      const { username, email, password, confirmPassword } = (await request.json()) as any;
-
-      if (!username || !email || !password || password !== confirmPassword) {
-        return jsonResponse({ error: "All fields required and passwords must match" }, 400);
-      }
-
-      try {
-        const passwordHash = await hashPassword(password);
-        await env.DB.prepare(
-          "INSERT INTO users (username, email, password_hash, credits, last_active) VALUES (?, ?, ?, 0, CURRENT_TIMESTAMP)"
-        )
-          .bind(username.toLowerCase(), email.toLowerCase(), passwordHash)
-          .run();
-
-        return jsonResponse({ success: true, message: "Account created successfully" });
-      } catch (err: any) {
-        if (err.message?.includes("UNIQUE constraint failed")) {
-          return jsonResponse({ error: "Username or email already taken" }, 400);
-        }
-        return jsonResponse({ error: "Registration failed" }, 500);
-      }
-    }
-
-    // LOGIN
-    if (url.pathname === "/api/login" && request.method === "POST") {
-      const { identifier, password } = (await request.json()) as any;
-      if (!identifier || !password) {
-        return jsonResponse({ error: "Identifier and password required" }, 400);
-      }
-
-      const userRow = (await env.DB.prepare(
-        "SELECT * FROM users WHERE username = ? OR email = ?"
-      )
-        .bind(identifier.toLowerCase(), identifier.toLowerCase())
-        .first()) as any;
-
-      if (!userRow || !(await verifyPassword(password, userRow.password_hash as string))) {
-        return jsonResponse({ error: "Invalid credentials" }, 401);
-      }
-
-      if (userRow.is_banned) {
-        return jsonResponse({ error: "Your account has been banned." }, 403);
-      }
-
-      const sessionId = crypto.randomUUID();
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-      await env.DB.prepare(
-        "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)"
-      )
-        .bind(sessionId, userRow.id, expiresAt)
-        .run();
-
-      const response = jsonResponse({
-        success: true,
-        username: userRow.username,
-        credits: userRow.credits,
-      });
-
-      const isHttps = url.protocol === "https:";
-      response.headers.append(
-        "Set-Cookie",
-        `session=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800${isHttps ? "; Secure" : ""}`
-      );
-
-      return response;
-    }
 
     // ME
     if (url.pathname === "/api/me" && request.method === "GET") {
@@ -223,134 +141,12 @@ export default {
           id: user.id,
           username: user.username,
           email: user.email,
-          credits: user.credits,
           created_at: user.created_at,
           is_admin: user.is_admin,
         },
       });
     }
 
-    // USER: REDEEM COUPON
-    if (url.pathname === "/api/coupons/redeem" && request.method === "POST") {
-      const user = await getSessionUser(request, env);
-      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const { code } = (await request.json()) as any;
-      if (!code) return jsonResponse({ error: "Coupon code is required" }, 400);
-
-      const coupon = (await env.DB.prepare(
-        "SELECT * FROM coupons WHERE code = ? AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)"
-      )
-        .bind(code.toUpperCase())
-        .first()) as any;
-
-      if (!coupon) return jsonResponse({ error: "Invalid or expired coupon" }, 404);
-      if (coupon.current_uses >= coupon.max_uses) return jsonResponse({ error: "Coupon limit reached" }, 400);
-
-      // Check if user already used it
-      const alreadyUsed = await env.DB.prepare("SELECT 1 FROM coupon_usage WHERE coupon_id = ? AND user_id = ?")
-        .bind(coupon.id, user.id).first();
-      if (alreadyUsed) return jsonResponse({ error: "You already redeemed this coupon" }, 400);
-
-      try {
-        await env.DB.batch([
-          env.DB.prepare("UPDATE users SET credits = credits + ? WHERE id = ?").bind(coupon.reward, user.id),
-          env.DB.prepare("UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?").bind(coupon.id),
-          env.DB.prepare("INSERT INTO coupon_usage (coupon_id, user_id) VALUES (?, ?)").bind(coupon.id, user.id)
-        ]);
-        return jsonResponse({ success: true, reward: coupon.reward });
-      } catch (e) {
-        return jsonResponse({ error: "Redemption failed" }, 500);
-      }
-    }
-
-
-    // USER: BILLING HISTORY
-    if (url.pathname === "/api/billing/history" && request.method === "GET") {
-      const user = await getSessionUser(request, env);
-      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const earningLogs = await env.DB.prepare(
-        "SELECT type, earned as amount, created_at FROM earnings_logs WHERE user_id = ? ORDER BY created_at DESC"
-      ).bind(user.id).all();
-
-      const couponLogs = await env.DB.prepare(
-        `SELECT 'coupon' as type, c.reward as amount, cu.used_at as created_at, c.code
-         FROM coupon_usage cu
-         JOIN coupons c ON cu.coupon_id = c.id
-         WHERE cu.user_id = ?
-         ORDER BY cu.used_at DESC`
-      ).bind(user.id).all();
-
-      const usageLogs = await env.DB.prepare(
-        "SELECT type, -amount as amount, created_at FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC"
-      ).bind(user.id).all();
-
-      const history = [
-        ...earningLogs.results,
-        ...couponLogs.results.map((c: any) => ({
-          type: `Coupon: ${c.code}`,
-          amount: c.amount,
-          created_at: c.created_at
-        })),
-        ...usageLogs.results
-      ].sort(
-        (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      return jsonResponse({ success: true, history });
-    }
-
-    // UPDATE ACCOUNT
-    if (url.pathname === "/api/account/update" && request.method === "POST") {
-      const user = await getSessionUser(request, env);
-      if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
-
-      const { username, newPassword, currentPassword } = (await request.json()) as any;
-
-      // Verify current password
-      const userRow = await env.DB.prepare("SELECT password_hash FROM users WHERE id = ?")
-        .bind(user.id).first();
-      if (!userRow || !(await verifyPassword(currentPassword, userRow.password_hash as string))) {
-        return jsonResponse({ error: "Incorrect current password" }, 401);
-      }
-
-      if (username) {
-        try {
-          await env.DB.prepare("UPDATE users SET username = ? WHERE id = ?")
-            .bind(username.toLowerCase(), user.id).run();
-        } catch (err: any) {
-          if (err.message?.includes("UNIQUE")) return jsonResponse({ error: "Username already taken" }, 400);
-          throw err;
-        }
-      }
-
-      if (newPassword) {
-        const hash = await hashPassword(newPassword);
-        await env.DB.prepare("UPDATE users SET password_hash = ? WHERE id = ?")
-          .bind(hash, user.id).run();
-      }
-
-      return jsonResponse({ success: true });
-    }
-
-    // LOGOUT
-    if (url.pathname === "/api/logout" && request.method === "POST") {
-      const cookieHeader = request.headers.get("Cookie") || "";
-      const sessionMatch = cookieHeader.match(/session=([^;]+)/);
-      const sessionId = sessionMatch ? sessionMatch[1] : null;
-
-      if (sessionId) {
-        await env.DB.prepare("DELETE FROM sessions WHERE id = ?").bind(sessionId).run();
-      }
-
-      const response = jsonResponse({ success: true });
-      response.headers.append(
-        "Set-Cookie",
-        "session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict"
-      );
-      return response;
-    }
 
     // WORKSPACES - GET
     if (url.pathname === "/api/workspaces" && request.method === "GET") {
@@ -573,7 +369,7 @@ export default {
       return jsonResponse({ success: true });
     }
 
-    // TERMINALS - USAGE BILLING
+    // TERMINALS - USAGE LOGGING (No deduction)
     if (url.pathname === "/api/terminals/usage" && request.method === "POST") {
       const user = await getSessionUser(request, env);
       if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
@@ -591,15 +387,8 @@ export default {
 
       if (!term) return jsonResponse({ error: "Terminal not found or unauthorized" }, 404);
 
-      if (user.credits < 1) {
-        return jsonResponse({ error: "Insufficient credits" }, 403);
-      }
-
-      await env.DB.batch([
-        env.DB.prepare("UPDATE users SET credits = credits - 1 WHERE id = ?").bind(user.id),
-        env.DB.prepare("INSERT INTO usage_logs (id, user_id, terminal_id, amount, type) VALUES (?, ?, ?, ?, ?)")
-          .bind(crypto.randomUUID(), user.id, terminalId, 1, 'terminal_usage')
-      ]);
+      await env.DB.prepare("INSERT INTO usage_logs (id, user_id, terminal_id, amount, type) VALUES (?, ?, ?, ?, ?)")
+          .bind(crypto.randomUUID(), user.id, terminalId, 0, 'terminal_usage').run();
 
       return jsonResponse({ success: true });
     }
