@@ -672,6 +672,10 @@ export default {
       return response;
     }
 
+    if (url.pathname.startsWith("/api/")) {
+      return jsonResponse({ error: "Not found" }, 404);
+    }
+
     // Asset Resolution Catch-all: If file not found in assets, and we have a terminal token, try proxying
     // This catches absolute paths like /static/js/main.js that don't include the /terminal/token/ prefix
     const cookies = request.headers.get("Cookie") || "";
