@@ -495,11 +495,7 @@
         }
 
         function getTerminalUrl(token) {
-            if (token.startsWith('http')) return token;
-            if (token.startsWith('ks-lt-')) {
-                return `https://${token.replace('ks-lt-', '')}.loca.lt`;
-            }
-            return `https://${token}.trycloudflare.com`;
+            return `/terminal/${token}/`;
         }
 
         async function selectTerminal(id) {
@@ -540,6 +536,7 @@
 
                 if (data.success && data.online) {
                     const targetUrl = getTerminalUrl(term.token);
+                    document.cookie = `terminal_token=${term.token}; path=/; max-age=3600`;
 
                     // Pre-load the iframe and show it only when ready
                     iframe.onload = () => {
