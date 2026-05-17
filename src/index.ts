@@ -115,10 +115,18 @@ async function proxyTerminal(request: Request, token: string, path: string) {
     return fetch(fullUrl, request);
   }
 
-  const newHeaders = new Headers(request.headers);
-  newHeaders.set("bypass-tunnel-reminder", "1");
-  // Set a non-standard User-Agent just in case
-  newHeaders.set("User-Agent", "KS-SSH-Proxy/1.0");
+  const newHeaders = new Headers();
+  // Filter headers to avoid looking like a standard browser request
+  const skipHeaders = ['sec-fetch-', 'user-agent', 'cookie', 'dnt', 'referer', 'origin'];
+  for (const [key, value] of request.headers.entries()) {
+    if (!skipHeaders.some(s => key.toLowerCase().startsWith(s))) {
+      newHeaders.set(key, value);
+    }
+  }
+
+  newHeaders.set("bypass-tunnel-reminder", "true");
+  newHeaders.set("Bypass-Tunnel-Reminder", "true");
+  newHeaders.set("User-Agent", "curl/7.88.1");
 
   const response = await fetch(fullUrl, {
     method: request.method,
@@ -517,8 +525,9 @@ export default {
           method: 'GET',
           signal: controller.signal,
           headers: {
-            'User-Agent': 'KS-SSH-Proxy/1.0',
-            'bypass-tunnel-reminder': '1'
+            'User-Agent': 'curl/7.88.1',
+            'bypass-tunnel-reminder': 'true',
+            'Bypass-Tunnel-Reminder': 'true'
           }
         });
 
