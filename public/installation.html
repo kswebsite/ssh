@@ -64,12 +64,24 @@
                 </div>
                 <div class="step-item">
                     <div class="step-label">--url</div>
-                    <div>Your chosen unique identifier. This will be used to access your terminal (e.g., <code>ks-lt-my-token-name</code>).</div>
+                    <div>Your chosen unique identifier. This will be used to access your terminal (e.g., <code>my-token-name</code>).</div>
                 </div>
                 <div class="step-item">
                     <div class="step-label">run</div>
                     <div>Instructs the script to start the tunneling client.</div>
                 </div>
+            </div>
+
+            <div class="section-label" style="margin: 32px 0 16px; color: var(--text-primary);">Bypass Programmatic reminder</div>
+            <div class="step-item">If you use <code>wget</code> or <code>curl</code> to access your tunnel programmatically, you must include the bypass header:</div>
+
+            <div class="code-block" style="margin-top: 12px;">
+                <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+                <pre>curl -H "bypass-tunnel-reminder: 1" https://my-token-name.loca.lt</pre>
+            </div>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+                <pre>wget --header="bypass-tunnel-reminder: 1" https://my-token-name.loca.lt</pre>
             </div>
         </div>
 

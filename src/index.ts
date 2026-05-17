@@ -124,9 +124,10 @@ async function proxyTerminal(request: Request, token: string, path: string) {
     }
   }
 
-  newHeaders.set("bypass-tunnel-reminder", "true");
-  newHeaders.set("Bypass-Tunnel-Reminder", "true");
-  newHeaders.set("User-Agent", "curl/7.88.1");
+  newHeaders.set("bypass-tunnel-reminder", "1");
+  newHeaders.set("Bypass-Tunnel-Reminder", "1");
+  newHeaders.set("User-Agent", "localtunnel");
+  newHeaders.set("Accept", "*/*");
 
   const response = await fetch(fullUrl, {
     method: request.method,
@@ -525,9 +526,10 @@ export default {
           method: 'GET',
           signal: controller.signal,
           headers: {
-            'User-Agent': 'curl/7.88.1',
-            'bypass-tunnel-reminder': 'true',
-            'Bypass-Tunnel-Reminder': 'true'
+            'User-Agent': 'localtunnel',
+            'bypass-tunnel-reminder': '1',
+            'Bypass-Tunnel-Reminder': '1',
+            'Accept': '*/*'
           }
         });
 
