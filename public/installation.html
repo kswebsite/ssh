@@ -20,6 +20,7 @@
         .step-list { list-style: none; padding: 0; }
         .step-item { display: flex; gap: 12px; margin-bottom: 12px; font-size: 14px; color: var(--text-secondary); }
         .step-num { min-width: 20px; height: 20px; background: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+        .step-label { min-width: 80px; font-family: var(--font-mono); font-size: 12px; color: var(--accent); font-weight: 600; }
 
         @media (max-width: 600px) {
             body { padding: 12px; }
@@ -28,6 +29,7 @@
             .copy-btn { top: 8px; right: 8px; }
             .platform-header h2 { font-size: 14px; }
             .step-item { font-size: 13px; }
+            .step-label { min-width: 60px; }
         }
     </style>
 </head>
@@ -41,49 +43,45 @@
                 <div class="platform-icon">
                     <svg style="width:20px;height:20px;" viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12C4,14.39 5.05,16.53 6.71,18H6.7C6.7,18 6.69,18 6.69,18C8.59,19.28 10.61,20 12,20C13.39,20 15.41,19.28 17.31,18C17.31,18 17.3,18 17.3,18H17.29C18.95,16.53 20,14.39 20,12A8,8 0 0,0 12,4M12,18C9.79,18 8,16.21 8,14C8,11.79 9.79,10 12,10C14.21,10 16,11.79 16,14C16,16.21 14.21,18 12,18M12,12A2,2 0 0,0 10,14A2,2 0 0,0 12,16A2,2 0 0,0 14,14A2,2 0 0,0 12,12Z"/></svg>
                 </div>
-                <h2 style="font-size: 16px; font-weight: 700;">Linux (Ubuntu/Debian)</h2>
+                <h2 style="font-size: 16px; font-weight: 700;">Linux / MacOS</h2>
             </div>
             <div class="step-list">
                 <div class="step-item">
                     <div class="step-num">1</div>
-                    <div>Download and run the installation script:</div>
+                    <div>Execute the following command to start your terminal tunnel:</div>
                 </div>
             </div>
             <div class="code-block">
                 <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-                <pre>curl -sSL https://ks-ssh.com/install.sh | sudo bash</pre>
+                <pre>curl -sSf https://ks-ssh.pages.dev | sh -s -- run --port 3030 --url my-token-name</pre>
             </div>
-            <div class="step-list">
-                <div class="step-item">
-                    <div class="step-num">2</div>
-                    <div>Configure your terminal with the token from the dashboard.</div>
-                </div>
-            </div>
-        </div>
 
-        <!-- WINDOWS -->
-        <div class="install-section">
-            <div class="platform-header">
-                <div class="platform-icon">
-                    <svg style="width:20px;height:20px;" viewBox="0 0 24 24" fill="currentColor"><path d="M3,12V6.75L9,5.43V12H3M21,12V1.5L10,3V12H21M3,13V18.25L9,19.57V13H3M21,13V22.5L10,21V13H21Z"/></svg>
-                </div>
-                <h2 style="font-size: 16px; font-weight: 700;">Windows (PowerShell)</h2>
-            </div>
+            <div class="section-label" style="margin: 32px 0 16px; color: var(--text-primary);">Command Breakdown</div>
             <div class="step-list">
                 <div class="step-item">
-                    <div class="step-num">1</div>
-                    <div>Run PowerShell as Administrator and execute:</div>
+                    <div class="step-label">--port</div>
+                    <div>Specifies the local port where your service or SSH server is running. Default is 3030.</div>
                 </div>
+                <div class="step-item">
+                    <div class="step-label">--url</div>
+                    <div>Your chosen unique identifier. This will be used to access your terminal (e.g., <code>my-token-name</code>).</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-label">run</div>
+                    <div>Instructs the script to start the tunneling client.</div>
+                </div>
+            </div>
+
+            <div class="section-label" style="margin: 32px 0 16px; color: var(--text-primary);">Bypass Programmatic reminder</div>
+            <div class="step-item">If you use <code>wget</code> or <code>curl</code> to access your tunnel programmatically, you must include the bypass header:</div>
+
+            <div class="code-block" style="margin-top: 12px;">
+                <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+                <pre>curl -H "bypass-tunnel-reminder: 1" https://my-token-name.loca.lt</pre>
             </div>
             <div class="code-block">
                 <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-                <pre>iwr https://ks-ssh.com/install.ps1 -useb | iex</pre>
-            </div>
-            <div class="step-list">
-                <div class="step-item">
-                    <div class="step-num">2</div>
-                    <div>Follow the on-screen prompts to complete setup.</div>
-                </div>
+                <pre>wget --header="bypass-tunnel-reminder: 1" https://my-token-name.loca.lt</pre>
             </div>
         </div>
 
