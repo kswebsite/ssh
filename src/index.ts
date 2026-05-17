@@ -401,7 +401,10 @@ export default {
 
       if (!term) return jsonResponse({ error: "Not found or unauthorized" }, 404);
 
-      const targetUrl = term.token.startsWith('http') ? term.token : `https://${term.token}.trycloudflare.com`;
+      let targetUrl = term.token.startsWith('http') ? term.token : `https://${term.token}.trycloudflare.com`;
+      if (term.token.startsWith('ks-lt-')) {
+        targetUrl = `https://${term.token.replace('ks-lt-', '')}.loca.lt`;
+      }
 
       try {
         const controller = new AbortController();
