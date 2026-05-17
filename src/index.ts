@@ -98,6 +98,101 @@ function jsonResponse(data: any, status = 200) {
   });
 }
 
+// ==================== PROXY HELPER ====================
+async function proxyTerminal(request: Request, token: string, path: string) {
+  let targetUrl = token.startsWith('http') ? token : `https://${token}.trycloudflare.com`;
+  if (token.startsWith('ks-lt-')) {
+    targetUrl = `https://${token.replace('ks-lt-', '')}.loca.lt`;
+  }
+
+  // Ensure path starts with /
+  if (!path.startsWith('/')) path = '/' + path;
+  const fullUrl = new URL(path, targetUrl).toString();
+
+  // Handle WebSocket Upgrade
+  const upgradeHeader = request.headers.get("Upgrade");
+  if (upgradeHeader === "websocket") {
+    return fetch(fullUrl, request);
+  }
+
+  const newHeaders = new Headers(request.headers);
+  newHeaders.set("bypass-tunnel-reminder", "1");
+  // Set a non-standard User-Agent just in case
+  newHeaders.set("User-Agent", "KS-SSH-Proxy/1.0");
+
+  const response = await fetch(fullUrl, {
+    method: request.method,
+    headers: newHeaders,
+    body: request.body,
+    redirect: "manual"
+  });
+
+  // Handle Redirects
+  if ([301, 302, 303, 307, 308].includes(response.status)) {
+    const location = response.headers.get("Location");
+    if (location) {
+      const locationUrl = new URL(location, targetUrl);
+      if (locationUrl.origin === new URL(targetUrl).origin) {
+        // Redirect within the same terminal
+        const newLocation = `/terminal/${token}${locationUrl.pathname}${locationUrl.search}${locationUrl.hash}`;
+        const resHeaders = new Headers(response.headers);
+        resHeaders.set("Location", newLocation);
+        return new Response(response.body, { status: response.status, headers: resHeaders });
+      }
+    }
+    return response;
+  }
+
+  const contentType = response.headers.get("Content-Type") || "";
+  if (contentType.includes("text/html")) {
+    // Rewrite absolute paths in HTML to go through the proxy
+    return new HTMLRewriter()
+      .on("a", {
+        element(el) {
+          const href = el.getAttribute("href");
+          if (href && href.startsWith("/") && !href.startsWith("//")) {
+            el.setAttribute("href", `/terminal/${token}${href}`);
+          }
+        },
+      })
+      .on("link", {
+        element(el) {
+          const href = el.getAttribute("href");
+          if (href && href.startsWith("/") && !href.startsWith("//")) {
+            el.setAttribute("href", `/terminal/${token}${href}`);
+          }
+        },
+      })
+      .on("script", {
+        element(el) {
+          const src = el.getAttribute("src");
+          if (src && src.startsWith("/") && !src.startsWith("//")) {
+            el.setAttribute("src", `/terminal/${token}${src}`);
+          }
+        },
+      })
+      .on("img", {
+        element(el) {
+          const src = el.getAttribute("src");
+          if (src && src.startsWith("/") && !src.startsWith("//")) {
+            el.setAttribute("src", `/terminal/${token}${src}`);
+          }
+        },
+      })
+      .on("form", {
+        element(el) {
+          const action = el.getAttribute("action");
+          if (action && action.startsWith("/") && !action.startsWith("//")) {
+            el.setAttribute("action", `/terminal/${token}${action}`);
+          }
+        },
+      })
+      .transform(response);
+  }
+
+  return response;
+}
+
 // ==================== MAIN WORKER ====================
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -119,6 +214,14 @@ export default {
 
     if (url.pathname === "/account.html" || url.pathname === "/account") {
       return Response.redirect(`${url.origin}/`, 302);
+    }
+
+    // ==================== TERMINAL PROXY ====================
+    if (url.pathname.startsWith("/terminal/")) {
+      const parts = url.pathname.split("/");
+      const token = parts[2];
+      const proxyPath = "/" + parts.slice(3).join("/");
+      return proxyTerminal(request, token, proxyPath + url.search + url.hash);
     }
 
     // ==================== API ENDPOINTS ====================
@@ -413,7 +516,10 @@ export default {
         const res = await fetch(targetUrl, {
           method: 'GET',
           signal: controller.signal,
-          headers: { 'User-Agent': 'KS-SSH-Status-Check' }
+          headers: {
+            'User-Agent': 'KS-SSH-Proxy/1.0',
+            'bypass-tunnel-reminder': '1'
+          }
         });
 
         clearTimeout(timeoutId);
@@ -564,6 +670,15 @@ export default {
     const response = await env.ASSETS.fetch(request);
     if (response.status !== 404) {
       return response;
+    }
+
+    // Asset Resolution Catch-all: If file not found in assets, and we have a terminal token, try proxying
+    // This catches absolute paths like /static/js/main.js that don't include the /terminal/token/ prefix
+    const cookies = request.headers.get("Cookie") || "";
+    const termTokenMatch = cookies.match(/terminal_token=([^;]+)/);
+    if (termTokenMatch) {
+      const token = termTokenMatch[1];
+      return proxyTerminal(request, token, url.pathname + url.search + url.hash);
     }
 
     return new Response("Not found", { status: 404 });
