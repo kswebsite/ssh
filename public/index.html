@@ -494,6 +494,14 @@
             document.getElementById('main-content').classList.toggle('header-collapsed');
         }
 
+        function getTerminalUrl(token) {
+            if (token.startsWith('http')) return token;
+            if (token.startsWith('ks-lt-')) {
+                return `https://${token.replace('ks-lt-', '')}.loca.lt`;
+            }
+            return `https://${token}.trycloudflare.com`;
+        }
+
         async function selectTerminal(id) {
             const thisConnId = ++connectionId;
             lastSelectedId = id;
@@ -531,7 +539,7 @@
                 if (thisConnId !== connectionId) return;
 
                 if (data.success && data.online) {
-                    const targetUrl = term.token.startsWith('http') ? term.token : `https://${term.token}.trycloudflare.com`;
+                    const targetUrl = getTerminalUrl(term.token);
 
                     // Pre-load the iframe and show it only when ready
                     iframe.onload = () => {
@@ -704,9 +712,25 @@
         }
 
         // API Handlers
+        function formatToken(input) {
+            if (!input) return '';
+            let val = input.trim();
+            // Convert https://example.loca.lt -> ks-lt-example
+            if (val.includes('loca.lt')) {
+                try {
+                    const url = new URL(val.startsWith('http') ? val : 'https://' + val);
+                    const hostParts = url.hostname.split('.');
+                    if (hostParts.length >= 3) {
+                        return 'ks-lt-' + hostParts[0];
+                    }
+                } catch (e) {}
+            }
+            return val;
+        }
+
         async function handleAddTerminal() {
             const name = document.getElementById('modal-name').value || 'Terminal';
-            const token = document.getElementById('modal-token').value;
+            const token = formatToken(document.getElementById('modal-token').value);
             const workspaceId = document.getElementById('modal-workspace').value;
             if (!token || !workspaceId) return ui.showToast('Token and workspace are required', 'error');
 
@@ -768,7 +792,7 @@
         async function handleEditTerminal() {
             const id = document.getElementById('edit-id').value;
             const name = document.getElementById('edit-name').value;
-            const token = document.getElementById('edit-token').value;
+            const token = formatToken(document.getElementById('edit-token').value);
             const workspaceId = document.getElementById('edit-workspace').value;
 
             const originalTerminals = terminals.map(t => ({...t}));
