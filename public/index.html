@@ -350,26 +350,30 @@
         let terminals = [];
         let workspaces = [];
         let activeId = null;
-        let currentUser = null;
+        let currentUser = { id: 1, username: 'user' };
         let currentWorkspaceId = 'all';
         let currentContextId = null;
         let usageInterval = null;
 
-        async function loadTerminals() {
-            const res = await fetch(`/api/terminals${currentWorkspaceId !== 'all' ? '?workspaceId=' + currentWorkspaceId : ''}`);
-            const data = await res.json();
-            if (data.success) terminals = data.terminals;
+        function loadTerminals() {
+            const stored = localStorage.getItem('ks_terminals');
+            terminals = stored ? JSON.parse(stored) : [];
             renderList();
         }
 
-        async function loadWorkspaces() {
-            const res = await fetch('/api/workspaces');
-            const data = await res.json();
-            if (data.success) {
-                workspaces = data.workspaces;
-                populateWorkspaceDropdown();
-                populateModalWorkspaceSelect();
-            }
+        function loadWorkspaces() {
+            const stored = localStorage.getItem('ks_workspaces');
+            workspaces = stored ? JSON.parse(stored) : [{ id: 'default', name: 'Default Workspace', owner_id: 1 }];
+            populateWorkspaceDropdown();
+            populateModalWorkspaceSelect();
+        }
+
+        function saveTerminals() {
+            localStorage.setItem('ks_terminals', JSON.stringify(terminals));
+        }
+
+        function saveWorkspaces() {
+            localStorage.setItem('ks_workspaces', JSON.stringify(workspaces));
         }
 
         function toggleWorkspaceDropdown() {
@@ -506,6 +510,11 @@
             const term = terminals.find(t => t.id === id);
             if (!term) return;
 
+            // Track recent usage in localStorage
+            let recent = JSON.parse(localStorage.getItem('ks_recent') || '[]');
+            recent = [id, ...recent.filter(rid => rid !== id)].slice(0, 5);
+            localStorage.setItem('ks_recent', JSON.stringify(recent));
+
             document.getElementById('page-title').textContent = term.name;
             document.getElementById('header-toggle').style.display = 'block';
 
@@ -528,7 +537,7 @@
             closeSidebarMobile();
 
             try {
-                const res = await fetch(`/api/terminals/${id}/status`);
+                const res = await fetch(`/api/status?token=${encodeURIComponent(term.token)}`);
                 const data = await res.json();
 
                 // If user started a new connection while we were fetching, stop this one
@@ -731,45 +740,31 @@
             const workspaceId = document.getElementById('modal-workspace').value;
             if (!token || !workspaceId) return ui.showToast('Token and workspace are required', 'error');
 
-            const tempId = 'temp-' + Date.now();
-            const originalTerminals = [...terminals];
-            const newTerm = { id: tempId, name, token, workspace_id: workspaceId };
+            const newTerm = {
+                id: crypto.randomUUID(),
+                name,
+                token,
+                workspace_id: workspaceId,
+                created_at: new Date().toISOString()
+            };
 
-            // Optimistic update
             terminals.push(newTerm);
+            saveTerminals();
             renderList();
             closeModals();
-            ui.showToast('Terminal adding...', 'info');
-
-            try {
-                const res = await fetch('/api/terminals', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, token, workspaceId })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    // Replace tempId with real id
-                    const index = terminals.findIndex(t => t.id === tempId);
-                    if (index !== -1) terminals[index] = data.terminal;
-                    renderList();
-                    ui.showToast('Terminal added', 'success');
-                } else throw new Error(data.error);
-            } catch (err) {
-                ui.showToast(err.message || 'Failed to add terminal', 'error');
-                terminals = originalTerminals;
-                renderList();
-            }
+            ui.showToast('Terminal added', 'success');
         }
 
         async function refreshTerminalStatus(id) {
+            const term = terminals.find(t => t.id === id);
+            if (!term) return;
             const dot = document.getElementById(`status-${id}`);
             if (!dot) return;
 
             dot.className = 'terminal-status checking';
 
             try {
-                const res = await fetch(`/api/terminals/${id}/status`);
+                const res = await fetch(`/api/status?token=${encodeURIComponent(term.token)}`);
                 const data = await res.json();
 
                 if (data.success && data.online) {
@@ -792,103 +787,48 @@
             const token = formatToken(document.getElementById('edit-token').value);
             const workspaceId = document.getElementById('edit-workspace').value;
 
-            const originalTerminals = terminals.map(t => ({...t}));
             const index = terminals.findIndex(t => t.id === id);
             if (index !== -1) {
                 terminals[index] = { ...terminals[index], name, token, workspace_id: workspaceId };
+                saveTerminals();
             }
 
             renderList();
             closeModals();
-            ui.showToast('Saving...', 'info');
-
-            try {
-                const res = await fetch(`/api/terminals/${id}`, {
-                    method: 'PATCH',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, token, workspaceId })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    ui.showToast('Terminal updated', 'success');
-                } else throw new Error(data.error);
-            } catch (err) {
-                ui.showToast(err.message || 'Failed to update terminal', 'error');
-                terminals = originalTerminals;
-                renderList();
-            }
+            ui.showToast('Terminal updated', 'success');
         }
 
         async function confirmCreateWorkspace() {
             const name = document.getElementById('new-ws-name').value;
             if (!name) return;
 
-            const tempId = 'temp-ws-' + Date.now();
-            const originalWorkspaces = [...workspaces];
-            const newWS = { id: tempId, name, owner_id: currentUser?.id };
+            const newWS = { id: crypto.randomUUID(), name, owner_id: currentUser?.id };
 
             workspaces.push(newWS);
+            saveWorkspaces();
             populateWorkspaceDropdown();
             closeModals();
-            ui.showToast('Creating workspace...', 'info');
-
-            try {
-                const res = await fetch('/api/workspaces', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    const idx = workspaces.findIndex(w => w.id === tempId);
-                    if (idx !== -1) workspaces[idx] = data.workspace;
-                    populateWorkspaceDropdown();
-                    ui.showToast('Workspace created', 'success');
-                } else throw new Error(data.error);
-            } catch (err) {
-                ui.showToast(err.message || 'Failed to create workspace', 'error');
-                workspaces = originalWorkspaces;
-                populateWorkspaceDropdown();
-            }
+            ui.showToast('Workspace created', 'success');
         }
 
         async function handleRenameWorkspace() {
-            const oldName = workspaces.find(w => w.id === currentWorkspaceId)?.name;
-            const newName = document.getElementById('ws-settings-name').value;
-
-            // Optimistic update
+            const name = document.getElementById('ws-settings-name').value;
             const ws = workspaces.find(w => w.id === currentWorkspaceId);
-            if (ws) ws.name = newName;
-            populateWorkspaceDropdown();
-            if (currentWorkspaceId === currentWorkspaceId) { // if active
-                document.getElementById('selected-ws-name').textContent = newName;
-            }
-
-            try {
-                const res = await fetch(`/api/workspaces/${currentWorkspaceId}`, {
-                    method: 'PATCH',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name: newName })
-                });
-                const data = await res.json();
-                if (!data.success) throw new Error(data.error);
-                loadWorkspaces(); // refresh to be sure
-            } catch (err) {
-                ui.showToast('Failed to rename: ' + err.message, 'error');
-                if (ws) ws.name = oldName;
+            if (ws) {
+                ws.name = name;
+                saveWorkspaces();
                 populateWorkspaceDropdown();
-                document.getElementById('selected-ws-name').textContent = oldName;
+                document.getElementById('selected-ws-name').textContent = name;
+                ui.showToast('Workspace renamed', 'success');
             }
         }
 
         async function handleDeleteWorkspace() {
             if (!await ui.confirm('Delete this workspace?')) return;
-            const res = await fetch(`/api/workspaces/${currentWorkspaceId}`, { method: 'DELETE' });
-            if ((await res.json()).success) {
-                closeModals();
-                selectWorkspace('all', 'All Workspaces');
-                loadWorkspaces();
-            }
+            workspaces = workspaces.filter(w => w.id !== currentWorkspaceId);
+            saveWorkspaces();
+            closeModals();
+            selectWorkspace('all', 'All Workspaces');
         }
 
         async function handleAddMember() {
@@ -946,21 +886,10 @@
 
         async function contextDelete() {
             if (!await ui.confirm('Delete terminal?')) return;
-
-            const originalTerminals = [...terminals];
             terminals = terminals.filter(t => t.id !== currentContextId);
+            saveTerminals();
             renderList();
-
-            try {
-                const res = await fetch(`/api/terminals/${currentContextId}`, { method: 'DELETE' });
-                const data = await res.json();
-                if (!data.success) throw new Error(data.error);
-                ui.showToast('Terminal deleted');
-            } catch (err) {
-                ui.showToast('Failed to delete: ' + err.message, 'error');
-                terminals = originalTerminals;
-                renderList();
-            }
+            ui.showToast('Terminal deleted');
         }
 
         function navigateTo(page) {
@@ -1018,26 +947,8 @@
         }
 
         window.onload = async () => {
-            // Parallelize initial data load
-            const [userRes, wsRes] = await Promise.all([
-                fetch('/api/me'),
-                fetch('/api/workspaces')
-            ]);
-
-            if (userRes.ok) {
-                const userData = await userRes.json();
-                currentUser = userData.user;
-            }
-
-            const wsData = await wsRes.json();
-            if (wsData.success) {
-                workspaces = wsData.workspaces;
-                populateWorkspaceDropdown();
-                populateModalWorkspaceSelect();
-            }
-
-            // Terminals load separately to allow early sidebar render
-            await loadTerminals();
+            loadWorkspaces();
+            loadTerminals();
             document.getElementById('search-input').oninput = renderList;
         };
     </script>
