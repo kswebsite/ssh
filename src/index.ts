@@ -258,26 +258,44 @@ export default {
         targetUrl = `https://${token.replace('ks-lt-', '')}.loca.lt`;
       }
 
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+      let isOnline = false;
+      const maxRetries = 2;
 
-        const res = await fetch(targetUrl, {
-          method: 'GET',
-          signal: controller.signal,
-          headers: {
-            'User-Agent': 'localtunnel',
-            'bypass-tunnel-reminder': '1',
-            'Bypass-Tunnel-Reminder': '1',
-            'Accept': '*/*'
-          }
-        });
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        clearTimeout(timeoutId);
-        return jsonResponse({ success: true, online: res.ok || res.status === 401 || res.status === 403 || res.status === 404 });
-      } catch (e) {
-        return jsonResponse({ success: true, online: false });
+          const res = await fetch(targetUrl, {
+            method: 'GET',
+            signal: controller.signal,
+            headers: {
+              'User-Agent': 'localtunnel',
+              'bypass-tunnel-reminder': '1',
+              'Bypass-Tunnel-Reminder': '1',
+              'Accept': '*/*'
+            }
+          });
+
+          clearTimeout(timeoutId);
+          // Online if < 502 (excluding 408 Request Timeout)
+          isOnline = (res.status < 502 && res.status !== 408);
+          if (isOnline) break;
+        } catch (e) {
+          if (i === maxRetries - 1) break;
+          // Short delay before retry
+          await new Promise(r => setTimeout(r, 500));
+        }
       }
+
+      return new Response(JSON.stringify({ success: true, online: isOnline }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          "Cache-Control": "no-store, no-cache, must-revalidate"
+        }
+      });
     }
 
 
