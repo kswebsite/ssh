@@ -764,7 +764,7 @@
             dot.className = 'terminal-status checking';
 
             try {
-                const res = await fetch(`/api/status?token=${encodeURIComponent(term.token)}`);
+                const res = await fetch(`/api/status?token=${encodeURIComponent(term.token)}&_t=${Date.now()}`);
                 const data = await res.json();
 
                 if (data.success && data.online) {
