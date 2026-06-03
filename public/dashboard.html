@@ -164,8 +164,11 @@
             const dot = document.getElementById(`status-${containerId}-${id}`);
             if (!dot) return;
 
+            dot.style.background = '#f59e0b';
+            dot.style.boxShadow = '0 0 8px #f59e0b';
+
             try {
-                const res = await fetch(`/api/status?token=${encodeURIComponent(token)}`);
+                const res = await fetch(`/api/status?token=${encodeURIComponent(token)}&_t=${Date.now()}`);
                 const data = await res.json();
                 if (data.success && data.online) {
                     dot.style.background = '#10b981';
@@ -176,6 +179,7 @@
                 }
             } catch (e) {
                 dot.style.background = '#ef4444';
+                dot.style.boxShadow = 'none';
             }
         }
 
